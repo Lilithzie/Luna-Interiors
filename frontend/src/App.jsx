@@ -1,52 +1,228 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { ToastContainer, } from 'react-toastify';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import store from './store';
+import { loadUser } from './actions/userActions';
+
+import { Header } from './Components/Layout/Header'
+import Footer from './Components/Layout/Footer'
+
 import './App.css'
+import Home from './Components/Home'
+import ProductDetails from './Components/Product/ProductDetails';
+import Login from './Components/User/Login';
+import Register from './Components/User/Register';
+import ForgotPassword from './Components/User/ForgotPassword';
+import NewPassword from './Components/User/NewPassword';
+import Profile from './Components/User/Profile';
+import UpdateProfile from './Components/User/UpdateProfile';
+import UpdatePassword from './Components/User/UpdatePassword';
+import Cart from './Components/Cart/Cart';
+import Shipping from './Components/Cart/Shipping';
+import ConfirmOrder from './Components/Cart/ConfirmOrder';
+import Payment from './Components/Cart/Payment';
+import OrderSuccess from './Components/Cart/OrderSuccess';
+import ListOrders from './Components/Order/ListOrders';
+import OrderDetails from './Components/Order/OrderDetails';
 
-const starterProducts = [
-  { id: 'LN-001', name: 'Solene Lounge Chair', category: 'Living Room', price: 18900, stock: 12, images: [], status: 'Active' },
-  { id: 'LN-002', name: 'Mira Bedside Table', category: 'Bedroom', price: 7500, stock: 8, images: [], status: 'Active' },
-  { id: 'LN-003', name: 'Arco Dining Set', category: 'Dining Room', price: 32500, stock: 4, images: [], status: 'Active' },
-]
-const emptyForm = { name: '', category: 'Living Room', price: '', stock: '', status: 'Active', images: [] }
-
-function readProducts() {
-  try { return JSON.parse(localStorage.getItem('luna-products')) || starterProducts } catch { return starterProducts }
-}
-
+import Dashboard from './Components/Admin/Dashboard';
+import ProductsList from './Components/Admin/ProductsList';
+import NewProduct from './Components/Admin/NewProduct';
+import UpdateProduct from './Components/Admin/UpdateProduct';
+import OrdersList from './Components/Admin/OrdersList';
+import ProcessOrder from './Components/Admin/ProcessOrder';
+import UsersList from './Components/Admin/UsersList';
+import UpdateUser from './Components/Admin/UpdateUser';
+import ProtectedRoute from './Components/Route/ProtectedRoute';
+import ProductReviews from './Components/Admin/ProductReviews';
 function App() {
-  const [products, setProducts] = useState(readProducts)
-  const [selected, setSelected] = useState([])
-  const [form, setForm] = useState(emptyForm)
-  const [editingId, setEditingId] = useState(null)
-  const [query, setQuery] = useState('')
-  const [notice, setNotice] = useState('')
-  const visibleProducts = useMemo(() => products.filter((product) => `${product.name} ${product.category} ${product.id}`.toLowerCase().includes(query.toLowerCase())), [products, query])
-  const allVisibleSelected = visibleProducts.length > 0 && visibleProducts.every((product) => selected.includes(product.id))
-  const persist = (nextProducts) => { setProducts(nextProducts); localStorage.setItem('luna-products', JSON.stringify(nextProducts)) }
-  const updateForm = (event) => { const { name, value } = event.target; setForm((current) => ({ ...current, [name]: value })) }
-  const handleImages = (event) => {
-    Array.from(event.target.files || []).forEach((file) => { const reader = new FileReader(); reader.onload = () => setForm((current) => ({ ...current, images: [...current.images, { name: file.name, url: reader.result }] })); reader.readAsDataURL(file) })
-    event.target.value = ''
-  }
-  const saveProduct = (event) => {
-    event.preventDefault()
-    if (!form.name.trim() || !form.price || !form.stock) { setNotice('Add a product name, price, and stock quantity to continue.'); return }
-    const nextProduct = { ...form, name: form.name.trim(), price: Number(form.price), stock: Number(form.stock), id: editingId || `LN-${String(Date.now()).slice(-4)}` }
-    persist(editingId ? products.map((product) => product.id === editingId ? nextProduct : product) : [nextProduct, ...products])
-    setForm(emptyForm); setEditingId(null); setNotice(editingId ? 'Product updated successfully.' : 'Product added to your catalog.')
-  }
-  const editProduct = (product) => { setEditingId(product.id); setForm({ ...product, price: String(product.price), stock: String(product.stock) }); window.scrollTo({ top: 0, behavior: 'smooth' }) }
-  const deleteProducts = (ids) => { persist(products.filter((product) => !ids.includes(product.id))); setSelected([]); setNotice(`${ids.length} product${ids.length > 1 ? 's' : ''} deleted.`) }
-  const toggleSelected = (id) => setSelected((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id])
+  const [ready, setReady] = useState(false)
+  useEffect(() => {
+    // restore the login session (cookie) after a page refresh
+    Promise.resolve(store.dispatch(loadUser())).finally(() => setReady(true))
+  }, [])
 
-  return <main className="app-shell">
-    <aside className="sidebar"><div className="brand"><span className="brand-mark">L</span><span>Luna<span className="brand-light">Interiors</span></span></div><p className="workspace-label">Workspace</p><nav><button className="nav-item active"><span>▦</span> Product catalog</button><button className="nav-item"><span>◉</span> Orders <small>Coming soon</small></button><button className="nav-item"><span>♙</span> Customers <small>Coming soon</small></button></nav><div className="sidebar-bottom"><div className="profile"><span className="avatar">AD</span><span><strong>Admin</strong><small>Store manager</small></span><span className="more">•••</span></div></div></aside>
-    <section className="content"><header className="topbar"><div className="breadcrumb">Workspace <span>/</span> Catalog</div><div className="top-actions"><span className="status-dot" /> Store is live <button className="icon-button" aria-label="Notifications">♧</button></div></header>
-      <div className="page-heading"><div><p className="eyebrow">LUNA INTERIORS / ADMIN</p><h1>Product catalog</h1><p className="lede">Keep your collection fresh, organized, and ready to discover.</p></div><button className="primary-button" onClick={() => { setForm(emptyForm); setEditingId(null); document.getElementById('product-form').scrollIntoView({ behavior: 'smooth' }) }}><span>＋</span> Add product</button></div>
-      <form id="product-form" className="product-form" onSubmit={saveProduct}><div className="form-heading"><div><span className="form-kicker">{editingId ? 'EDITING PRODUCT' : 'NEW PRODUCT'}</span><h2>{editingId ? 'Update product details' : 'Add to your collection'}</h2></div>{editingId && <button type="button" className="text-button" onClick={() => { setEditingId(null); setForm(emptyForm) }}>Cancel edit</button>}</div><div className="form-grid">
-        <label>Product name<input name="name" value={form.name} onChange={updateForm} placeholder="e.g. Solene Lounge Chair" /></label><label>Category<select name="category" value={form.category} onChange={updateForm}><option>Living Room</option><option>Bedroom</option><option>Dining Room</option><option>Outdoor</option><option>Storage</option><option>Kitchen</option></select></label><label>Price <span className="field-hint">PHP</span><input name="price" type="number" min="0" value={form.price} onChange={updateForm} placeholder="0.00" /></label><label>Stock quantity<input name="stock" type="number" min="0" value={form.stock} onChange={updateForm} placeholder="0" /></label><label>Status<select name="status" value={form.status} onChange={updateForm}><option>Active</option><option>Draft</option><option>Archived</option></select></label><label className="upload-field">Product photos<input type="file" accept="image/*" multiple onChange={handleImages} /><span className="upload-box"><strong>＋</strong> Add multiple photos <small>PNG, JPG up to 5MB</small></span></label>
-      </div>{form.images.length > 0 && <div className="image-previews">{form.images.map((image, index) => <div className="preview" key={`${image.name}-${index}`}><img src={image.url} alt={image.name} /><button type="button" onClick={() => setForm((current) => ({ ...current, images: current.images.filter((_, imageIndex) => imageIndex !== index) }))} aria-label={`Remove ${image.name}`}>×</button></div>)}</div>}{notice && <p className="notice" role="status">{notice}</p>}<div className="form-footer"><span>Fields marked are required for a product listing.</span><button className="primary-button" type="submit">{editingId ? 'Save changes' : 'Create product'} <span>→</span></button></div></form>
-      <section className="catalog-section"><div className="section-heading"><div><span className="form-kicker">INVENTORY</span><h2>All products <span className="count-pill">{products.length}</span></h2></div><div className="table-tools"><div className="search"><span>⌕</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search catalog" /></div>{selected.length > 0 && <button className="delete-button" onClick={() => deleteProducts(selected)}>⌫ Delete {selected.length}</button>}</div></div><div className="table-wrap"><table><thead><tr><th className="check-cell"><input type="checkbox" checked={allVisibleSelected} onChange={() => setSelected(allVisibleSelected ? selected.filter((id) => !visibleProducts.some((product) => product.id === id)) : [...new Set([...selected, ...visibleProducts.map((product) => product.id)])])} aria-label="Select all products" /></th><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th /></tr></thead><tbody>{visibleProducts.map((product) => <tr key={product.id}><td className="check-cell"><input type="checkbox" checked={selected.includes(product.id)} onChange={() => toggleSelected(product.id)} aria-label={`Select ${product.name}`} /></td><td><div className="product-cell"><div className="product-thumb">{product.images?.[0] ? <img src={product.images[0].url} alt="" /> : <span>{product.name.charAt(0)}</span>}</div><div><strong>{product.name}</strong><small>{product.id}</small></div></div></td><td>{product.category}</td><td className="price">₱{Number(product.price).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td><td>{product.stock} units</td><td><span className={`status ${product.status.toLowerCase()}`}>{product.status}</span></td><td><button className="edit-button" onClick={() => editProduct(product)}>Edit</button><button className="row-delete" onClick={() => deleteProducts([product.id])} aria-label={`Delete ${product.name}`}>×</button></td></tr>)}{visibleProducts.length === 0 && <tr><td colSpan="7" className="empty-state">No products match your search.</td></tr>}</tbody></table></div></section><footer>© 2026 Luna Interiors <span>•</span> Product management</footer></section>
-  </main>
+  // const [state, setState] = useState({
+  //   cartItems: localStorage.getItem('cartItems')
+  //     ? JSON.parse(localStorage.getItem('cartItems'))
+  //     : [],
+
+  //   shippingInfo: localStorage.getItem('shippingInfo')
+  //     ? JSON.parse(localStorage.getItem('shippingInfo'))
+  //     : {},
+  // })
+
+  // const addItemToCart = async (id, quantity) => {
+  //   console.log(id, quantity)
+  //   try {
+  //     const { data } = await axios.get(`${import.meta.env.VITE_API}/product/${id}`)
+  //     console.log(data)
+
+  //     const item = {
+  //       product: data.product._id,
+  //       name: data.product.name,
+  //       price: data.product.price,
+  //       image: data.product.images[0].url ? data.product.images[0].url : '',
+  //       stock: data.product.stock,
+  //       quantity: quantity
+  //     }
+  //     console.log(item)
+
+  //     const isItemExist = state.cartItems.find(i => i.product === item.product)
+
+
+  //     if (isItemExist) {
+  //       setState({
+  //         ...state,
+  //         cartItems: state.cartItems.map(i => i.product === isItemExist.product ? item : i)
+  //       })
+  //     }
+  //     else {
+  //       setState({
+  //         ...state,
+  //         cartItems: [...state.cartItems, item]
+  //       })
+  //     }
+
+  //     toast.success('Item Added to Cart', {
+  //       position: 'bottom-right'
+  //     })
+
+
+
+  //   } catch (error) {
+  //     toast.error(error, {
+  //       position: 'top-left'
+  //     });
+
+  //   }
+
+  // }
+
+  // const removeItemFromCart = async (id) => {
+  //   setState({
+  //     ...state,
+  //     cartItems: state.cartItems.filter(i => i.product !== id)
+  //   })
+  //   localStorage.setItem('cartItems', JSON.stringify(state.cartItems))
+  // }
+
+  // const saveShippingInfo = async (data) => {
+  //   setState({
+  //     ...state,
+  //     shippingInfo: data
+  //   })
+  //   localStorage.setItem('shippingInfo', JSON.stringify(data))
+  // }
+
+
+  if (!ready) return <div className="loader"> </div>
+
+  return (
+    <>
+
+      <Router>
+        {/* <Header cartItems={state.cartItems} /> */}
+        <Header />
+        <Routes>
+          <Route path="/" element={<Home />} exact="true" />
+          {/* <Route path="/product/:id" element={<ProductDetails cartItems={state.cartItems} addItemToCart={addItemToCart} />} exact="true" /> */}
+          <Route path="/product/:id" element={<ProductDetails />} exact="true" />
+
+          <Route path="/search/:keyword" element={<Home />} exact="true" />
+          <Route path="/login" element={<Login />} exact="true" />
+          <Route path="/register" element={<Register exact="true" />} />
+          <Route path="/password/forgot" element={<ForgotPassword />} exact="true" />
+          <Route path="/password/reset/:token" element={<NewPassword />} exact="true" />
+          <Route path="/me" element={<Profile />} exact="true" />
+          <Route path="/me/update" element={<UpdateProfile />} exact="true"
+          />
+          <Route path="/password/update" element={<UpdatePassword />} />
+          {/* <Route path="/cart" element={<Cart cartItems={state.cartItems} addItemToCart={addItemToCart} removeItemFromCart={removeItemFromCart} />} exact="true" />
+          <Route path="/shipping" element={<Shipping shipping={state.shippingInfo} saveShippingInfo={saveShippingInfo} />} />
+          <Route path="/confirm" element={<ConfirmOrder cartItems={state.cartItems} shippingInfo={state.shippingInfo} />} />
+          <Route path="/payment" element={<Payment cartItems={state.cartItems} shippingInfo={state.shippingInfo} />} /> */}
+
+          <Route path="/cart" element={<Cart />} exact="true" />
+          <Route path="/shipping" element={<Shipping />} />
+          <Route path="/confirm" element={<ConfirmOrder />} />
+          <Route path="/payment" element={<Payment />} />
+
+
+          <Route path="/success" element={<OrderSuccess />} />
+          <Route path="/orders/me" element={<ListOrders />} />
+          <Route path="/order/:id" element={<OrderDetails />} />
+
+          {/* <Route path="/dashboard" element={<Dashboard />} /> */}
+          {/* <Route path="/admin/products" element={<ProductsList />} /> */}
+          <Route path="/admin/product" element={<ProtectedRoute isAdmin={true}><NewProduct /></ProtectedRoute>} />
+          <Route
+            path="/admin/product/:id"
+            element={<ProtectedRoute isAdmin={true}><UpdateProduct /></ProtectedRoute>} />
+          {/* <Route
+            path="/admin/orders"
+            element={<OrdersList />}
+
+          /> */}
+          <Route
+            path="/admin/order/:id"
+            element={<ProcessOrder />} />
+          {/* <Route
+            path="/admin/users"
+            element={<UsersList />} /> */}
+          <Route path="/admin/user/:id" element={<UpdateUser />} />
+
+          <Route
+            path="/admin/products"
+            element={
+              <ProtectedRoute isAdmin={true}>
+                <ProductsList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute isAdmin={true}>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute isAdmin={true}>
+                <UsersList />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/orders"
+            element={
+              <ProtectedRoute isAdmin={true}>
+                <OrdersList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/reviews"
+            element={
+              <ProtectedRoute isAdmin={true} >
+                <ProductReviews />
+              </ProtectedRoute>} />
+
+        </Routes>
+
+
+      </Router>
+      <Footer />
+      <ToastContainer />
+    </>
+  )
 }
 
 export default App

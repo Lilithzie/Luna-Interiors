@@ -1,35 +1,13 @@
-/* 1. Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
-
-/* 2. Global Styles */
-:root {
-    font-family: 'Manrope', sans-serif;
-    color: #3B2A20;
-    background: #FAF5ED;
-    font-synthesis: none;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-}
-
-/* 3. Box Sizing */
-* {
-    box-sizing: border-box;
-}
-
-/* 4. Body */
 body {
-    margin: 0;
-    min-width: 320px;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* 5. Form Elements */
-button,
-input,
-select {
-    font: inherit;
-}
-
-/* 6. Buttons */
-button {
-    cursor: pointer;
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
 }

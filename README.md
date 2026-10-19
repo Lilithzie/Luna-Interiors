@@ -183,3 +183,28 @@ npm run dev
 <p align="center">
   <strong>Luna Interiors © 2026</strong>
 </p>
+
+---
+
+## ✅ Progress — Machine Problems 1–3
+
+| MP | Feature | Where |
+| -- | ------- | ----- |
+| MP1 (20) | Product CRUD datatable, multiple photo upload, bulk delete via checkboxes | `frontend/src/Components/Admin/ProductsList.jsx`, `ProductForm.jsx`, `NewProduct.jsx`, `UpdateProduct.jsx` · `backend/controllers/product.js` (`DELETE /api/v1/admin/products` = bulk) |
+| MP2 (20) | Price, category, ratings and review-count filters (+ sort, pagination) | `frontend/src/Components/Home.jsx` · `backend/utils/apiFeatures.js` |
+| MP3 (20) | Customers who ordered a product can review/rate it, edit their own review, admin can delete any review | `frontend/src/Components/Product/ProductDetails.jsx`, `Admin/ProductReviews.jsx` · `createProductReview`, `deleteReview` |
+
+Built on the itcp318 reference system (same Express + Mongoose models, Redux, cookie/JWT auth, same MongoDB via `DB_URI`).
+
+### Setup
+```bash
+cd backend && npm install
+cp config/.env.example config/.env     # fill DB_URI (same DB), JWT_SECRET, Cloudinary keys
+npm run seed                           # optional: demo products + admin/customer accounts
+npm run dev                            # http://localhost:4001
+
+cd ../frontend && npm install
+npm run dev                            # http://localhost:5173  (VITE_API in frontend/.env)
+```
+Seeded logins: `admin@lunainteriors.com / admin123` · `customer@lunainteriors.com / customer123`.
+If the Cloudinary keys are blank, product photos are saved to `backend/uploads` instead.
