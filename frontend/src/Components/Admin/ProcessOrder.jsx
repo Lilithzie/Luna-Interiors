@@ -40,9 +40,10 @@ const ProcessOrder = () => {
 
             const { data } = await axios.get(`${import.meta.env.VITE_API}/order/${id}`, config)
             setOrder(data.order)
+            setStatus(data.order.orderStatus)
             setLoading(false)
         } catch (error) {
-            setError(error.response.data.message)
+            setError(error.response?.data?.message || error.message)
         }
     }
     const updateOrder = async (id, formData) => {
@@ -59,7 +60,7 @@ const ProcessOrder = () => {
 
 
         } catch (error) {
-            setError(error.response.data.message)
+            setError(error.response?.data?.message || error.message)
         }
     }
 
@@ -77,9 +78,7 @@ const ProcessOrder = () => {
     }, [error, isUpdated, orderId])
 
     const updateOrderHandler = (id) => {
-        const formData = new FormData();
-        formData.set('status', status);
-        updateOrder(id, formData)
+        updateOrder(id, { status })
     }
 
     const shippingDetails = shippingInfo && `${shippingInfo.address}, ${shippingInfo.city}, ${shippingInfo.postalCode}, ${shippingInfo.country}`
@@ -104,8 +103,9 @@ const ProcessOrder = () => {
                                     <p><b>Amount:</b> ₱{totalPrice}</p>
                                     <hr />
                                     <h4 className="my-4">Payment</h4>
-                                    <p className={isPaid ? "greenColor" : "redColor"}><b>{isPaid ? "PAID" : "NOT PAID"}</b></p>
-                                    <h4 className="my-4">Stripe ID</h4>
+                                    <p><b>Method:</b> {order.paymentMethod || 'Card'}</p>
+                                    <p className={isPaid ? "greenColor" : "redColor"}><b>{isPaid ? "PAID" : (order.paymentMethod === 'Cash on Delivery' ? "TO COLLECT ON DELIVERY" : "NOT PAID")}</b></p>
+                                    <h4 className="my-4">Payment Reference</h4>
                                     <p><b>{paymentInfo && paymentInfo.id}</b></p>
 
                                     <h4 className="my-4">Order Status:</h4>
@@ -147,7 +147,7 @@ const ProcessOrder = () => {
                                             <option value="Delivered">Delivered</option>
                                         </select>
                                     </div>
-                                    <button className="btn btn-primary btn-block" onClick={() => updateOrderHandler(order._id)}>
+                                    <button className="btn btn-luna btn-block" disabled={orderStatus === 'Delivered'} onClick={() => updateOrderHandler(order._id)}>
                                         Update Status
                                     </button>
                                 </div>

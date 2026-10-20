@@ -4,34 +4,75 @@ const Product = require('../models/product');
 
 
 // Create a new order   =>  /api/v1/order/new
-exports.newOrder = async (req, res, next) => {
-    const {
-        orderItems,
-        shippingInfo,
-        itemsPrice,
-        taxPrice,
-        shippingPrice,
-        totalPrice,
-        paymentInfo
+const SHIPPING_FREE_OVER = 5000;
+const SHIPPING_FEE = 250;
+const TAX_RATE = 0.05;
+const PAYMENT_METHODS = ['Cash on Delivery', 'Card'];
 
-    } = req.body;
+// POST /order/new   (customers only - admins manage the shop, they do not buy)
+exports.newOrder = async (req, res) => {
+    const { orderItems, shippingInfo, paymentMethod, paymentInfo } = req.body;
 
+    if (!Array.isArray(orderItems) || orderItems.length === 0) {
+        return res.status(400).json({ success: false, message: 'Your cart is empty' })
+    }
+    if (!PAYMENT_METHODS.includes(paymentMethod)) {
+        return res.status(400).json({ success: false, message: 'Please choose a payment method (Cash on Delivery or Card)' })
+    }
+
+    // Never trust prices from the browser: rebuild the items from the database
+    const items = [];
+    for (const line of orderItems) {
+        const qty = Number(line.quantity);
+        const product = await Product.findById(line.product);
+        if (!product) {
+            return res.status(404).json({ success: false, message: `A product in your cart no longer exists` })
+        }
+        if (!Number.isInteger(qty) || qty < 1) {
+            return res.status(400).json({ success: false, message: `Invalid quantity for ${product.name}` })
+        }
+        if (product.stock < qty) {
+            return res.status(400).json({ success: false, message: `Only ${product.stock} left in stock for ${product.name}` })
+        }
+        items.push({
+            name: product.name,
+            quantity: qty,
+            image: product.images && product.images.length ? product.images[0].url : '/images/no-image.svg',
+            price: product.price,
+            product: product._id,
+            _doc: product
+        });
+    }
+
+    const itemsPrice = items.reduce((acc, i) => acc + i.price * i.quantity, 0);
+    const shippingPrice = itemsPrice > SHIPPING_FREE_OVER ? 0 : SHIPPING_FEE;
+    const taxPrice = Number((itemsPrice * TAX_RATE).toFixed(2));
+    const totalPrice = Number((itemsPrice + shippingPrice + taxPrice).toFixed(2));
+
+    const isCard = paymentMethod === 'Card';
     const order = await Order.create({
-        orderItems,
+        orderItems: items.map(({ _doc, ...rest }) => rest),
         shippingInfo,
         itemsPrice,
         taxPrice,
         shippingPrice,
         totalPrice,
-        paymentInfo,
-        paidAt: Date.now(),
+        paymentMethod,
+        // Card is simulated (no real gateway): only the last 4 digits are ever kept
+        paymentInfo: isCard
+            ? { id: `card_${Date.now()}_${(paymentInfo && paymentInfo.last4) || '0000'}`, status: 'succeeded' }
+            : { id: `cod_${Date.now()}`, status: 'Pending (Cash on Delivery)' },
+        paidAt: isCard ? Date.now() : undefined,
         user: req.user._id
     })
 
-    res.status(200).json({
-        success: true,
-        order
-    })
+    // reserve the stock as soon as the order is placed
+    for (const i of items) {
+        i._doc.stock -= i.quantity;
+        await i._doc.save({ validateBeforeSave: false });
+    }
+
+    res.status(201).json({ success: true, order })
 }
 
 exports.myOrders = async (req, res, next) => {
@@ -43,18 +84,17 @@ exports.myOrders = async (req, res, next) => {
     })
 }
 
-exports.getSingleOrder = async (req, res, next) => {
+exports.getSingleOrder = async (req, res) => {
     const order = await Order.findById(req.params.id).populate('user', 'name email')
     if (!order) {
-        res.status(404).json({
-            message: 'No Order found with this ID',
-
-        })
+        return res.status(404).json({ success: false, message: 'No Order found with this ID' })
     }
-    res.status(200).json({
-        success: true,
-        order
-    })
+    // a customer can only open their own order, admins can open any
+    const ownerId = order.user && order.user._id ? order.user._id.toString() : String(order.user);
+    if (req.user.role !== 'admin' && ownerId !== req.user._id.toString()) {
+        return res.status(403).json({ success: false, message: 'You are not allowed to view this order' })
+    }
+    res.status(200).json({ success: true, order })
 }
 
 exports.allOrders = async (req, res, next) => {
@@ -89,34 +129,33 @@ exports.deleteOrder = async (req, res, next) => {
     })
 }
 
-exports.updateOrder = async (req, res, next) => {
-    const order = await Order.findById(req.params.id)
-    console.log(req.body.order)
-    if (order.orderStatus === 'Delivered') {
-        return res.status(400).json({
-            message: 'You have already delivered this order',
+const STATUSES = ['Processing', 'Shipped', 'Delivered'];
 
-        })
+// PUT /admin/order/:id   body: { status }
+exports.updateOrder = async (req, res) => {
+    const order = await Order.findById(req.params.id)
+    if (!order) {
+        return res.status(404).json({ success: false, message: 'No Order found with this ID' })
+    }
+    const { status } = req.body;
+    if (!STATUSES.includes(status)) {
+        return res.status(400).json({ success: false, message: 'Invalid status' })
+    }
+    if (order.orderStatus === 'Delivered') {
+        return res.status(400).json({ success: false, message: 'You have already delivered this order' })
     }
 
-    order.orderItems.forEach(async item => {
-        await updateStock(item.product, item.quantity)
-    })
-
-    order.orderStatus = req.body.status
-    order.deliveredAt = Date.now()
+    order.orderStatus = status
+    if (status === 'Delivered') {
+        order.deliveredAt = Date.now()
+        // Cash on Delivery is paid when the customer receives the order
+        if (order.paymentMethod === 'Cash on Delivery') {
+            order.paymentInfo = { id: order.paymentInfo && order.paymentInfo.id, status: 'succeeded' }
+            order.paidAt = Date.now()
+        }
+    }
     await order.save()
-    res.status(200).json({
-        success: true,
-    })
-}
-
-async function updateStock(id, quantity) {
-    const product = await Product.findById(id);
-
-    product.stock = product.stock - quantity;
-
-    await product.save({ validateBeforeSave: false })
+    res.status(200).json({ success: true, order })
 }
 
 exports.totalOrders = async (req, res, next) => {
@@ -234,8 +273,8 @@ exports.salesPerMonth = async (req, res, next) => {
             $group: {
                 // _id: {month: { $month: "$paidAt" } },
                 _id: {
-                    year: { $year: "$paidAt" },
-                    month: { $month: "$paidAt" }
+                    year: { $year: { $ifNull: ["$paidAt", "$createdAt"] } },
+                    month: { $month: { $ifNull: ["$paidAt", "$createdAt"] } }
                 },
                 total: { $sum: "$totalPrice" },
             },
@@ -246,7 +285,7 @@ exports.salesPerMonth = async (req, res, next) => {
                 month: {
                     $let: {
                         vars: {
-                            monthsInString: [, 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', ' Sept', 'Oct', 'Nov', 'Dec']
+                            monthsInString: [null, 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
                         },
                         in: {
                             $arrayElemAt: ['$$monthsInString', "$_id.month"]

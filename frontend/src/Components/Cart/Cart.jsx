@@ -9,6 +9,7 @@ import { addItemToCart, removeItemFromCart } from '../../actions/cartActions'
 const Cart = () => {
     const dispatch = useDispatch();
     const { cartItems } = useSelector(state => state.cart)
+    const { isAuthenticated } = useSelector(state => state.auth)
 
     const navigate = useNavigate()
 
@@ -29,7 +30,7 @@ const Cart = () => {
         dispatch(removeItemFromCart(id))
     }
     const checkoutHandler = () => {
-        navigate('/login?redirect=shipping')
+        navigate(isAuthenticated ? '/shipping' : '/login?redirect=shipping')
     }
     // localStorage.setItem('cartItems', JSON.stringify(cartItems))
     // useEffect(() => {
