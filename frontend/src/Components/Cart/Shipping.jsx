@@ -11,11 +11,11 @@ const Shipping = () => {
     const { shippingInfo } = useSelector(state => state.cart)
 
     const countriesList = Object.values(countries)
-    const [address, setAddress] = useState(shippingInfo.address)
-    const [city, setCity] = useState(shippingInfo.city)
-    const [postalCode, setPostalCode] = useState(shippingInfo.postalCode)
-    const [phoneNo, setPhoneNo] = useState(shippingInfo.phoneNo)
-    const [country, setCountry] = useState(shippingInfo.country)
+    const [address, setAddress] = useState(shippingInfo.address || '')
+    const [city, setCity] = useState(shippingInfo.city || '')
+    const [postalCode, setPostalCode] = useState(shippingInfo.postalCode || '')
+    const [phoneNo, setPhoneNo] = useState(shippingInfo.phoneNo || '')
+    const [country, setCountry] = useState(shippingInfo.country || 'Philippines')
     let navigate = useNavigate();
     const submitHandler = (e) => {
         e.preventDefault()

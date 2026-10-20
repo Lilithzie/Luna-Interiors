@@ -61,10 +61,15 @@ export const Header = () => {
                         </Link>
 
                         <div className="dropdown-menu" aria-labelledby="dropDownMenuButton">
-                            {user && user.role === 'admin' && (
-                                <Link className="dropdown-item" to="/dashboard">Dashboard</Link>
+                            {user && user.role === 'admin' ? (
+                                <>
+                                    <Link className="dropdown-item" to="/dashboard">Dashboard</Link>
+                                    <Link className="dropdown-item" to="/admin/products">Products</Link>
+                                    <Link className="dropdown-item" to="/admin/orders">Orders</Link>
+                                </>
+                            ) : (
+                                <Link className="dropdown-item" to="/orders/me">My Orders</Link>
                             )}
-                            <Link className="dropdown-item" to="/orders/me">Orders</Link>
                             <Link className="dropdown-item" to="/me">Profile</Link>
 
                             <Link
@@ -76,11 +81,11 @@ export const Header = () => {
                         </div>
                     </div>) : <Link to="/login" className="btn ml-4" id="login_btn">Login</Link>}
 
-                    <Link to="/cart" style={{ textDecoration: 'none' }} >
+                    {!(user && user.role === 'admin') && <Link to="/cart" style={{ textDecoration: 'none' }} >
                         <span id="cart" className="ml-3">Cart</span>
                         <span className="ml-1" id="cart_count">{cartItems ? cartItems.length : null}</span>
                         {/* <span className="ml-1" id="cart_count">2</span> */}
-                    </Link>
+                    </Link>}
                     {/* <span className="ml-1" id="cart_count">{cartItems ? cartItems.length : null}</span>  */}
                 </div>
 

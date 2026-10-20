@@ -72,6 +72,11 @@ const ListOrders = () => {
             headerAlign: 'right'
         },
         {
+            field: 'payment',
+            headerName: 'Payment',
+            width: 160
+        },
+        {
             field: 'status',
             headerName: 'Status',
             width: 160,
@@ -99,10 +104,11 @@ const ListOrders = () => {
         }
     ];
 
-    const rows = orders.map(order => ({
+    const rows = (orders || []).map(order => ({
         id: order._id,
         numOfItems: order.orderItems.length,
         amount: `₱${order.totalPrice}`,
+        payment: order.paymentMethod || 'Card',
         status: order.orderStatus || ''
     }));
     useEffect(() => {
@@ -130,9 +136,9 @@ const ListOrders = () => {
                         rows={rows}
                         columns={columns}
 
-                        pageSize={5}
-                        rowsPerPageOptions={[5, 10, 25]}
-                        disableSelectionOnClick
+                        pageSizeOptions={[5, 10, 25]}
+                        initialState={{ pagination: { paginationModel: { pageSize: 5 } } }}
+                        disableRowSelectionOnClick
                         getRowId={(row) => row.id}
                         showToolbar
                     />

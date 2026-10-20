@@ -40,5 +40,5 @@ router.get('/reviews', getProductReviews)
 router.get('/admin/reviews', ...admin, getAllReviews)
 router.delete('/reviews', ...admin, deleteReview)
 
-router.get('/admin/product-sales', productSales);
+router.get('/admin/product-sales', ...admin, productSales);
 module.exports = router

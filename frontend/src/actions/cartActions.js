@@ -38,5 +38,6 @@ export const clearCart = () => async (dispatch) => {
     dispatch({
         type: CLEAR_CART,
     })
+    localStorage.removeItem('cartItems')
 }
 

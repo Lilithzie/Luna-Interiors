@@ -35,7 +35,7 @@ const OrdersList = () => {
             setAllOrders(data.orders)
             setLoading(false)
         } catch (error) {
-            setError(error.response.data.message)
+            setError(error.response?.data?.message || error.message)
         }
     }
     const deleteOrder = async (id) => {
@@ -50,7 +50,7 @@ const OrdersList = () => {
             setIsDeleted(data.success)
             setLoading(false)
         } catch (error) {
-            setError(error.response.data.message)
+            setError(error.response?.data?.message || error.message)
 
         }
     }
@@ -92,9 +92,14 @@ const OrdersList = () => {
             headerAlign: 'right'
         },
         {
+            field: 'payment',
+            headerName: 'Payment',
+            width: 160
+        },
+        {
             field: 'status',
             headerName: 'Status',
-            width: 120,
+            width: 130,
             align: 'right',
             headerAlign: 'right'
         },
@@ -123,6 +128,7 @@ const OrdersList = () => {
         id: order._id,
         numofItems: order.orderItems.length,
         amount: `₱${order.totalPrice}`,
+        payment: order.paymentMethod || 'Card',
         status: order.orderStatus,
     }));
 
@@ -142,9 +148,9 @@ const OrdersList = () => {
                                     rows={rows}
                                     columns={columns}
 
-                                    pageSize={5}
-                                    rowsPerPageOptions={[5, 10, 25]}
-                                    disableSelectionOnClick
+                                    pageSizeOptions={[5, 10, 25]}
+                                    initialState={{ pagination: { paginationModel: { pageSize: 5 } } }}
+                                    disableRowSelectionOnClick
                                     getRowId={(row) => row.id}
                                     showToolbar
                                 />

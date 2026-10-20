@@ -5,6 +5,8 @@ import './index.css'
 import App from './App.jsx'
 import { Provider } from 'react-redux'
 import store from './store'
+import axios from 'axios'
+axios.defaults.withCredentials = true   // send the login cookie on every API call
 
 createRoot(document.getElementById('root')).render(
 

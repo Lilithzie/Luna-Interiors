@@ -28,6 +28,8 @@ const ProductDetails = () => {
     const { id } = useParams()
     const dispatch = useDispatch()
 
+    const isAdmin = !!(user && user.role === 'admin')
+
     const increaseQty = () => { if (quantity < product.stock) setQuantity(quantity + 1) }
     const decreaseQty = () => { if (quantity > 1) setQuantity(quantity - 1) }
 
@@ -97,12 +99,21 @@ const ProductDetails = () => {
                         <span id="no_of_reviews">({product.numOfReviews} {product.numOfReviews === 1 ? 'Review' : 'Reviews'})</span>
                         <hr />
                         <p id="product_price">{peso(product.price)}</p>
-                        <div className="stockCounter d-inline">
-                            <span className="btn btn-danger minus" onClick={decreaseQty}>-</span>
-                            <input type="number" className="form-control count d-inline" value={quantity} readOnly />
-                            <span className="btn btn-primary plus" onClick={increaseQty}>+</span>
-                        </div>
-                        <button type="button" id="cart_btn" className="btn btn-luna d-inline ml-4" disabled={product.stock === 0} onClick={addToCart}>Add to Cart</button>
+                        {isAdmin ? (
+                            <div className="alert alert-secondary" id="admin_notice">
+                                You are logged in as an admin. Admin accounts manage the shop and cannot order.{' '}
+                                <Link to={`/admin/product/${product._id}`}>Edit this product</Link>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="stockCounter d-inline">
+                                    <span className="btn btn-danger minus" onClick={decreaseQty}>-</span>
+                                    <input type="number" className="form-control count d-inline" value={quantity} readOnly />
+                                    <span className="btn btn-primary plus" onClick={increaseQty}>+</span>
+                                </div>
+                                <button type="button" id="cart_btn" className="btn btn-luna d-inline ml-4" disabled={product.stock === 0} onClick={addToCart}>Add to Cart</button>
+                            </>
+                        )}
                         <hr />
                         <p>Status: <span id="stock_status" className={product.stock > 0 ? 'greenColor' : 'redColor'}>{product.stock > 0 ? `In Stock (${product.stock})` : 'Out of Stock'}</span></p>
                         <hr />
@@ -118,12 +129,12 @@ const ProductDetails = () => {
                                     <Link to="/login">Login</Link> to review products you've ordered.
                                 </div>
                             )}
-                            {isAuthenticated && !canReview && (
+                            {isAuthenticated && !isAdmin && !canReview && (
                                 <div className="alert alert-secondary" id="review_locked">
                                     Only customers who have ordered this product can write a review.
                                 </div>
                             )}
-                            {isAuthenticated && canReview && (
+                            {isAuthenticated && !isAdmin && canReview && (
                                 <form onSubmit={submitReview} className="filter-panel" id="review_form">
                                     <h5>{myReview ? 'Update your review' : 'Write a review'}</h5>
                                     <StarInput value={rating} onChange={setRating} />

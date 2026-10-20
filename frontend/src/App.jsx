@@ -145,15 +145,15 @@ function App() {
           <Route path="/confirm" element={<ConfirmOrder cartItems={state.cartItems} shippingInfo={state.shippingInfo} />} />
           <Route path="/payment" element={<Payment cartItems={state.cartItems} shippingInfo={state.shippingInfo} />} /> */}
 
-          <Route path="/cart" element={<Cart />} exact="true" />
-          <Route path="/shipping" element={<Shipping />} />
-          <Route path="/confirm" element={<ConfirmOrder />} />
-          <Route path="/payment" element={<Payment />} />
+          <Route path="/cart" element={<ProtectedRoute customerOnly={true}><Cart /></ProtectedRoute>} />
+          <Route path="/shipping" element={<ProtectedRoute customerOnly={true}><Shipping /></ProtectedRoute>} />
+          <Route path="/confirm" element={<ProtectedRoute customerOnly={true}><ConfirmOrder /></ProtectedRoute>} />
+          <Route path="/payment" element={<ProtectedRoute customerOnly={true}><Payment /></ProtectedRoute>} />
 
 
-          <Route path="/success" element={<OrderSuccess />} />
-          <Route path="/orders/me" element={<ListOrders />} />
-          <Route path="/order/:id" element={<OrderDetails />} />
+          <Route path="/success" element={<ProtectedRoute customerOnly={true}><OrderSuccess /></ProtectedRoute>} />
+          <Route path="/orders/me" element={<ProtectedRoute customerOnly={true}><ListOrders /></ProtectedRoute>} />
+          <Route path="/order/:id" element={<ProtectedRoute><OrderDetails /></ProtectedRoute>} />
 
           {/* <Route path="/dashboard" element={<Dashboard />} /> */}
           {/* <Route path="/admin/products" element={<ProductsList />} /> */}
@@ -168,11 +168,11 @@ function App() {
           /> */}
           <Route
             path="/admin/order/:id"
-            element={<ProcessOrder />} />
+            element={<ProtectedRoute isAdmin={true}><ProcessOrder /></ProtectedRoute>} />
           {/* <Route
             path="/admin/users"
             element={<UsersList />} /> */}
-          <Route path="/admin/user/:id" element={<UpdateUser />} />
+          <Route path="/admin/user/:id" element={<ProtectedRoute isAdmin={true}><UpdateUser /></ProtectedRoute>} />
 
           <Route
             path="/admin/products"

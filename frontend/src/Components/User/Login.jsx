@@ -11,7 +11,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { login, clearErrors } from '../../actions/userActions'
 
 const Login = () => {
-    const { isAuthenticated, error, loading, } = useSelector(state => state.auth)
+    const { isAuthenticated, error, loading, user } = useSelector(state => state.auth)
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     // const [loading, setLoading] = useState(false)
@@ -58,7 +58,10 @@ const Login = () => {
     // }, [])
 
     useEffect(() => {
-        if (isAuthenticated && redirect === 'shipping') {
+        if (isAuthenticated && user && user.role === 'admin') {
+            navigate('/dashboard')        // admins go straight to their own area
+        }
+        else if (isAuthenticated && redirect === 'shipping') {
             navigate(`/${redirect}`)
         }
         else if (isAuthenticated)
@@ -68,7 +71,7 @@ const Login = () => {
             console.log(error)
             dispatch(clearErrors());
         }
-    }, [error, isAuthenticated, dispatch, navigate, redirect])
+    }, [error, isAuthenticated, user, dispatch, navigate, redirect])
 
     return (
         <>

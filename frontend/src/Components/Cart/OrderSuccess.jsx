@@ -8,7 +8,6 @@ const OrderSuccess = () => {
     // // sessionStorage.removeItem()
     // localStorage.removeItem('cartItems');
     // localStorage.removeItem('shippingInfo');
-    localStorage.clear();
     sessionStorage.removeItem('orderInfo')
     return (
         <>

@@ -47,7 +47,7 @@ const OrderDetails = () => {
 
         if (error) {
             toast.error(error, {
-                position: toast.POSITION.BOTTOM_RIGHT
+                position: 'bottom-right'
             });
         }
     }, [error, id])
@@ -76,7 +76,8 @@ const OrderDetails = () => {
                             <hr />
 
                             <h4 className="my-4">Payment</h4>
-                            <p className={isPaid ? "greenColor" : "redColor"}><b>{isPaid ? "PAID" : "NOT PAID"}</b></p>
+                            <p><b>Method:</b> {order.paymentMethod || 'Card'}</p>
+                            <p className={isPaid ? "greenColor" : "redColor"}><b>{isPaid ? "PAID" : (order.paymentMethod === 'Cash on Delivery' ? "TO PAY ON DELIVERY" : "NOT PAID")}</b></p>
 
 
                             <h4 className="my-4">Order Status:</h4>

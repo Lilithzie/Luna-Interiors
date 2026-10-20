@@ -22,7 +22,7 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true)
     // const [totalAmount, setTotalAmount] = useState([])
     let outOfStock = 0;
-    products.forEach(product => {
+    (products || []).forEach(product => {
         if (product.stock === 0) {
             outOfStock += 1;
         }
