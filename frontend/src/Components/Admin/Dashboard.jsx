@@ -42,8 +42,8 @@ const Dashboard = () => {
             setProducts(data.products)
             setLoading(false)
         } catch (error) {
-
-            setError(error.response.data.message)
+            setError(error.response?.data?.message || 'Could not load dashboard data')
+            setLoading(false)
 
         }
     }
@@ -140,7 +140,8 @@ const Dashboard = () => {
                             </div>
                         </>
                     )}
-
+                    {error && <div className="alert alert-danger">{error}</div>}
+                    <DateRangeSalesChart />
 
                 </div>
                 <>
@@ -152,10 +153,6 @@ const Dashboard = () => {
                 <>
                     <MonthlySalesChart />
                 </>
-                <div className="col-12">
-                    <DateRangeSalesChart />
-                </div>
-
             </div >
         </ >
     )

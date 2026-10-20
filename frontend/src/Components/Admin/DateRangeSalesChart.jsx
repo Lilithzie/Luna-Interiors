@@ -43,7 +43,7 @@ export default function DateRangeSalesChart() {
             <div className="d-flex justify-content-between align-items-center flex-wrap mb-3">
                 <div>
                     <h2 className="h4 mb-1">Sales performance</h2>
-                    <p className="text-muted mb-0">Delivered orders within the selected date range</p>
+                    <p className="text-muted mb-0">Order sales within the selected date range</p>
                 </div>
                 <div className="d-flex align-items-center gap-2 mt-2 mt-md-0">
                     <label className="small text-muted" htmlFor="sales_start">From</label>
@@ -67,7 +67,7 @@ export default function DateRangeSalesChart() {
                     </ResponsiveContainer>
                 </div>
                 {loading && <p className="text-center text-muted mb-0">Updating chart…</p>}
-                {!loading && sales.length === 0 && <p className="text-center text-muted mb-0">No delivered sales found for this range.</p>}
+                {!loading && sales.length === 0 && <p className="text-center text-muted mb-0">No sales found for this range.</p>}
             </>}
         </section>
     )
