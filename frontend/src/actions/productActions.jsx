@@ -10,9 +10,9 @@ import {
 } from '../constants/productConstants';
 
 // MP2 - filters: { keyword, page, price:[min,max], category, ratings, reviews, sort }
-export const getProducts = ({ page = 1, keyword = '', price, category = '', ratings = 0, reviews = 0, sort = 'newest' } = {}) => async (dispatch) => {
+export const getProducts = ({ page = 1, keyword = '', price, category = '', ratings = 0, reviews = 0, sort = 'newest', append = false } = {}) => async (dispatch) => {
     try {
-        dispatch({ type: ALL_PRODUCTS_REQUEST })
+        dispatch({ type: ALL_PRODUCTS_REQUEST, meta: { append } })
 
         const params = new URLSearchParams();
         params.set('page', page);
@@ -27,12 +27,13 @@ export const getProducts = ({ page = 1, keyword = '', price, category = '', rati
         if (sort) params.set('sort', sort);
 
         const { data } = await axios.get(`${import.meta.env.VITE_API}/products?${params.toString()}`)
-        dispatch({ type: ALL_PRODUCTS_SUCCESS, payload: data })
+        dispatch({ type: ALL_PRODUCTS_SUCCESS, payload: data, meta: { append } })
 
     } catch (error) {
         dispatch({
             type: ALL_PRODUCTS_FAIL,
-            payload: error.response?.data?.message || error.message
+            payload: error.response?.data?.message || error.message,
+            meta: { append }
         })
     }
 }

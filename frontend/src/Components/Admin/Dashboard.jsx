@@ -11,6 +11,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import ProductSalesChart from './ProductSalesChart';
 import UserSalesChart from './UserSalesChart';
 import MonthlySalesChart from './MonthlySalesChart';
+import DateRangeSalesChart from './DateRangeSalesChart';
 
 
 const Dashboard = () => {
@@ -151,6 +152,9 @@ const Dashboard = () => {
                 <>
                     <MonthlySalesChart />
                 </>
+                <div className="col-12">
+                    <DateRangeSalesChart />
+                </div>
 
             </div >
         </ >

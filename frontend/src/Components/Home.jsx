@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import Product from './Product/Product'
 import Slider from '@mui/material/Slider';
-import Pagination from '@mui/material/Pagination';
 import MetaData from './Layout/MetaData'
 import Loader from './Layout/Loader';
 import { Stars } from './Layout/Stars'
@@ -18,9 +17,11 @@ const Home = () => {
     const [filters, setFilters] = useState(defaultFilters);
     const [priceDraft, setPriceDraft] = useState(defaultFilters.price);   // slider value while dragging
     const [currentPage, setCurrentPage] = useState(1)
+    const loadMoreRef = useRef(null)
     const { keyword } = useParams();
     const dispatch = useDispatch();
     const { loading, products, error, filteredProductsCount, resPerPage } = useSelector(state => state.products);
+    const total = filteredProductsCount || 0;
 
     const setFilter = (patch) => {
         setCurrentPage(1);
@@ -46,11 +47,21 @@ const Home = () => {
     }, [keyword]);
 
     useEffect(() => {
-        dispatch(getProducts({ page: currentPage, keyword, ...filters }))
+        dispatch(getProducts({ page: currentPage, keyword, ...filters, append: currentPage > 1 }))
     }, [dispatch, currentPage, keyword, filters]);
 
+    useEffect(() => {
+        const target = loadMoreRef.current
+        if (!target || loading || !resPerPage || products.length >= total) return undefined
+
+        const observer = new IntersectionObserver(([entry]) => {
+            if (entry.isIntersecting) setCurrentPage(page => page + 1)
+        }, { rootMargin: '280px' })
+        observer.observe(target)
+        return () => observer.disconnect()
+    }, [loading, products.length, resPerPage, total])
+
     const filtersActive = JSON.stringify(filters) !== JSON.stringify(defaultFilters);
-    const total = filteredProductsCount || 0;
 
     return (
         <>
@@ -147,18 +158,12 @@ const Home = () => {
                                         </div>
                                     )}
                                 </div>
+                                {products.length > 0 && products.length < total && (
+                                    <div ref={loadMoreRef} className="text-center text-muted py-4" aria-live="polite">
+                                        {loading ? 'Loading more products…' : 'Scroll to load more'}
+                                    </div>
+                                )}
                             </section>
-                        )}
-
-                        {resPerPage && total > resPerPage && (
-                            <div className="d-flex justify-content-center mt-4">
-                                <Pagination
-                                    count={Math.ceil(total / resPerPage)}
-                                    page={currentPage}
-                                    onChange={(e, p) => setCurrentPage(p)}
-                                    shape="rounded"
-                                />
-                            </div>
                         )}
                     </div>
                 </div>

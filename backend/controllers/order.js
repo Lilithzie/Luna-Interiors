@@ -316,3 +316,24 @@ exports.salesPerMonth = async (req, res, next) => {
     })
 
 }
+
+// GET /admin/sales-chart?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
+// Returns daily completed sales for the dashboard date-range chart.
+exports.salesChart = async (req, res) => {
+    const start = req.query.startDate ? new Date(`${req.query.startDate}T00:00:00.000Z`) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const end = req.query.endDate ? new Date(`${req.query.endDate}T23:59:59.999Z`) : new Date();
+
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start > end) {
+        return res.status(400).json({ success: false, message: 'Please provide a valid date range' });
+    }
+
+    const sales = await Order.aggregate([
+        { $match: { orderStatus: 'Delivered', $or: [{ paidAt: { $gte: start, $lte: end } }, { paidAt: null, createdAt: { $gte: start, $lte: end } }] } },
+        { $project: { saleDate: { $ifNull: ['$paidAt', '$createdAt'] }, totalPrice: 1 } },
+        { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$saleDate' } }, total: { $sum: '$totalPrice' }, orders: { $sum: 1 } } },
+        { $sort: { _id: 1 } },
+        { $project: { _id: 0, date: '$_id', total: 1, orders: 1 } },
+    ]);
+
+    return res.status(200).json({ success: true, startDate: start.toISOString().slice(0, 10), endDate: end.toISOString().slice(0, 10), sales });
+};
