@@ -4,6 +4,29 @@ const cloudinary = require('cloudinary')
 const sendEmail = require('../utils/sendEmail')
 const sendToken = require('../utils/jwtToken');
 
+let firebaseAdmin;
+try { firebaseAdmin = require('firebase-admin') } catch { firebaseAdmin = null }
+let firebaseAuth;
+
+const getFirebaseAuth = () => {
+    if (!firebaseAdmin) return null;
+    if (!firebaseAuth) {
+        const { FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY } = process.env;
+        if (!FIREBASE_PROJECT_ID || !FIREBASE_CLIENT_EMAIL || !FIREBASE_PRIVATE_KEY) return null;
+        if (!firebaseAdmin.apps.length) {
+            firebaseAdmin.initializeApp({
+                credential: firebaseAdmin.credential.cert({
+                    projectId: FIREBASE_PROJECT_ID,
+                    clientEmail: FIREBASE_CLIENT_EMAIL,
+                    privateKey: FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+                }),
+            });
+        }
+        firebaseAuth = firebaseAdmin.auth();
+    }
+    return firebaseAuth;
+}
+
 exports.registerUser = async (req, res, next) => {
     const result = await cloudinary.v2.uploader.upload(req.body.avatar, {
         folder: 'avatars',
@@ -274,3 +297,26 @@ exports.logout = async (req, res, next) => {
         message: 'Logged out'
     })
 }
+
+exports.googleLogin = async (req, res) => {
+    const auth = getFirebaseAuth();
+    if (!auth) return res.status(503).json({ success: false, message: 'Google login is not configured on the backend' });
+    if (!req.body.idToken) return res.status(400).json({ success: false, message: 'Firebase ID token is required' });
+
+    try {
+        const decoded = await auth.verifyIdToken(req.body.idToken);
+        if (!decoded.email || decoded.email_verified === false) return res.status(401).json({ success: false, message: 'Google account email is not verified' });
+        let user = await User.findOne({ email: decoded.email });
+        if (!user) {
+            user = await User.create({
+                name: decoded.name || decoded.email.split('@')[0],
+                email: decoded.email,
+                password: crypto.randomBytes(32).toString('hex'),
+                avatar: { public_id: `firebase/${decoded.uid}`, url: decoded.picture || '/images/default_avatar.svg' },
+            });
+        }
+        return sendToken(user, 200, res);
+    } catch (error) {
+        return res.status(401).json({ success: false, message: 'Google sign-in token is invalid or expired' });
+    }
+};

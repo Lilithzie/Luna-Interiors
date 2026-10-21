@@ -12,7 +12,6 @@ import {
 } from "recharts";
 import { getToken } from "../Utils/helpers";
 import axios from "axios";
-import Loader from '../Layout/Loader';
 
 const UserSalesChart = () => {
     const [sales, setSales] = useState([])
@@ -42,10 +41,10 @@ const UserSalesChart = () => {
     }, [])
 
     return (
-        <ResponsiveContainer width="90%" height={600}>
-            {loading ? <Loader /> : (<BarChart
-                data={sales}
-            >
+        <div className="card shadow-sm border-0 my-3 p-3" style={{ height: 380 }}>
+            <h2 className="h5">Sales by customer</h2>
+            <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={sales}>
                 <CartesianGrid strokeDasharray="2 2" />
                 <XAxis dataKey="userDetails.name" />
                 <YAxis />
@@ -60,8 +59,9 @@ const UserSalesChart = () => {
                         ))
                     }
                 </Bar>
-            </BarChart>)}
-        </ResponsiveContainer>
+            </BarChart>
+            </ResponsiveContainer>
+        </div>
 
 
     );

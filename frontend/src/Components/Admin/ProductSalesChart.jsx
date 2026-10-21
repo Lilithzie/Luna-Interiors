@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { getToken } from "../Utils/helpers";
 import axios from "axios";
-import Loader from '../Layout/Loader';
 
 import { PieChart, Pie, Legend, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
@@ -67,8 +66,10 @@ export default function ProductSalesChart() {
 
 
     return (
-        <ResponsiveContainer width="90%" height={1000}>
-            <PieChart width={1000} height={1000}>
+        <div className="card shadow-sm border-0 my-3 p-3" style={{ height: 380 }}>
+            <h2 className="h5">Sales by product</h2>
+            <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
                 {/* <Pie data={data} dataKey="percent" nameKey="name" cx="50%" cy="50%" outerRadius={50} fill="#8884d8" /> */}
                 <Pie
                     dataKey="percent"
@@ -77,7 +78,7 @@ export default function ProductSalesChart() {
                     data={sales}
                     cx="50%"
                     cy="50%"
-                    outerRadius={300}
+                    outerRadius="65%"
                     fill="#8884d8"
                     label={renderCustomizedLabel}
                     labelLine={false}
@@ -89,7 +90,8 @@ export default function ProductSalesChart() {
                 <Tooltip />
                 <Legend layout="vertical" verticalAlign="top" align="right" />
             </PieChart>
-        </ResponsiveContainer>
+            </ResponsiveContainer>
+        </div>
 
 
     );

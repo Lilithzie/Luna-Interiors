@@ -14,12 +14,14 @@ const {
     deleteUser,
     updateUser,
     logout,
+    googleLogin,
 
 } = require('../controllers/auth');
 const { isAuthenticatedUser, authorizeRoles } = require('../middleware/auth')
 
 router.post('/register', upload.single("avatar"), registerUser);
 router.post('/login', loginUser);
+router.post('/auth/google', googleLogin);
 router.post('/password/forgot', forgotPassword);
 router.put('/password/reset/:token', resetPassword);
 router.get('/me', isAuthenticatedUser, getUserProfile)

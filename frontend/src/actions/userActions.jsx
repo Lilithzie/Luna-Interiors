@@ -204,3 +204,13 @@ export const clearErrors = () => async (dispatch) => {
         type: CLEAR_ERRORS
     })
 }
+
+export const loginWithGoogle = (idToken) => async (dispatch) => {
+    try {
+        dispatch({ type: LOGIN_REQUEST })
+        const { data } = await axios.post(`${import.meta.env.VITE_API}/auth/google`, { idToken }, { withCredentials: true })
+        dispatch({ type: LOGIN_SUCCESS, payload: data.user })
+    } catch (error) {
+        dispatch({ type: LOGIN_FAIL, payload: error.response?.data?.message || error.message })
+    }
+}

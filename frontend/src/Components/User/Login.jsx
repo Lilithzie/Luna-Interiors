@@ -9,7 +9,8 @@ import 'react-toastify/dist/ReactToastify.css';
 // import axios from 'axios';
 // import { getUser, authenticate } from '../Utils/helpers';
 import { useDispatch, useSelector } from 'react-redux'
-import { login, clearErrors } from '../../actions/userActions'
+import { login, loginWithGoogle, clearErrors } from '../../actions/userActions'
+import { signInWithGoogle } from '../../config/firebase'
 
 const Login = () => {
     const { isAuthenticated, error, loading, user } = useSelector(state => state.auth)
@@ -22,6 +23,15 @@ const Login = () => {
 
     const submitHandler = ({ email, password }) => {
         dispatch(login(email.trim(), password))
+    }
+
+    const googleLoginHandler = async () => {
+        try {
+            const result = await signInWithGoogle()
+            dispatch(loginWithGoogle(await result.user.getIdToken()))
+        } catch (googleError) {
+            toast.error(googleError.message, { position: 'bottom-right' })
+        }
     }
 
     // const login = async (email, password) => {
@@ -122,6 +132,10 @@ const Login = () => {
                                     className="btn btn-block py-3"
                                 >
                                     LOGIN
+                                </button>
+
+                                <button type="button" className="btn btn-outline-secondary btn-block py-3 mt-2" onClick={googleLoginHandler}>
+                                    <span aria-hidden="true">G</span> Continue with Google
                                 </button>
 
                                 <Link to="/register" className="float-right mt-3">New User?</Link>

@@ -142,17 +142,13 @@ const Dashboard = () => {
                     )}
                     {error && <div className="alert alert-danger">{error}</div>}
                     <DateRangeSalesChart />
+                    <div className="row">
+                        <div className="col-12 col-xl-6"><ProductSalesChart /></div>
+                        <div className="col-12 col-xl-6"><UserSalesChart /></div>
+                        <div className="col-12"><MonthlySalesChart /></div>
+                    </div>
 
                 </div>
-                <>
-                    <ProductSalesChart />
-                </>
-                <>
-                    <UserSalesChart />
-                </>
-                <>
-                    <MonthlySalesChart />
-                </>
             </div >
         </ >
     )
