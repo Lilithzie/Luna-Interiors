@@ -9,8 +9,13 @@ import {
     CLEAR_ERRORS
 } from '../constants/productConstants';
 
+// Quiz 3 (infinite scroll): only the newest request may update the list. If the shopper changes a
+// filter / search while an older page is still loading, that older response is ignored.
+let latestProductsRequest = 0;
+
 // MP2 - filters: { keyword, page, price:[min,max], category, ratings, reviews, sort }
 export const getProducts = ({ page = 1, keyword = '', price, category = '', ratings = 0, reviews = 0, sort = 'newest', append = false } = {}) => async (dispatch) => {
+    const requestId = ++latestProductsRequest;
     try {
         dispatch({ type: ALL_PRODUCTS_REQUEST, meta: { append } })
 
@@ -27,9 +32,11 @@ export const getProducts = ({ page = 1, keyword = '', price, category = '', rati
         if (sort) params.set('sort', sort);
 
         const { data } = await axios.get(`${import.meta.env.VITE_API}/products?${params.toString()}`)
+        if (requestId !== latestProductsRequest) return   // a newer request replaced this one
         dispatch({ type: ALL_PRODUCTS_SUCCESS, payload: data, meta: { append } })
 
     } catch (error) {
+        if (requestId !== latestProductsRequest) return
         dispatch({
             type: ALL_PRODUCTS_FAIL,
             payload: error.response?.data?.message || error.message,

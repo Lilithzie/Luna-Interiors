@@ -16,6 +16,7 @@ export const productsReducer = (state = { products: [] }, action) => {
             return {
                 ...state,
                 loading: true,
+                error: null,
                 products: action.meta?.append ? state.products : []
             }
         case ALL_PRODUCTS_SUCCESS:
@@ -23,7 +24,10 @@ export const productsReducer = (state = { products: [] }, action) => {
             return {
                 ...state,
                 loading: false,
-                products: action.meta?.append ? [...state.products, ...action.payload.products] : action.payload.products,
+                // infinite scroll: add the next page, skipping anything already shown (the list can shift while scrolling)
+                products: action.meta?.append
+                    ? [...state.products, ...action.payload.products.filter(p => !state.products.some(old => old._id === p._id))]
+                    : action.payload.products,
                 productsCount: action.payload.productsCount,
                 resPerPage: action.payload.resPerPage,
                 filteredProductsCount: action.payload.filteredProductsCount,

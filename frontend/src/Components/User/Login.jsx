@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
+import { useForm } from 'react-hook-form'
 import { Link, useNavigate, useLocation, useParams } from 'react-router-dom'
 
 import Loader from '../Layout/Loader'
@@ -12,16 +13,15 @@ import { login, clearErrors } from '../../actions/userActions'
 
 const Login = () => {
     const { isAuthenticated, error, loading, user } = useSelector(state => state.auth)
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    // React Hook Form: validation rules live next to each field (see register(...) below)
+    const { register, handleSubmit, formState: { errors } } = useForm({ mode: 'onTouched', defaultValues: { email: '', password: '' } })
     // const [loading, setLoading] = useState(false)
     let navigate = useNavigate()
     let location = useLocation()
     const dispatch = useDispatch()
 
-    const submitHandler = (e) => {
-        e.preventDefault();
-        dispatch(login(email, password))
+    const submitHandler = ({ email, password }) => {
+        dispatch(login(email.trim(), password))
     }
 
     // const login = async (email, password) => {
@@ -82,7 +82,8 @@ const Login = () => {
                     <div className="row wrapper">
                         <div className="col-10 col-lg-5">
                             <form className="shadow-lg"
-                                onSubmit={submitHandler}
+                                onSubmit={handleSubmit(submitHandler)}
+                                noValidate
                             >
                                 <h1 className="mb-3">Login</h1>
                                 <div className="form-group">
@@ -90,10 +91,13 @@ const Login = () => {
                                     <input
                                         type="email"
                                         id="email_field"
-                                        className="form-control"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
+                                        className={`form-control ${errors.email ? 'is-invalid' : ''}`}
+                                        {...register('email', {
+                                            required: 'Email is required',
+                                            pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Enter a valid email address' },
+                                        })}
                                     />
+                                    {errors.email && <div className="invalid-feedback">{errors.email.message}</div>}
                                 </div>
 
                                 <div className="form-group">
@@ -101,10 +105,13 @@ const Login = () => {
                                     <input
                                         type="password"
                                         id="password_field"
-                                        className="form-control"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
+                                        className={`form-control ${errors.password ? 'is-invalid' : ''}`}
+                                        {...register('password', {
+                                            required: 'Password is required',
+                                            minLength: { value: 6, message: 'Password must be at least 6 characters' },
+                                        })}
                                     />
+                                    {errors.password && <div className="invalid-feedback">{errors.password.message}</div>}
                                 </div>
 
                                 <Link to="/password/forgot" className="float-right mb-4">Forgot Password?</Link>

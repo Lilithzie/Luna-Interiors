@@ -2,6 +2,7 @@ const Product = require('../models/product')
 const Order = require('../models/order')
 const APIFeatures = require('../utils/apiFeatures');
 const { uploadImages, destroyImages } = require('../utils/imageUpload');
+const { maskBadWords } = require('../utils/profanity');
 
 const RES_PER_PAGE = 8;
 
@@ -40,7 +41,10 @@ exports.getSingleProduct = async (req, res) => {
     if (!product) {
         return res.status(404).json({ success: false, message: 'Product not found' })
     }
-    return res.status(200).json({ success: true, product })
+    // mask bad words in review comments (also covers reviews saved before the filter existed)
+    const data = product.toObject ? product.toObject() : product;
+    data.reviews = (data.reviews || []).map(r => ({ ...r, comment: maskBadWords(r.comment).text }));
+    return res.status(200).json({ success: true, product: data })
 }
 
 // PUT /admin/product/:id   (multipart: new "images" files + "keepImages" JSON array of public_ids)
@@ -134,7 +138,8 @@ exports.reviewEligibility = async (req, res) => {
     if (!product) return res.status(404).json({ success: false, message: 'Product not found' })
     const availed = !!(await hasAvailed(req.user._id, product._id));
     const mine = product.reviews.find(r => r.user.toString() === req.user._id.toString());
-    return res.status(200).json({ success: true, canReview: availed, review: mine || null })
+    const myReview = mine ? { ...(mine.toObject ? mine.toObject() : mine), comment: maskBadWords(mine.comment).text } : null;
+    return res.status(200).json({ success: true, canReview: availed, review: myReview })
 }
 
 // PUT /review   -> create the user's review, or update it if it already exists
@@ -157,10 +162,13 @@ exports.createProductReview = async (req, res) => {
         return res.status(403).json({ success: false, message: 'Only customers who ordered this product can review it' })
     }
 
+    // bad-words: bad words in the comment are replaced with asterisks before saving
+    const { text: cleanComment, masked } = maskBadWords(String(comment).trim());
+
     const existing = product.reviews.find(r => r.user.toString() === req.user._id.toString());
     if (existing) {
         existing.rating = value;
-        existing.comment = String(comment).trim();
+        existing.comment = cleanComment;
         existing.name = req.user.name;
         existing.updatedAt = Date.now();
     } else {
@@ -168,20 +176,25 @@ exports.createProductReview = async (req, res) => {
             user: req.user._id,
             name: req.user.name,
             rating: value,
-            comment: String(comment).trim(),
+            comment: cleanComment,
         });
     }
     recalcRatings(product);
     await product.save({ validateBeforeSave: false });
 
-    return res.status(200).json({ success: true, updated: !!existing })
+    return res.status(200).json({ success: true, updated: !!existing, masked })
 }
 
 // GET /reviews?id=<productId>
+// Comments are masked again on the way out so reviews saved before the filter existed are clean too.
 exports.getProductReviews = async (req, res) => {
     const product = await Product.findById(req.query.id);
     if (!product) return res.status(404).json({ success: false, message: 'Product not found' })
-    res.status(200).json({ success: true, reviews: product.reviews })
+    const reviews = product.reviews.map(r => {
+        const obj = r.toObject ? r.toObject() : r;
+        return { ...obj, comment: maskBadWords(obj.comment).text };
+    });
+    res.status(200).json({ success: true, reviews })
 }
 
 // GET /admin/reviews  -> every review of every product (admin datatable)
@@ -195,7 +208,7 @@ exports.getAllReviews = async (req, res) => {
         user: r.user,
         name: r.name,
         rating: r.rating,
-        comment: r.comment,
+        comment: maskBadWords(r.comment).text,
         createdAt: r.createdAt,
         updatedAt: r.updatedAt,
     })));

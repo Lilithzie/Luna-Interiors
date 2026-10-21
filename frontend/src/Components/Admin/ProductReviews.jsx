@@ -4,6 +4,7 @@ import axios from 'axios'
 import Swal from 'sweetalert2'
 import { toast } from 'react-toastify'
 import { DataGrid, GridToolbarContainer, GridToolbarQuickFilter } from '@mui/x-data-grid'
+import { useInfiniteRows, LoadMoreSentinel } from '../Utils/InfiniteScroll'
 
 import MetaData from '../Layout/MetaData'
 import Loader from '../Layout/Loader'
@@ -61,6 +62,9 @@ const ProductReviews = () => {
         },
     ], [])   // eslint-disable-line react-hooks/exhaustive-deps
 
+    // Quiz 3: infinite scroll - rows are revealed 10 at a time as you scroll down
+    const inf = useInfiniteRows(reviews.map(r => ({ ...r, id: r._id })), 10)
+
     return (
         <>
             <MetaData title="Product Reviews" />
@@ -71,15 +75,13 @@ const ProductReviews = () => {
                     {loading ? <Loader /> : (
                         <div style={{ background: '#fff', borderRadius: 12 }}>
                             <DataGrid
-                                rows={reviews.map(r => ({ ...r, id: r._id }))}
+                                {...inf.gridProps}
                                 columns={columns}
                                 disableRowSelectionOnClick
-                                pageSizeOptions={[5, 10, 25]}
-                                initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
                                 slots={{ toolbar: Toolbar }}
                                 showToolbar
-                                autoHeight
                             />
+                            <LoadMoreSentinel hasMore={inf.hasMore} onLoadMore={inf.loadMore} shown={inf.shown} total={inf.total} label="reviews" />
                         </div>
                     )}
                 </div>
