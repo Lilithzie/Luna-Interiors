@@ -10,6 +10,7 @@ import Sidebar from './SideBar'
 import axios from 'axios';
 import { getToken, errMsg, successMsg } from '../Utils/helpers';
 import { DataGrid, } from '@mui/x-data-grid'
+import { useInfiniteRows, LoadMoreSentinel } from '../Utils/InfiniteScroll'
 
 const UsersList = () => {
     const [loading, setLoading] = useState(true)
@@ -116,13 +117,15 @@ const UsersList = () => {
             )
         }
     ];
-    const rows = allUsers.map(user => ({
+    const allRows = allUsers.map(user => ({
         id: user._id,
         name: user.name,
 
         email: user.email,
         role: user.role,
     }));
+    // Quiz 3: infinite scroll - rows are revealed 10 at a time as you scroll down
+    const inf = useInfiniteRows(allRows, 10)
 
     return (
         <>
@@ -137,15 +140,13 @@ const UsersList = () => {
                         {loading ? <Loader /> : (
                             <div style={{ width: '100%' }}>
                                 <DataGrid
-                                    rows={rows}
+                                    {...inf.gridProps}
                                     columns={columns}
-
-                                    pageSizeOptions={[5, 10, 25]}
-                                    initialState={{ pagination: { paginationModel: { pageSize: 5 } } }}
                                     disableRowSelectionOnClick
                                     getRowId={(row) => row.id}
                                     showToolbar
                                 />
+                                <LoadMoreSentinel hasMore={inf.hasMore} onLoadMore={inf.loadMore} shown={inf.shown} total={inf.total} label="users" />
                             </div>
                         )}
                     </>

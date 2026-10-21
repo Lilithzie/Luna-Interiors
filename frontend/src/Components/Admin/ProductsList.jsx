@@ -9,6 +9,7 @@ import MetaData from '../Layout/MetaData'
 import Loader from '../Layout/Loader'
 import Sidebar from './SideBar'
 import { peso, firstImage } from '../Utils/helpers'
+import { useInfiniteRows, LoadMoreSentinel } from '../Utils/InfiniteScroll'
 
 const API = import.meta.env.VITE_API
 
@@ -95,7 +96,9 @@ const ProductsList = () => {
         },
     ], [])   // eslint-disable-line react-hooks/exhaustive-deps
 
-    const rows = products.map(p => ({ ...p, id: p._id }))
+    const allRows = products.map(p => ({ ...p, id: p._id }))
+    // Quiz 3: infinite scroll - rows are revealed 10 at a time as you scroll down
+    const inf = useInfiniteRows(allRows, 10)
 
     return (
         <>
@@ -116,19 +119,17 @@ const ProductsList = () => {
                         <div style={{ width: '100%', background: '#fff', borderRadius: 12 }}>
                             <DataGrid
                                 apiRef={apiRef}
-                                rows={rows}
+                                {...inf.gridProps}
                                 columns={columns}
                                 checkboxSelection
                                 disableRowSelectionOnClick
                                 rowSelectionModel={selection}
                                 onRowSelectionModelChange={setSelection}
-                                pageSizeOptions={[5, 10, 25]}
-                                initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
                                 slots={{ toolbar: Toolbar }}
                                 showToolbar
                                 rowHeight={58}
-                                autoHeight
                             />
+                            <LoadMoreSentinel hasMore={inf.hasMore} onLoadMore={inf.loadMore} shown={inf.shown} total={inf.total} label="products" />
                         </div>
                     )}
                 </div>

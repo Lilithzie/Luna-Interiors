@@ -7,6 +7,7 @@ import Sidebar from './SideBar'
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { DataGrid, } from '@mui/x-data-grid'
+import { useInfiniteRows, LoadMoreSentinel } from '../Utils/InfiniteScroll'
 import { getToken } from '../Utils/helpers'
 import axios from 'axios'
 
@@ -124,13 +125,15 @@ const OrdersList = () => {
             )
         }
     ];
-    const rows = allOrders.map(order => ({
+    const allRows = allOrders.map(order => ({
         id: order._id,
         numofItems: order.orderItems.length,
         amount: `₱${order.totalPrice}`,
         payment: order.paymentMethod || 'Card',
         status: order.orderStatus,
     }));
+    // Quiz 3: infinite scroll - rows are revealed 10 at a time as you scroll down
+    const inf = useInfiniteRows(allRows, 10)
 
     return (
         <>
@@ -145,15 +148,13 @@ const OrdersList = () => {
                         {loading ? <Loader /> : (
                             <div style={{ width: '100%' }}>
                                 <DataGrid
-                                    rows={rows}
+                                    {...inf.gridProps}
                                     columns={columns}
-
-                                    pageSizeOptions={[5, 10, 25]}
-                                    initialState={{ pagination: { paginationModel: { pageSize: 5 } } }}
                                     disableRowSelectionOnClick
                                     getRowId={(row) => row.id}
                                     showToolbar
                                 />
+                                <LoadMoreSentinel hasMore={inf.hasMore} onLoadMore={inf.loadMore} shown={inf.shown} total={inf.total} label="orders" />
                             </div>
                         )}
                     </>

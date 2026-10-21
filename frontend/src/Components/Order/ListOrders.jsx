@@ -16,6 +16,7 @@ import {
 
 
 import { DataGrid, } from '@mui/x-data-grid'
+import { useInfiniteRows, LoadMoreSentinel } from '../Utils/InfiniteScroll'
 
 const ListOrders = () => {
     const dispatch = useDispatch();
@@ -104,13 +105,15 @@ const ListOrders = () => {
         }
     ];
 
-    const rows = (orders || []).map(order => ({
+    const allRows = (orders || []).map(order => ({
         id: order._id,
         numOfItems: order.orderItems.length,
         amount: `₱${order.totalPrice}`,
         payment: order.paymentMethod || 'Card',
         status: order.orderStatus || ''
     }));
+    // Quiz 3: infinite scroll - rows are revealed 10 at a time as you scroll down
+    const inf = useInfiniteRows(allRows, 10)
     useEffect(() => {
         dispatch(myOrders());
         if (error) {
@@ -133,15 +136,13 @@ const ListOrders = () => {
             {loading ? <Loader /> : (
                 <div style={{ width: '100%' }}>
                     <DataGrid
-                        rows={rows}
+                        {...inf.gridProps}
                         columns={columns}
-
-                        pageSizeOptions={[5, 10, 25]}
-                        initialState={{ pagination: { paginationModel: { pageSize: 5 } } }}
                         disableRowSelectionOnClick
                         getRowId={(row) => row.id}
                         showToolbar
                     />
+                    <LoadMoreSentinel hasMore={inf.hasMore} onLoadMore={inf.loadMore} shown={inf.shown} total={inf.total} label="orders" />
                 </div>
             )}
         </>

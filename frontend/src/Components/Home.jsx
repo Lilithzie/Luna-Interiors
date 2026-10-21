@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
 import Product from './Product/Product'
 import Slider from '@mui/material/Slider';
@@ -6,6 +6,7 @@ import MetaData from './Layout/MetaData'
 import Loader from './Layout/Loader';
 import { Stars } from './Layout/Stars'
 import { CATEGORIES, peso } from './Utils/helpers'
+import { LoadMoreSentinel } from './Utils/InfiniteScroll'
 
 import { useDispatch, useSelector } from 'react-redux'
 import { getProducts } from '../actions/productActions'
@@ -16,18 +17,24 @@ const defaultFilters = { price: [0, MAX_PRICE], category: '', ratings: 0, review
 const Home = () => {
     const [filters, setFilters] = useState(defaultFilters);
     const [priceDraft, setPriceDraft] = useState(defaultFilters.price);   // slider value while dragging
-    const [currentPage, setCurrentPage] = useState(1)
-    const loadMoreRef = useRef(null)
     const { keyword } = useParams();
     const dispatch = useDispatch();
-    const { loading, products, error, filteredProductsCount, resPerPage } = useSelector(state => state.products);
+    const { loading, products, error, filteredProductsCount } = useSelector(state => state.products);
     const total = filteredProductsCount || 0;
 
+    // ---- Quiz 3: infinite scroll ----
+    // The page number belongs to ONE search/filter combination (queryKey). When the keyword or any
+    // filter changes the key changes, so we are automatically back on page 1 - no stale page 2/3 request
+    // can ever be appended to a different result set.
+    const queryKey = JSON.stringify([keyword || '', filters]);
+    const [pageState, setPageState] = useState({ key: queryKey, page: 1 });
+    const currentPage = pageState.key === queryKey ? pageState.page : 1;
+    const loadMore = useCallback(() => setPageState({ key: queryKey, page: currentPage + 1 }), [queryKey, currentPage]);
+
     const setFilter = (patch) => {
-        setCurrentPage(1);
         setFilters(f => ({ ...f, ...patch }));
     }
-    const clearFilters = () => { setFilters(defaultFilters); setPriceDraft(defaultFilters.price); setCurrentPage(1); }
+    const clearFilters = () => { setFilters(defaultFilters); setPriceDraft(defaultFilters.price); }
 
     const setPriceInput = (idx, raw) => {
         const v = raw === '' ? '' : Math.max(0, Math.min(MAX_PRICE, Number(raw)));
@@ -43,23 +50,9 @@ const Home = () => {
     }
 
     useEffect(() => {
-        setCurrentPage(1);
-    }, [keyword]);
-
-    useEffect(() => {
         dispatch(getProducts({ page: currentPage, keyword, ...filters, append: currentPage > 1 }))
-    }, [dispatch, currentPage, keyword, filters]);
-
-    useEffect(() => {
-        const target = loadMoreRef.current
-        if (!target || loading || !resPerPage || products.length >= total) return undefined
-
-        const observer = new IntersectionObserver(([entry]) => {
-            if (entry.isIntersecting) setCurrentPage(page => page + 1)
-        }, { rootMargin: '280px' })
-        observer.observe(target)
-        return () => observer.disconnect()
-    }, [loading, products.length, resPerPage, total])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [dispatch, currentPage, queryKey]);
 
     const filtersActive = JSON.stringify(filters) !== JSON.stringify(defaultFilters);
 
@@ -146,7 +139,8 @@ const Home = () => {
                             </select>
                         </div>
 
-                        {loading ? <Loader /> : (
+                        {/* full-page loader only for the first load / a new search; while loading MORE the list stays put */}
+                        {loading && products.length === 0 ? <Loader /> : (
                             <section id="products">
                                 <div className="row">
                                     {error && <div className="col-12 alert alert-danger mt-3">{error}</div>}
@@ -158,10 +152,15 @@ const Home = () => {
                                         </div>
                                     )}
                                 </div>
-                                {products.length > 0 && products.length < total && (
-                                    <div ref={loadMoreRef} className="text-center text-muted py-4" aria-live="polite">
-                                        {loading ? 'Loading more products…' : 'Scroll to load more'}
-                                    </div>
+                                {products.length > 0 && (
+                                    <LoadMoreSentinel
+                                        hasMore={!error && products.length < total}
+                                        loading={loading}
+                                        onLoadMore={loadMore}
+                                        shown={products.length}
+                                        total={total}
+                                        label="products"
+                                    />
                                 )}
                             </section>
                         )}
