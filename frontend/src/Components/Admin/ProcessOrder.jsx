@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Link, useParams, useNavigate, } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import MetaData from '../Layout/MetaData'
 import Loader from '../Layout/Loader'
 import Sidebar from './SideBar'
@@ -8,6 +8,7 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios'
 import { getToken } from '../Utils/helpers'
+import { OrderTimeline, OrderTotals, STATUSES, fmtDate, paymentLabel } from '../Order/OrderParts'
 
 const ProcessOrder = () => {
 
@@ -16,7 +17,6 @@ const ProcessOrder = () => {
     const [error, setError] = useState('')
     const [order, setOrder] = useState({})
     const [isUpdated, setIsUpdated] = useState(false)
-    let navigate = useNavigate()
 
     let { id } = useParams();
     const { shippingInfo, orderItems, paymentInfo, user, totalPrice, orderStatus } = order
@@ -38,7 +38,7 @@ const ProcessOrder = () => {
                 }
             }
 
-            const { data } = await axios.get(`${import.meta.env.VITE_API}/order/${id}`, config)
+            const { data } = await axios.get(`${import.meta.env.VITE_API}/order/${id}`, { ...config, withCredentials: true })
             setOrder(data.order)
             setStatus(data.order.orderStatus)
             setLoading(false)
@@ -55,8 +55,10 @@ const ProcessOrder = () => {
                     'Authorization': `Bearer ${getToken()}`
                 }
             }
-            const { data } = await axios.put(`${import.meta.env.VITE_API}/admin/order/${id}`, formData, config)
+            const { data } = await axios.put(`${import.meta.env.VITE_API}/admin/order/${id}`, formData, { ...config, withCredentials: true })
             setIsUpdated(data.success)
+            setOrder(data.order)                 // show the new status + timeline right away
+            setStatus(data.order.orderStatus)
 
 
         } catch (error) {
@@ -71,9 +73,8 @@ const ProcessOrder = () => {
             setError('')
         }
         if (isUpdated) {
-            successMsg('Order updated successfully');
-            setIsUpdated('')
-            navigate('/admin/orders')
+            successMsg(`Order status updated to ${status}`);
+            setIsUpdated(false)
         }
     }, [error, isUpdated, orderId])
 
@@ -82,7 +83,9 @@ const ProcessOrder = () => {
     }
 
     const shippingDetails = shippingInfo && `${shippingInfo.address}, ${shippingInfo.city}, ${shippingInfo.postalCode}, ${shippingInfo.country}`
-    const isPaid = paymentInfo && paymentInfo.status === 'succeeded' ? true : false
+    // the status can only move forward, so earlier steps are not offered
+    const currentIdx = STATUSES.indexOf(orderStatus)
+    const delivered = orderStatus === 'Delivered'
     return (
         <>
             <MetaData title={`Process Order # ${order && order._id}`} />
@@ -95,21 +98,22 @@ const ProcessOrder = () => {
                         {loading ? <Loader /> : (
                             <div className="row d-flex justify-content-around">
                                 <div className="col-12 col-lg-7 order-details">
-                                    <h2 className="my-5">Order # {order._id}</h2>
+                                    <h2 className="mt-5 mb-2">Order # {order.transactionNo || order._id}</h2>
+                                    <p className="text-muted mb-4">Placed on {fmtDate(order.createdAt)} · <Link to="/admin/orders">Back to all orders</Link></p>
                                     <h4 className="mb-4">Shipping Info</h4>
                                     <p><b>Name:</b> {user && user.name}</p>
                                     <p><b>Phone:</b> {shippingInfo && shippingInfo.phoneNo}</p>
                                     <p className="mb-4"><b>Address:</b>{shippingDetails}</p>
-                                    <p><b>Amount:</b> ₱{totalPrice}</p>
                                     <hr />
                                     <h4 className="my-4">Payment</h4>
                                     <p><b>Method:</b> {order.paymentMethod || 'Card'}</p>
-                                    <p className={isPaid ? "greenColor" : "redColor"}><b>{isPaid ? "PAID" : (order.paymentMethod === 'Cash on Delivery' ? "TO COLLECT ON DELIVERY" : "NOT PAID")}</b></p>
+                                    <p className={paymentLabel(order).cls}><b>{paymentLabel(order).text === 'TO PAY ON DELIVERY' ? 'TO COLLECT ON DELIVERY' : paymentLabel(order).text}</b></p>
                                     <h4 className="my-4">Payment Reference</h4>
                                     <p><b>{paymentInfo && paymentInfo.id}</b></p>
 
                                     <h4 className="my-4">Order Status:</h4>
-                                    <p className={order.orderStatus && String(order.orderStatus).includes('Delivered') ? "greenColor" : "redColor"} ><b>{orderStatus}</b></p>
+                                    <p className={order.orderStatus && String(order.orderStatus).includes('Delivered') ? "greenColor" : "redColor"} ><b id="current_status">{orderStatus}</b></p>
+                                    <OrderTimeline order={order} />
                                     <h4 className="my-4">Order Items:</h4>
                                     <hr />
                                     <div className="cart-item my-1">
@@ -132,6 +136,7 @@ const ProcessOrder = () => {
                                         ))}
                                     </div>
                                     <hr />
+                                    <div className="col-md-6 px-0 mb-5"><OrderTotals order={order} /></div>
                                 </div>
                                 <div className="col-12 col-lg-3 mt-5">
                                     <h4 className="my-4">Status</h4>
@@ -142,14 +147,17 @@ const ProcessOrder = () => {
                                             value={status}
                                             onChange={(e) => setStatus(e.target.value)}
                                         >
-                                            <option value="Processing">Processing</option>
-                                            <option value="Shipped">Shipped</option>
-                                            <option value="Delivered">Delivered</option>
+                                            {STATUSES.map((s, i) => (
+                                                <option key={s} value={s} disabled={i < currentIdx}>{s}</option>
+                                            ))}
                                         </select>
                                     </div>
-                                    <button className="btn btn-luna btn-block" disabled={orderStatus === 'Delivered'} onClick={() => updateOrderHandler(order._id)}>
+                                    <button id="update_status" className="btn btn-luna btn-block" disabled={delivered || status === orderStatus} onClick={() => updateOrderHandler(order._id)}>
                                         Update Status
                                     </button>
+                                    <small className="text-muted d-block mt-2">
+                                        {delivered ? 'This order is delivered, so its status is final.' : 'Status can only move forward (Processing → Shipped → Delivered).'}
+                                    </small>
                                 </div>
                             </div>
                         )}
