@@ -1,4 +1,5 @@
 const Order = require('../models/order');
+const { ORDER_STATUSES } = require('../models/order');
 const Product = require('../models/product');
 
 
@@ -63,6 +64,8 @@ exports.newOrder = async (req, res) => {
             ? { id: `card_${Date.now()}_${(paymentInfo && paymentInfo.last4) || '0000'}`, status: 'succeeded' }
             : { id: `cod_${Date.now()}`, status: 'Pending (Cash on Delivery)' },
         paidAt: isCard ? Date.now() : undefined,
+        orderStatus: 'Processing',
+        statusHistory: [{ status: 'Processing', at: Date.now() }],
         user: req.user._id
     })
 
@@ -129,9 +132,10 @@ exports.deleteOrder = async (req, res, next) => {
     })
 }
 
-const STATUSES = ['Processing', 'Shipped', 'Delivered'];
+const STATUSES = ORDER_STATUSES;
 
 // PUT /admin/order/:id   body: { status }
+// The status can only move forward: Processing -> Shipped -> Delivered.
 exports.updateOrder = async (req, res) => {
     const order = await Order.findById(req.params.id)
     if (!order) {
@@ -144,8 +148,24 @@ exports.updateOrder = async (req, res) => {
     if (order.orderStatus === 'Delivered') {
         return res.status(400).json({ success: false, message: 'You have already delivered this order' })
     }
+    const from = STATUSES.indexOf(order.orderStatus);
+    const to = STATUSES.indexOf(status);
+    if (to === from) {
+        return res.status(400).json({ success: false, message: `This order is already ${status}` })
+    }
+    if (to < from) {
+        return res.status(400).json({ success: false, message: `An order cannot go back from ${order.orderStatus} to ${status}` })
+    }
 
     order.orderStatus = status
+    // orders created before status history existed start their timeline from their creation date
+    if (!order.statusHistory || order.statusHistory.length === 0) {
+        order.statusHistory = [{ status: 'Processing', at: order.createdAt || Date.now() }]
+    }
+    // moving straight to Delivered still records the Shipped step in between
+    for (let i = from + 1; i <= to; i++) {
+        order.statusHistory.push({ status: STATUSES[i], at: Date.now() })
+    }
     if (status === 'Delivered') {
         order.deliveredAt = Date.now()
         // Cash on Delivery is paid when the customer receives the order

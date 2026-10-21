@@ -8,6 +8,7 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useDispatch, useSelector } from 'react-redux'
 import { clearErrors, getOrderDetails } from '../../actions/orderActions'
+import { OrderTimeline, OrderTotals, fmtDate, paymentLabel } from './OrderParts'
 
 // import { getToken } from '../Utils/helpers'
 
@@ -54,7 +55,6 @@ const OrderDetails = () => {
 
     const shippingDetails = shippingInfo && `${shippingInfo.address}, ${shippingInfo.city}, ${shippingInfo.postalCode}, ${shippingInfo.country}`
 
-    const isPaid = paymentInfo && paymentInfo.status === 'succeeded' ? true : false
 
     return (
         <>
@@ -65,23 +65,24 @@ const OrderDetails = () => {
                     <div className="row d-flex justify-content-between">
                         <div className="col-12 col-lg-8 mt-5 order-details">
 
-                            <h1 className="my-5">Order # {order._id}</h1>
+                            <h1 className="mt-5 mb-2">Order # {order.transactionNo || order._id}</h1>
+                            <p className="text-muted mb-5">Placed on {fmtDate(order.createdAt)}</p>
 
                             <h4 className="mb-4">Shipping Info</h4>
                             <p><b>Name:</b> {user && user.name}</p>
                             <p><b>Phone:</b> {shippingInfo && shippingInfo.phoneNo}</p>
                             <p className="mb-4"><b>Address:</b>{shippingDetails}</p>
-                            <p><b>Amount:</b> ₱{totalPrice}</p>
 
                             <hr />
 
                             <h4 className="my-4">Payment</h4>
                             <p><b>Method:</b> {order.paymentMethod || 'Card'}</p>
-                            <p className={isPaid ? "greenColor" : "redColor"}><b>{isPaid ? "PAID" : (order.paymentMethod === 'Cash on Delivery' ? "TO PAY ON DELIVERY" : "NOT PAID")}</b></p>
+                            <p className={paymentLabel(order).cls}><b>{paymentLabel(order).text}</b></p>
 
 
                             <h4 className="my-4">Order Status:</h4>
-                            <p className={order.orderStatus && String(order.orderStatus).includes('Delivered') ? "greenColor" : "redColor"} ><b>{orderStatus}</b></p>
+                            <p className={order.orderStatus && String(order.orderStatus).includes('Delivered') ? "greenColor" : "redColor"} ><b id="order_status">{orderStatus}</b></p>
+                            <OrderTimeline order={order} />
 
 
                             <h4 className="my-4">Order Items:</h4>
@@ -110,6 +111,7 @@ const OrderDetails = () => {
                                 ))}
                             </div>
                             <hr />
+                            <div className="col-md-6 px-0 mb-5"><OrderTotals order={order} /></div>
                         </div>
                     </div>
                 </>

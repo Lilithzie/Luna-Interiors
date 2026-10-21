@@ -661,3 +661,14 @@ ul.CTAs a {
 .thumb-grid .thumb .new-tag { position: absolute; left: 0; bottom: 0; background: var(--luna); color: #fff; font-size: 9px; padding: 0 5px; }
 .grid-thumb { width: 44px; height: 44px; object-fit: cover; border-radius: 6px; }
 .admin-page-title { color: var(--luna-ink); }
+
+
+/* ---------- Order status timeline + totals (term test lab) ---------- */
+.order-timeline { list-style: none; margin: 0 0 1rem; padding: 0; display: flex; gap: 12px; flex-wrap: wrap; }
+.order-timeline li { display: flex; align-items: center; gap: 10px; flex: 1 1 150px; padding: 10px 12px; border: 1px solid #e6dccf; border-radius: 10px; background: #fff; color: #9a8b7a; }
+.order-timeline .dot { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: #efe6da; color: #8B5A2B; font-weight: 700; flex: none; }
+.order-timeline li.done, .order-timeline li.current { color: #2E1F14; border-color: #8B5A2B; }
+.order-timeline li.done .dot, .order-timeline li.current .dot { background: #8B5A2B; color: #fff; }
+.order-timeline li.current { box-shadow: 0 0 0 2px rgba(139, 90, 43, .18); }
+.order-totals td { border-top: 0; padding: 4px 0; }
+.order-totals tr.grand td { border-top: 2px solid #8B5A2B; padding-top: 8px; font-size: 1.1rem; }
