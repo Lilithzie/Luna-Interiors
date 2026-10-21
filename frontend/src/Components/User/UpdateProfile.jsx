@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useForm } from 'react-hook-form'
 import MetaData from '../Layout/MetaData'
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
@@ -18,8 +19,7 @@ const UpdateProfile = () => {
     const { error, isUpdated, loading } = useSelector(state => state.user)
 
 
-    const [name, setName] = useState('')
-    const [email, setEmail] = useState('')
+    const { register, handleSubmit, reset, formState: { errors } } = useForm({ mode: 'onTouched', defaultValues: { name: '', email: '' } })
     const [avatar, setAvatar] = useState('')
     const [avatarPreview, setAvatarPreview] = useState('/images/default_avatar.jpg')
     // const [error, setError] = useState('')
@@ -86,8 +86,7 @@ const UpdateProfile = () => {
     useEffect(() => {
         console.log(user)
         if (user) {
-            setName(user.name);
-            setEmail(user.email);
+            reset({ name: user.name, email: user.email })
             setAvatarPreview(user.avatar.url)
         }
         if (error) {
@@ -103,18 +102,21 @@ const UpdateProfile = () => {
                 type: UPDATE_PROFILE_RESET
             })
         }
-    }, [dispatch, error, isUpdated, navigate, user])
+    }, [dispatch, error, isUpdated, navigate, user, reset])
 
-    const submitHandler = (e) => {
-        e.preventDefault();
+    const submitHandler = ({ name, email }) => {
         const formData = new FormData();
-        formData.set('name', name);
-        formData.set('email', email);
+        formData.set('name', name.trim());
+        formData.set('email', email.trim());
         formData.set('avatar', avatar);
         dispatch(updateProfile(formData))
     }
 
     const onChange = e => {
+        const file = e.target.files[0]
+        if (!file) return
+        if (!/^image\/(jpe?g|png|webp)$/i.test(file.type)) return toast.error('Avatar must be a JPG, PNG or WEBP image', { position: 'bottom-right' })
+        if (file.size > 2 * 1024 * 1024) return toast.error('Avatar must be 2MB or smaller', { position: 'bottom-right' })
         const reader = new FileReader();
 
         reader.onload = () => {
@@ -124,7 +126,7 @@ const UpdateProfile = () => {
             }
         }
 
-        reader.readAsDataURL(e.target.files[0])
+        reader.readAsDataURL(file)
 
     }
     // console.log(user)
@@ -136,19 +138,23 @@ const UpdateProfile = () => {
 
             <div className="row wrapper">
                 <div className="col-10 col-lg-5">
-                    <form className="shadow-lg" onSubmit={submitHandler} encType='multipart/form-data'>
+                    <form className="shadow-lg" onSubmit={handleSubmit(submitHandler)} encType='multipart/form-data' noValidate>
                         <h1 className="mt-2 mb-5">Update Profile</h1>
 
                         <div className="form-group">
-                            <label htmlFor="email_field">Name</label>
+                            <label htmlFor="name_field">Name</label>
                             <input
-                                type="name"
+                                type="text"
                                 id="name_field"
-                                className="form-control"
-                                name='name'
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
+                                className={`form-control ${errors.name ? 'is-invalid' : ''}`}
+                                {...register('name', {
+                                    required: 'Name is required',
+                                    minLength: { value: 2, message: 'Name must be at least 2 characters' },
+                                    maxLength: { value: 30, message: 'Name cannot exceed 30 characters' },
+                                    validate: v => v.trim().length >= 2 || 'Name cannot be just spaces',
+                                })}
                             />
+                            {errors.name && <div className="invalid-feedback">{errors.name.message}</div>}
                         </div>
 
                         <div className="form-group">
@@ -156,11 +162,13 @@ const UpdateProfile = () => {
                             <input
                                 type="email"
                                 id="email_field"
-                                className="form-control"
-                                name='email'
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                className={`form-control ${errors.email ? 'is-invalid' : ''}`}
+                                {...register('email', {
+                                    required: 'Email is required',
+                                    pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Enter a valid email address' },
+                                })}
                             />
+                            {errors.email && <div className="invalid-feedback">{errors.email.message}</div>}
                         </div>
 
                         <div className='form-group'>

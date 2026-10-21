@@ -59,6 +59,7 @@ const ProductDetails = () => {
         try {
             const { data } = await axios.put(`${import.meta.env.VITE_API}/review`, { rating, comment, productId: id }, { withCredentials: true })
             toast.success(data.updated ? 'Your review was updated' : 'Thanks! Your review was posted', { position: 'bottom-right' })
+            if (data.masked) toast.info('Some words in your review were masked (****) because they are not allowed.', { position: 'bottom-right' })
             dispatch(getProductDetails(id))
             loadEligibility()
         } catch (err) {
@@ -146,6 +147,7 @@ const ProductDetails = () => {
                                         value={comment}
                                         onChange={(e) => setComment(e.target.value)}
                                     />
+                                    <small className="text-muted">Inappropriate words are automatically masked (****).</small>
                                     <button type="submit" id="submit_review" className="btn btn-luna mt-3" disabled={saving}>
                                         {saving ? 'Saving…' : myReview ? 'Update Review' : 'Submit Review'}
                                     </button>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
+import { useForm } from 'react-hook-form'
 import { toast } from 'react-toastify'
 import { CATEGORIES } from '../Utils/helpers'
 
@@ -7,25 +8,27 @@ const MAX_SIZE = 5 * 1024 * 1024
 
 // Shared by NewProduct and UpdateProduct. Supports MULTIPLE photo upload with previews.
 const ProductForm = ({ initial, submitLabel, submitting, onSubmit }) => {
-    const [name, setName] = useState('')
-    const [price, setPrice] = useState('')
-    const [description, setDescription] = useState('')
-    const [category, setCategory] = useState(CATEGORIES[0])
-    const [stock, setStock] = useState('')
-    const [seller, setSeller] = useState('Luna Interiors')
+    // React Hook Form handles the text fields; photos are managed separately below
+    const { register, handleSubmit, reset, formState: { errors } } = useForm({
+        mode: 'onTouched',
+        defaultValues: { name: '', price: '', stock: '', description: '', category: CATEGORIES[0], seller: 'Luna Interiors' },
+    })
+    const [photoError, setPhotoError] = useState('')
     const [existing, setExisting] = useState([])     // images already saved (can be removed)
     const [files, setFiles] = useState([])           // new File objects
 
     useEffect(() => {
         if (!initial) return
-        setName(initial.name || '')
-        setPrice(initial.price ?? '')
-        setDescription(initial.description || '')
-        setCategory(initial.category || CATEGORIES[0])
-        setStock(initial.stock ?? '')
-        setSeller(initial.seller || 'Luna Interiors')
+        reset({
+            name: initial.name || '',
+            price: initial.price ?? '',
+            stock: initial.stock ?? '',
+            description: initial.description || '',
+            category: initial.category || CATEGORIES[0],
+            seller: initial.seller || 'Luna Interiors',
+        })
         setExisting(initial.images || [])
-    }, [initial])
+    }, [initial, reset])
 
     const previews = useMemo(() => files.map(f => URL.createObjectURL(f)), [files])
     useEffect(() => () => previews.forEach(URL.revokeObjectURL), [previews])
@@ -42,55 +45,90 @@ const ProductForm = ({ initial, submitLabel, submitting, onSubmit }) => {
         const room = MAX_FILES - existing.length - files.length
         if (accepted.length > room) toast.warn(`Maximum of ${MAX_FILES} photos per product`, { position: 'bottom-right' })
         setFiles([...files, ...accepted.slice(0, Math.max(room, 0))])
+        if (accepted.length) setPhotoError('')
     }
 
-    const submit = (e) => {
-        e.preventDefault()
+    const submit = (values) => {
         if (existing.length + files.length === 0) {
+            setPhotoError('Please add at least one product photo')
             return toast.error('Please add at least one product photo', { position: 'bottom-right' })
         }
         const fd = new FormData()
-        fd.set('name', name)
-        fd.set('price', price)
-        fd.set('description', description)
-        fd.set('category', category)
-        fd.set('stock', stock)
-        fd.set('seller', seller)
+        fd.set('name', values.name.trim())
+        fd.set('price', values.price)
+        fd.set('description', values.description.trim())
+        fd.set('category', values.category)
+        fd.set('stock', values.stock)
+        fd.set('seller', values.seller.trim())
         fd.set('keepImages', JSON.stringify(existing.map(i => i.public_id)))
         files.forEach(f => fd.append('images', f))
         onSubmit(fd)
     }
 
     return (
-        <form className="shadow-lg p-4 bg-white" onSubmit={submit} encType="multipart/form-data" style={{ borderRadius: 12 }}>
+        <form className="shadow-lg p-4 bg-white" onSubmit={handleSubmit(submit, () => { if (existing.length + files.length === 0) setPhotoError('Please add at least one product photo') })} noValidate encType="multipart/form-data" style={{ borderRadius: 12 }}>
             <div className="form-group">
                 <label htmlFor="name_field">Name</label>
-                <input type="text" id="name_field" className="form-control" value={name} maxLength={100} required onChange={e => setName(e.target.value)} />
+                <input type="text" id="name_field" className={`form-control ${errors.name ? 'is-invalid' : ''}`}
+                    {...register('name', {
+                        required: 'Product name is required',
+                        minLength: { value: 3, message: 'Name must be at least 3 characters' },
+                        maxLength: { value: 100, message: 'Name cannot exceed 100 characters' },
+                        validate: v => v.trim().length >= 3 || 'Name cannot be just spaces',
+                    })} />
+                {errors.name && <div className="invalid-feedback">{errors.name.message}</div>}
             </div>
             <div className="row">
                 <div className="form-group col-md-6">
                     <label htmlFor="price_field">Price (₱)</label>
-                    <input type="number" id="price_field" className="form-control" min="0" step="0.01" value={price} required onChange={e => setPrice(e.target.value)} />
+                    <input type="number" id="price_field" className={`form-control ${errors.price ? 'is-invalid' : ''}`} step="0.01"
+                        {...register('price', {
+                            required: 'Price is required',
+                            validate: v => Number(v) > 0 || 'Price must be greater than 0',
+                            max: { value: 9999999, message: 'Price is too high (max ₱9,999,999)' },
+                        })} />
+                    {errors.price && <div className="invalid-feedback">{errors.price.message}</div>}
                 </div>
                 <div className="form-group col-md-6">
                     <label htmlFor="stock_field">Stock</label>
-                    <input type="number" id="stock_field" className="form-control" min="0" value={stock} required onChange={e => setStock(e.target.value)} />
+                    <input type="number" id="stock_field" className={`form-control ${errors.stock ? 'is-invalid' : ''}`}
+                        {...register('stock', {
+                            required: 'Stock is required',
+                            validate: v => (Number.isInteger(Number(v)) && Number(v) >= 0) || 'Stock must be a whole number, 0 or more',
+                            max: { value: 100000, message: 'Stock is too high (max 100,000)' },
+                        })} />
+                    {errors.stock && <div className="invalid-feedback">{errors.stock.message}</div>}
                 </div>
             </div>
             <div className="form-group">
                 <label htmlFor="description_field">Description</label>
-                <textarea id="description_field" className="form-control" rows="6" value={description} required onChange={e => setDescription(e.target.value)} />
+                <textarea id="description_field" className={`form-control ${errors.description ? 'is-invalid' : ''}`} rows="6"
+                    {...register('description', {
+                        required: 'Description is required',
+                        minLength: { value: 10, message: 'Description must be at least 10 characters' },
+                        maxLength: { value: 2000, message: 'Description cannot exceed 2000 characters' },
+                        validate: v => v.trim().length >= 10 || 'Description cannot be just spaces',
+                    })} />
+                {errors.description && <div className="invalid-feedback">{errors.description.message}</div>}
             </div>
             <div className="row">
                 <div className="form-group col-md-6">
                     <label htmlFor="category_field">Category</label>
-                    <select id="category_field" className="form-control" value={category} onChange={e => setCategory(e.target.value)}>
+                    <select id="category_field" className={`form-control ${errors.category ? 'is-invalid' : ''}`}
+                        {...register('category', { required: 'Please choose a category', validate: v => CATEGORIES.includes(v) || 'Please choose a valid category' })}>
                         {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
+                    {errors.category && <div className="invalid-feedback">{errors.category.message}</div>}
                 </div>
                 <div className="form-group col-md-6">
                     <label htmlFor="seller_field">Seller</label>
-                    <input type="text" id="seller_field" className="form-control" value={seller} onChange={e => setSeller(e.target.value)} />
+                    <input type="text" id="seller_field" className={`form-control ${errors.seller ? 'is-invalid' : ''}`}
+                        {...register('seller', {
+                            required: 'Seller is required',
+                            maxLength: { value: 50, message: 'Seller cannot exceed 50 characters' },
+                            validate: v => v.trim().length > 0 || 'Seller cannot be just spaces',
+                        })} />
+                    {errors.seller && <div className="invalid-feedback">{errors.seller.message}</div>}
                 </div>
             </div>
 
@@ -100,6 +138,7 @@ const ProductForm = ({ initial, submitLabel, submitting, onSubmit }) => {
                     <input type="file" name="images" className="custom-file-input" id="customFile" accept=".jpg,.jpeg,.png,.webp" multiple onChange={onPick} />
                     <label className="custom-file-label" htmlFor="customFile">Choose photos</label>
                 </div>
+                {photoError && <div className="text-danger small mt-2" id="photo_error">{photoError}</div>}
                 <div className="thumb-grid" id="photo_previews">
                     {existing.map(img => (
                         <div className="thumb" key={img.public_id}>
