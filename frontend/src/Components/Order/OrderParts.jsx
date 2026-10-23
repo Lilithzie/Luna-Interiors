@@ -1,4 +1,6 @@
 import React from 'react'
+import axios from 'axios'
+import { toast } from 'react-toastify'
 
 export const STATUSES = ['Processing', 'Shipped', 'Delivered']
 export const money = (n) => `₱${Number(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -47,4 +49,31 @@ export const paymentLabel = (order) => {
     return order.paymentMethod === 'Cash on Delivery'
         ? { text: 'TO PAY ON DELIVERY', cls: 'redColor' }
         : { text: 'NOT PAID', cls: 'redColor' }
+}
+
+// "Download receipt (PDF)" - the file is built by the server (GET /order/:id/receipt)
+export const ReceiptButton = ({ order, className = 'btn btn-outline-luna' }) => {
+    const [busy, setBusy] = React.useState(false)
+    const download = async () => {
+        setBusy(true)
+        try {
+            const { data } = await axios.get(`${import.meta.env.VITE_API}/order/${order._id}/receipt`, { responseType: 'blob', withCredentials: true })
+            const url = URL.createObjectURL(new Blob([data], { type: 'application/pdf' }))
+            const a = document.createElement('a')
+            a.href = url
+            a.download = `Receipt-${order.transactionNo || order._id}.pdf`
+            document.body.appendChild(a)
+            a.click()
+            a.remove()
+            URL.revokeObjectURL(url)
+        } catch (err) {
+            toast.error('Could not download the receipt. Please try again.', { position: 'bottom-right' })
+        }
+        setBusy(false)
+    }
+    return (
+        <button type="button" id="download_receipt" className={className} onClick={download} disabled={busy}>
+            {busy ? 'Preparing PDF…' : 'Download receipt (PDF)'}
+        </button>
+    )
 }

@@ -8,7 +8,7 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useDispatch, useSelector } from 'react-redux'
 import { clearErrors, getOrderDetails } from '../../actions/orderActions'
-import { OrderTimeline, OrderTotals, fmtDate, paymentLabel } from './OrderParts'
+import { OrderTimeline, OrderTotals, ReceiptButton, fmtDate, paymentLabel } from './OrderParts'
 
 // import { getToken } from '../Utils/helpers'
 
@@ -111,7 +111,8 @@ const OrderDetails = () => {
                                 ))}
                             </div>
                             <hr />
-                            <div className="col-md-6 px-0 mb-5"><OrderTotals order={order} /></div>
+                            <div className="col-md-6 px-0 mb-3"><OrderTotals order={order} /></div>
+                            <div className="mb-5"><ReceiptButton order={order} /></div>
                         </div>
                     </div>
                 </>
