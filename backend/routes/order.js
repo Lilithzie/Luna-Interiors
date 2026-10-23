@@ -13,6 +13,7 @@ const { newOrder,
 	customerSales,
 	salesPerMonth,
 	salesChart,
+	downloadReceipt,
 
 
 } = require('../controllers/order')
@@ -21,6 +22,7 @@ const { isAuthenticatedUser, authorizeRoles, forbidAdmin } = require('../middlew
 router.post('/order/new', isAuthenticatedUser, forbidAdmin, newOrder);
 router.get('/orders/me', isAuthenticatedUser, myOrders);
 router.get('/order/:id', isAuthenticatedUser, getSingleOrder);
+router.get('/order/:id/receipt', isAuthenticatedUser, downloadReceipt);
 router.get('/admin/orders/', isAuthenticatedUser, authorizeRoles('admin'), allOrders);
 // // router.route('/admin/order/:id').delete(isAuthenticatedUser, deleteOrder);
 router.route('/admin/order/:id').put(isAuthenticatedUser, authorizeRoles('admin'), updateOrder).delete(isAuthenticatedUser, authorizeRoles('admin'), deleteOrder);

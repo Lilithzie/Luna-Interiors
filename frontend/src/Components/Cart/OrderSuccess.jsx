@@ -2,7 +2,7 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import MetaData from '../Layout/MetaData'
-import { OrderTimeline, OrderTotals, fmtDate, money, paymentLabel } from '../Order/OrderParts'
+import { OrderTimeline, OrderTotals, ReceiptButton, fmtDate, money, paymentLabel } from '../Order/OrderParts'
 
 // Shown right after checkout: the completed transaction (like a receipt).
 const OrderSuccess = () => {
@@ -38,6 +38,12 @@ const OrderSuccess = () => {
                         <h2 className="mb-1">Thank you! Your order has been placed.</h2>
                         <p className="text-muted mb-0">Transaction <strong id="transaction_no">{order.transactionNo || order._id}</strong> · {fmtDate(order.createdAt)}</p>
                     </div>
+
+                    {created.emailSent ? (
+                        <div className="alert alert-success" id="email_note">A confirmation email with your PDF receipt was sent to <strong>{created.emailTo}</strong>.</div>
+                    ) : (
+                        <div className="alert alert-warning" id="email_note">Your order is placed, but we could not send the confirmation email right now. You can still download your receipt below.</div>
+                    )}
 
                     <div className="filter-panel">
                         <h5>Order status</h5>
@@ -80,6 +86,7 @@ const OrderSuccess = () => {
 
                     <div className="text-center my-4">
                         <Link to={`/order/${order._id}`} className="btn btn-luna mr-2" id="view_order">View order details</Link>
+                        <span className="mr-2"><ReceiptButton order={order} /></span>
                         <Link to="/orders/me" className="btn btn-outline-luna mr-2">My Orders</Link>
                         <Link to="/" className="btn btn-link">Continue shopping</Link>
                     </div>

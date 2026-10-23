@@ -1,6 +1,7 @@
 const Order = require('../models/order');
 const { ORDER_STATUSES } = require('../models/order');
 const Product = require('../models/product');
+const { sendOrderEmail, buildReceiptPdf, transactionNo } = require('../utils/orderEmail');
 
 
 
@@ -75,7 +76,11 @@ exports.newOrder = async (req, res) => {
         await i._doc.save({ validateBeforeSave: false });
     }
 
-    res.status(201).json({ success: true, order })
+    // e-mail the customer a confirmation (products, subtotal, grand total + PDF receipt).
+    // If the mail server is down the order is still placed - the result is reported as emailSent.
+    const mail = await sendOrderEmail(order, req.user, 'placed');
+
+    res.status(201).json({ success: true, order, emailSent: mail.sent, emailTo: mail.to })
 }
 
 exports.myOrders = async (req, res, next) => {
@@ -137,7 +142,7 @@ const STATUSES = ORDER_STATUSES;
 // PUT /admin/order/:id   body: { status }
 // The status can only move forward: Processing -> Shipped -> Delivered.
 exports.updateOrder = async (req, res) => {
-    const order = await Order.findById(req.params.id)
+    const order = await Order.findById(req.params.id).populate('user', 'name email')
     if (!order) {
         return res.status(404).json({ success: false, message: 'No Order found with this ID' })
     }
@@ -175,7 +180,30 @@ exports.updateOrder = async (req, res) => {
         }
     }
     await order.save()
-    res.status(200).json({ success: true, order })
+
+    // tell the customer: e-mail with the products, subtotal, grand total and the PDF receipt attached
+    const mail = await sendOrderEmail(order, order.user, status);
+
+    res.status(200).json({ success: true, order, emailSent: mail.sent, emailTo: mail.to, emailError: mail.sent ? undefined : mail.error })
+}
+
+// GET /order/:id/receipt  -> the PDF receipt (the customer who owns the order, or an admin)
+exports.downloadReceipt = async (req, res) => {
+    const order = await Order.findById(req.params.id).populate('user', 'name email')
+    if (!order) {
+        return res.status(404).json({ success: false, message: 'No Order found with this ID' })
+    }
+    const ownerId = order.user && order.user._id ? order.user._id.toString() : String(order.user);
+    if (req.user.role !== 'admin' && ownerId !== req.user._id.toString()) {
+        return res.status(403).json({ success: false, message: 'You are not allowed to view this receipt' })
+    }
+    const pdf = await buildReceiptPdf(order, order.user)
+    res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="Receipt-${transactionNo(order)}.pdf"`,
+        'Content-Length': pdf.length,
+    })
+    res.status(200).send(pdf)
 }
 
 exports.totalOrders = async (req, res, next) => {

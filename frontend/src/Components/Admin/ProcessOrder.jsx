@@ -8,7 +8,7 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios'
 import { getToken } from '../Utils/helpers'
-import { OrderTimeline, OrderTotals, STATUSES, fmtDate, paymentLabel } from '../Order/OrderParts'
+import { OrderTimeline, OrderTotals, ReceiptButton, STATUSES, fmtDate, paymentLabel } from '../Order/OrderParts'
 
 const ProcessOrder = () => {
 
@@ -59,6 +59,9 @@ const ProcessOrder = () => {
             setIsUpdated(data.success)
             setOrder(data.order)                 // show the new status + timeline right away
             setStatus(data.order.orderStatus)
+            // the server e-mails the customer (products, subtotal, grand total + PDF receipt)
+            if (data.emailSent) toast.info(`Email with the PDF receipt sent to ${data.emailTo}`, { position: 'bottom-center' })
+            else toast.warn('Status saved, but the email could not be sent. Check the SMTP settings in the backend .env.', { position: 'bottom-center' })
 
 
         } catch (error) {
@@ -136,7 +139,8 @@ const ProcessOrder = () => {
                                         ))}
                                     </div>
                                     <hr />
-                                    <div className="col-md-6 px-0 mb-5"><OrderTotals order={order} /></div>
+                                    <div className="col-md-6 px-0 mb-3"><OrderTotals order={order} /></div>
+                                    <div className="mb-5"><ReceiptButton order={order} /></div>
                                 </div>
                                 <div className="col-12 col-lg-3 mt-5">
                                     <h4 className="my-4">Status</h4>
@@ -156,7 +160,7 @@ const ProcessOrder = () => {
                                         Update Status
                                     </button>
                                     <small className="text-muted d-block mt-2">
-                                        {delivered ? 'This order is delivered, so its status is final.' : 'Status can only move forward (Processing → Shipped → Delivered).'}
+                                        {delivered ? 'This order is delivered, so its status is final.' : 'Status can only move forward (Processing → Shipped → Delivered). The customer is emailed with the receipt each time you update it.'}
                                     </small>
                                 </div>
                             </div>
