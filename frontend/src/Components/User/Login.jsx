@@ -124,7 +124,9 @@ const Login = () => {
                                     {errors.password && <div className="invalid-feedback">{errors.password.message}</div>}
                                 </div>
 
-                                <Link to="/password/forgot" className="float-right mb-4">Forgot Password?</Link>
+                                <div className="auth-forgot">
+                                    <Link to="/password/forgot">Forgot Password?</Link>
+                                </div>
 
                                 <button
                                     id="login_button"
@@ -134,11 +136,13 @@ const Login = () => {
                                     LOGIN
                                 </button>
 
-                                <button type="button" className="btn btn-outline-secondary btn-block py-3 mt-2" onClick={googleLoginHandler}>
-                                    <span aria-hidden="true">G</span> Continue with Google
+                                <button type="button" className="btn btn-block py-3 mt-2 google-login-btn" onClick={googleLoginHandler}>
+                                    <span className="google-mark" aria-hidden="true">G</span> Continue with Google
                                 </button>
 
-                                <Link to="/register" className="float-right mt-3">New User?</Link>
+                                <div className="auth-register">
+                                    <Link to="/register">New User?</Link>
+                                </div>
                             </form>
                         </div>
                     </div>

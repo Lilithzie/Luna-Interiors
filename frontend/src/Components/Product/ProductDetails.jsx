@@ -24,6 +24,8 @@ const ProductDetails = () => {
     const [rating, setRating] = useState(0)
     const [comment, setComment] = useState('')
     const [saving, setSaving] = useState(false)
+    const [reviewErrors, setReviewErrors] = useState({})
+    const [reviewAttempted, setReviewAttempted] = useState(false)
 
     const { id } = useParams()
     const dispatch = useDispatch()
@@ -53,8 +55,12 @@ const ProductDetails = () => {
 
     const submitReview = async (e) => {
         e.preventDefault()
-        if (!rating) return toast.error('Please select a star rating', { position: 'bottom-right' })
-        if (!comment.trim()) return toast.error('Please write a comment', { position: 'bottom-right' })
+        setReviewAttempted(true)
+        const nextErrors = {}
+        if (!Number.isInteger(Number(rating)) || Number(rating) < 1 || Number(rating) > 5) nextErrors.rating = 'Please select a rating from 1 to 5 stars.'
+        if (comment.trim().length < 3) nextErrors.comment = 'Review must be at least 3 characters.'
+        setReviewErrors(nextErrors)
+        if (Object.keys(nextErrors).length) return
         setSaving(true)
         try {
             const { data } = await axios.put(`${import.meta.env.VITE_API}/review`, { rating, comment, productId: id }, { withCredentials: true })
@@ -138,15 +144,17 @@ const ProductDetails = () => {
                             {isAuthenticated && !isAdmin && canReview && (
                                 <form onSubmit={submitReview} className="filter-panel" id="review_form">
                                     <h5>{myReview ? 'Update your review' : 'Write a review'}</h5>
-                                    <StarInput value={rating} onChange={setRating} />
+                                    <StarInput value={rating} onChange={(value) => { setRating(value); if (reviewAttempted) setReviewErrors(current => ({ ...current, rating: '' })) }} />
+                                    {reviewErrors.rating && <div className="text-danger small mt-1" role="alert">{reviewErrors.rating}</div>}
                                     <textarea
                                         id="review"
-                                        className="form-control mt-3"
+                                        className={`form-control mt-3 ${reviewErrors.comment ? 'is-invalid' : ''}`}
                                         rows="3"
                                         placeholder="Tell others what you think of this piece…"
                                         value={comment}
-                                        onChange={(e) => setComment(e.target.value)}
+                                        onChange={(e) => { setComment(e.target.value); if (reviewAttempted) setReviewErrors(current => ({ ...current, comment: '' })) }}
                                     />
+                                    {reviewErrors.comment && <div className="invalid-feedback">{reviewErrors.comment}</div>}
                                     <small className="text-muted">Inappropriate words are automatically masked (****).</small>
                                     <button type="submit" id="submit_review" className="btn btn-luna mt-3" disabled={saving}>
                                         {saving ? 'Saving…' : myReview ? 'Update Review' : 'Submit Review'}

@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from 'react'
 import '../../App.css'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify';
@@ -7,13 +6,11 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useDispatch, useSelector } from 'react-redux'
 import { logout } from '../../actions/userActions'
 
-import Search from './Search'
 export const Header = () => {
     const dispatch = useDispatch();
-    const { user, loading } = useSelector(state => state.auth)
+    const { user } = useSelector(state => state.auth)
     const { cartItems } = useSelector(state => state.cart)
     // const [user, setUser] = useState({})
-    const navigate = useNavigate()
 
     // const logoutHandler = () => {
     //     logout(navigate('/'));
@@ -45,7 +42,6 @@ export const Header = () => {
                     </div>
 
                 </div>
-                <Search />
                 <div className="col-12 col-md-3 mt-4 mt-md-0 text-center">
 
                     {user ? (<div className="ml-4 dropdown d-inline">

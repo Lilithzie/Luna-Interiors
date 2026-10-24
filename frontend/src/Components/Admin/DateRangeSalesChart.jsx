@@ -39,7 +39,7 @@ export default function DateRangeSalesChart() {
     const total = useMemo(() => sales.reduce((sum, day) => sum + day.total, 0), [sales])
 
     return (
-        <section className="card shadow-sm border-0 my-4 p-3">
+        <section className="card dashboard-chart-card sales-range-chart shadow-sm border-0 p-3">
             <div className="d-flex justify-content-between align-items-center flex-wrap mb-3">
                 <div>
                     <h2 className="h4 mb-1">Sales performance</h2>
@@ -55,7 +55,7 @@ export default function DateRangeSalesChart() {
             {error && <div className="alert alert-danger">{error}</div>}
             {!error && <>
                 <div className="d-flex justify-content-between align-items-center mb-2"><span className="text-muted small">Total sales</span><strong>₱{total.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</strong></div>
-                <div style={{ width: '100%', height: 320 }}>
+                <div style={{ width: '100%', height: 245 }}>
                     <ResponsiveContainer>
                         <LineChart data={sales} margin={{ top: 10, right: 20, left: 5, bottom: 10 }}>
                             <CartesianGrid strokeDasharray="3 3" />

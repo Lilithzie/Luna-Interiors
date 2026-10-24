@@ -24,7 +24,7 @@ const Payment = () => {
     const [submitting, setSubmitting] = useState(false)
 
     let orderInfo = null
-    try { orderInfo = JSON.parse(sessionStorage.getItem('orderInfo')) } catch (e) { orderInfo = null }
+    try { orderInfo = JSON.parse(sessionStorage.getItem('orderInfo')) } catch { orderInfo = null }
 
     // "4242 4242 4242 4242" style grouping, digits only
     const onCardNumber = (v) => setCardNumber(v.replace(/\D/g, '').slice(0, 16).replace(/(.{4})/g, '$1 ').trim())

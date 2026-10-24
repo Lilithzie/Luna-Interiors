@@ -21,6 +21,9 @@ exports.newOrder = async (req, res) => {
     if (!PAYMENT_METHODS.includes(paymentMethod)) {
         return res.status(400).json({ success: false, message: 'Please choose a payment method (Cash on Delivery or Card)' })
     }
+    if (!shippingInfo || !String(shippingInfo.address || '').trim() || !String(shippingInfo.city || '').trim() || !/^\+?[0-9\s()-]{7,20}$/.test(String(shippingInfo.phoneNo || '').trim()) || !/^\d{4,10}$/.test(String(shippingInfo.postalCode || '').trim()) || !String(shippingInfo.country || '').trim()) {
+        return res.status(400).json({ success: false, message: 'Please provide a complete and valid shipping address, phone number, postal code, and country' })
+    }
 
     // Never trust prices from the browser: rebuild the items from the database
     const items = [];

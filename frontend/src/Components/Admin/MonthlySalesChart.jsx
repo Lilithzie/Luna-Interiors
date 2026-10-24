@@ -31,7 +31,7 @@ export default function MonthlySalesChart() {
     }, [])
 
     return (
-        <div className="card shadow-sm border-0 my-3 p-3" style={{ height: 380 }}>
+        <div className="card dashboard-chart-card shadow-sm border-0 p-3">
             <h2 className="h5">Monthly sales</h2>
             <ResponsiveContainer width="100%" height="100%">
             <LineChart data={sales} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>

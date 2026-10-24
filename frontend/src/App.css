@@ -35,9 +35,11 @@ nav {
   background-color: #8B5A2B;
 }
 
-.input-group {
-  width: 90%;
-  margin-right: 35%;
+.input-group { width: 100%; }
+
+.shop-search {
+  width: min(100%, 680px);
+  margin: 1.5rem auto 0;
 }
 
 #search_field {
@@ -115,11 +117,15 @@ nav {
 
 /* Footer */
 footer {
-  margin-top: 8rem;
+  margin-top: auto;
   color: grey;
   bottom: 0;
   width: 100%;
 }
+
+.site-shell { min-height: 100vh; display: flex; flex-direction: column; }
+.site-main { flex: 1 0 auto; }
+.route-content { min-height: 0; }
 
 /* Ratings */
 
@@ -316,6 +322,54 @@ footer {
 .wrapper form a {
   font-size: 0.9rem;
   color: grey;
+}
+
+/* Shared validation treatment for forms that use manual field state. */
+.form-control.is-invalid,
+select.is-invalid,
+textarea.is-invalid {
+  border-color: #c94f5c;
+  box-shadow: 0 0 0 1px rgba(201, 79, 92, .12);
+}
+
+.invalid-feedback,
+.text-danger.small {
+  color: #b33f4d !important;
+  font-size: .78rem;
+  margin-top: .3rem;
+}
+
+.auth-forgot,
+.auth-register {
+  clear: both;
+  text-align: right;
+}
+
+.auth-forgot {
+  margin: -0.75rem 0 1rem;
+}
+
+.auth-register {
+  margin-top: 0.75rem;
+}
+
+.google-login-btn {
+  background: #fff !important;
+  border: 2px solid #4285f4 !important;
+  color: #1a73e8 !important;
+  margin-top: 0.5rem !important;
+  font-weight: 600;
+}
+
+.google-login-btn:hover {
+  background: #f8fbff !important;
+  color: #174ea6 !important;
+}
+
+.google-mark {
+  margin-right: 0.45rem;
+  color: #4285f4;
+  font-weight: 800;
 }
 
 /* Avatar */
@@ -575,6 +629,34 @@ ul.CTAs a {
 
 .card-font-size {
   font-size: 1.5rem;
+}
+
+.dashboard-charts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.dashboard-chart-card {
+  height: 300px !important;
+  min-width: 0;
+  margin: 0 !important;
+  overflow: hidden;
+}
+
+.sales-range-chart {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 900px) {
+  .dashboard-charts {
+    grid-template-columns: 1fr;
+  }
+
+  .sales-range-chart {
+    grid-column: auto;
+  }
 }
 
 /* Reviews */

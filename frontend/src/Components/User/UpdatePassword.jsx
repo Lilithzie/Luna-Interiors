@@ -8,6 +8,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useDispatch, useSelector } from 'react-redux'
 import { updatePassword, clearErrors } from '../../actions/userActions'
 import { UPDATE_PASSWORD_RESET } from '../../constants/userConstants'
+import { validatePassword } from '../Utils/validation'
 
 
 
@@ -18,6 +19,8 @@ const UpdatePassword = () => {
 
     const [oldPassword, setOldPassword] = useState('')
     const [password, setPassword] = useState('')
+    const [fieldErrors, setFieldErrors] = useState({})
+    const [attempted, setAttempted] = useState(false)
     // const [error, setError] = useState('')
     // const [isUpdated, setIsUpdated] = useState(false)
     // const [loading, setLoading] = useState(false)
@@ -77,6 +80,14 @@ const UpdatePassword = () => {
 
     const submitHandler = (e) => {
         e.preventDefault();
+        setAttempted(true)
+        const nextErrors = {}
+        if (!oldPassword) nextErrors.oldPassword = 'Current password is required.'
+        const passwordError = validatePassword(password)
+        if (passwordError) nextErrors.password = passwordError
+        if (oldPassword && password && oldPassword === password) nextErrors.password = 'New password must be different from the current password.'
+        setFieldErrors(nextErrors)
+        if (Object.keys(nextErrors).length) return
 
         const formData = new FormData();
         formData.set('oldPassword', oldPassword);
@@ -91,17 +102,18 @@ const UpdatePassword = () => {
 
             <div className="row wrapper">
                 <div className="col-10 col-lg-5">
-                    <form className="shadow-lg" onSubmit={submitHandler} >
+                    <form className="shadow-lg" onSubmit={submitHandler} noValidate>
                         <h1 className="mt-2 mb-5">Update Password</h1>
                         <div className="form-group">
                             <label htmlFor="old_password_field">Old Password</label>
                             <input
                                 type="password"
                                 id="old_password_field"
-                                className="form-control"
+                                className={`form-control ${fieldErrors.oldPassword ? 'is-invalid' : ''}`}
                                 value={oldPassword}
-                                onChange={(e) => setOldPassword(e.target.value)}
+                                onChange={(e) => { setOldPassword(e.target.value); if (attempted) setFieldErrors(current => ({ ...current, oldPassword: '' })) }}
                             />
+                            {fieldErrors.oldPassword && <div className="invalid-feedback">{fieldErrors.oldPassword}</div>}
                         </div>
 
                         <div className="form-group">
@@ -109,10 +121,11 @@ const UpdatePassword = () => {
                             <input
                                 type="password"
                                 id="new_password_field"
-                                className="form-control"
+                                className={`form-control ${fieldErrors.password ? 'is-invalid' : ''}`}
                                 value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                                onChange={(e) => { setPassword(e.target.value); if (attempted) setFieldErrors(current => ({ ...current, password: '' })) }}
                             />
+                            {fieldErrors.password && <div className="invalid-feedback">{fieldErrors.password}</div>}
                         </div>
 
                         <button type="submit" className="btn update-btn btn-block mt-4 mb-3" disabled={loading ? true : false} >Update Password</button>

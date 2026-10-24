@@ -1,5 +1,6 @@
 const User = require('../models/user');
 const crypto = require('crypto')
+const validator = require('validator')
 const cloudinary = require('cloudinary')
 const sendEmail = require('../utils/sendEmail')
 const sendToken = require('../utils/jwtToken');
@@ -32,6 +33,13 @@ const getFirebaseAuth = () => {
 }
 
 exports.registerUser = async (req, res, next) => {
+    const name = String(req.body.name || '').trim();
+    const email = String(req.body.email || '').trim().toLowerCase();
+    const password = String(req.body.password || '');
+    if (name.length < 2 || name.length > 30) return res.status(400).json({ success: false, message: 'Name must be between 2 and 30 characters' });
+    if (!validator.isEmail(email)) return res.status(400).json({ success: false, message: 'Please enter a valid email address' });
+    if (password.length < 8) return res.status(400).json({ success: false, message: 'Password must be at least 8 characters long' });
+    if (!req.body.avatar) return res.status(400).json({ success: false, message: 'Please choose an avatar image' });
     const result = await cloudinary.v2.uploader.upload(req.body.avatar, {
         folder: 'avatars',
         width: 150,
@@ -39,7 +47,6 @@ exports.registerUser = async (req, res, next) => {
     }, (err, res) => {
         console.log(err, res);
     });
-    const { name, email, password, } = req.body;
     const user = await User.create({
         name,
         email,
@@ -61,7 +68,8 @@ exports.registerUser = async (req, res, next) => {
 }
 
 exports.loginUser = async (req, res, next) => {
-    const { email, password } = req.body;
+    const email = String(req.body.email || '').trim().toLowerCase();
+    const password = String(req.body.password || '');
 
     // Checks if email and password is entered by user
     if (!email || !password) {
@@ -214,6 +222,9 @@ exports.updateProfile = async (req, res, next) => {
 
 exports.updatePassword = async (req, res, next) => {
     console.log(req.body.password)
+    if (!req.body.oldPassword || String(req.body.password || '').length < 8) {
+        return res.status(400).json({ message: 'Current password is required and the new password must be at least 8 characters long' })
+    }
     const user = await User.findById(req.user.id).select('+password');
     // Check previous user password
     const isMatched = await user.comparePassword(req.body.oldPassword)

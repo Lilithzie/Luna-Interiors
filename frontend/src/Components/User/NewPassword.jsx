@@ -4,6 +4,7 @@ import MetaData from '../Layout/MetaData'
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
+import { validatePassword } from '../Utils/validation'
 
 const NewPassword = () => {
     const [password, setPassword] = useState('')
@@ -12,6 +13,8 @@ const NewPassword = () => {
     let navigate = useNavigate();
     const [error, setError] = useState('')
     const [success, setSuccess] = useState(false)
+    const [fieldErrors, setFieldErrors] = useState({})
+    const [attempted, setAttempted] = useState(false)
 
     let { token } = useParams();
     console.log(token)
@@ -49,6 +52,13 @@ const NewPassword = () => {
 
     const submitHandler = (e) => {
         e.preventDefault();
+        setAttempted(true)
+        const nextErrors = {}
+        const passwordError = validatePassword(password)
+        if (passwordError) nextErrors.password = passwordError
+        if (password !== confirmPassword) nextErrors.confirmPassword = 'Passwords do not match.'
+        setFieldErrors(nextErrors)
+        if (Object.keys(nextErrors).length) return
         const formData = new FormData();
         formData.set('password', password);
         formData.set('confirmPassword', confirmPassword);
@@ -60,7 +70,7 @@ const NewPassword = () => {
             <MetaData title={'New Password Reset'} />
             <div className="row wrapper">
                 <div className="col-10 col-lg-5">
-                    <form className="shadow-lg" onSubmit={submitHandler}>
+                    <form className="shadow-lg" onSubmit={submitHandler} noValidate>
                         <h1 className="mb-3">New Password</h1>
 
                         <div className="form-group">
@@ -68,10 +78,11 @@ const NewPassword = () => {
                             <input
                                 type="password"
                                 id="password_field"
-                                className="form-control"
+                                className={`form-control ${fieldErrors.password ? 'is-invalid' : ''}`}
                                 value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                                onChange={(e) => { setPassword(e.target.value); if (attempted) setFieldErrors(current => ({ ...current, password: '' })) }}
                             />
+                            {fieldErrors.password && <div className="invalid-feedback">{fieldErrors.password}</div>}
                         </div>
 
                         <div className="form-group">
@@ -79,10 +90,11 @@ const NewPassword = () => {
                             <input
                                 type="password"
                                 id="confirm_password_field"
-                                className="form-control"
+                                className={`form-control ${fieldErrors.confirmPassword ? 'is-invalid' : ''}`}
                                 value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                onChange={(e) => { setConfirmPassword(e.target.value); if (attempted) setFieldErrors(current => ({ ...current, confirmPassword: '' })) }}
                             />
+                            {fieldErrors.confirmPassword && <div className="invalid-feedback">{fieldErrors.confirmPassword}</div>}
                         </div>
 
                         <button

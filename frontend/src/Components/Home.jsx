@@ -7,6 +7,7 @@ import Loader from './Layout/Loader';
 import { Stars } from './Layout/Stars'
 import { CATEGORIES, peso } from './Utils/helpers'
 import { LoadMoreSentinel } from './Utils/InfiniteScroll'
+import Search from './Layout/Search'
 
 import { useDispatch, useSelector } from 'react-redux'
 import { getProducts } from '../actions/productActions'
@@ -60,6 +61,7 @@ const Home = () => {
         <>
             <MetaData title={'Shop Furniture'} />
             <div className="container container-fluid">
+                <div className="shop-search"><Search /></div>
                 <h1 id="products_heading">{keyword ? `Results for “${keyword}”` : 'Furniture for every room'}</h1>
 
                 <div className="row mt-4">

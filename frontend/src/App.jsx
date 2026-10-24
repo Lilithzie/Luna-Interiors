@@ -121,12 +121,12 @@ function App() {
   if (!ready) return <div className="loader"> </div>
 
   return (
-    <>
-
+    <div className="site-shell">
       <Router>
+        <div className="site-main">
         {/* <Header cartItems={state.cartItems} /> */}
         <Header />
-        <Routes>
+        <main className="route-content"><Routes>
           <Route path="/" element={<Home />} exact="true" />
           {/* <Route path="/product/:id" element={<ProductDetails cartItems={state.cartItems} addItemToCart={addItemToCart} />} exact="true" /> */}
           <Route path="/product/:id" element={<ProductDetails />} exact="true" />
@@ -215,13 +215,14 @@ function App() {
                 <ProductReviews />
               </ProtectedRoute>} />
 
-        </Routes>
+        </Routes></main>
+        </div>
 
 
       </Router>
       <Footer />
       <ToastContainer />
-    </>
+    </div>
   )
 }
 
