@@ -10,6 +10,9 @@ const SHIPPING_FREE_OVER = 5000;
 const SHIPPING_FEE = 250;
 const TAX_RATE = 0.05;
 const PAYMENT_METHODS = ['Cash on Delivery', 'Card'];
+// MongoDB stores UTC; the sales charts report Philippine calendar days and months
+const SHOP_TIMEZONE = 'Asia/Manila';
+const SHOP_UTC_OFFSET = '+08:00';
 
 // POST /order/new   (customers only - admins manage the shop, they do not buy)
 exports.newOrder = async (req, res) => {
@@ -331,8 +334,8 @@ exports.salesPerMonth = async (req, res, next) => {
             $group: {
                 // _id: {month: { $month: "$paidAt" } },
                 _id: {
-                    year: { $year: { $ifNull: ["$paidAt", "$createdAt"] } },
-                    month: { $month: { $ifNull: ["$paidAt", "$createdAt"] } }
+                    year: { $year: { date: { $ifNull: ["$paidAt", "$createdAt"] }, timezone: SHOP_TIMEZONE } },
+                    month: { $month: { date: { $ifNull: ["$paidAt", "$createdAt"] }, timezone: SHOP_TIMEZONE } }
                 },
                 total: { $sum: "$totalPrice" },
             },
@@ -376,10 +379,10 @@ exports.salesPerMonth = async (req, res, next) => {
 }
 
 // GET /admin/sales-chart?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
-// Returns daily order sales for the dashboard date-range chart.
+// Returns daily order sales for the dashboard date-range chart. Days are Manila calendar days.
 exports.salesChart = async (req, res) => {
-    const start = req.query.startDate ? new Date(`${req.query.startDate}T00:00:00.000Z`) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    const end = req.query.endDate ? new Date(`${req.query.endDate}T23:59:59.999Z`) : new Date();
+    const start = req.query.startDate ? new Date(`${req.query.startDate}T00:00:00.000${SHOP_UTC_OFFSET}`) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const end = req.query.endDate ? new Date(`${req.query.endDate}T23:59:59.999${SHOP_UTC_OFFSET}`) : new Date();
 
     if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start > end) {
         return res.status(400).json({ success: false, message: 'Please provide a valid date range' });
@@ -388,10 +391,11 @@ exports.salesChart = async (req, res) => {
     const sales = await Order.aggregate([
         { $match: { $or: [{ paidAt: { $gte: start, $lte: end } }, { paidAt: null, createdAt: { $gte: start, $lte: end } }] } },
         { $project: { saleDate: { $ifNull: ['$paidAt', '$createdAt'] }, totalPrice: 1 } },
-        { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$saleDate' } }, total: { $sum: '$totalPrice' }, orders: { $sum: 1 } } },
+        { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$saleDate', timezone: SHOP_TIMEZONE } }, total: { $sum: '$totalPrice' }, orders: { $sum: 1 } } },
         { $sort: { _id: 1 } },
         { $project: { _id: 0, date: '$_id', total: 1, orders: 1 } },
     ]);
 
-    return res.status(200).json({ success: true, startDate: start.toISOString().slice(0, 10), endDate: end.toISOString().slice(0, 10), sales });
+    const shopDate = (date) => date.toLocaleDateString('en-CA', { timeZone: SHOP_TIMEZONE });   // YYYY-MM-DD
+    return res.status(200).json({ success: true, startDate: shopDate(start), endDate: shopDate(end), sales });
 };

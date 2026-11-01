@@ -3,7 +3,7 @@ import { Line, LineChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YA
 import { useDispatch, useSelector } from 'react-redux'
 import { getSalesChart } from '../../slices/salesSlice'
 
-const formatDate = (date) => date.toISOString().slice(0, 10)
+const formatDate = (date) => date.toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' })   // YYYY-MM-DD
 const initialEnd = new Date()
 const initialStart = new Date(initialEnd)
 initialStart.setDate(initialStart.getDate() - 30)
