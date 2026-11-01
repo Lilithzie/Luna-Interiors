@@ -20,7 +20,7 @@ export const LoadMoreSentinel = ({ hasMore, loading = false, onLoadMore, shown, 
         // still on screen (tall monitor / few rows) it immediately asks for the next batch.
         const observer = new IntersectionObserver(([entry]) => {
             if (entry.isIntersecting) loadRef.current()
-        }, { rootMargin: '200px' })
+        }, { rootMargin: '500px' })
         observer.observe(el)
         return () => observer.disconnect()
     }, [hasMore, loading, shown])
@@ -31,8 +31,8 @@ export const LoadMoreSentinel = ({ hasMore, loading = false, onLoadMore, shown, 
             {loading
                 ? 'Loading more…'
                 : hasMore
-                    ? <>Showing {shown} of {total} {label} · <button type="button" className="btn btn-link btn-sm p-0 align-baseline" onClick={() => loadRef.current()}>Load more</button></>
-                    : `Showing all ${total} ${label}`}
+                    ? `Showing ${shown} of ${total} ${label}`
+                    : `Showing all ${total} ${label}. You've reached the end.`}
         </div>
     )
 }

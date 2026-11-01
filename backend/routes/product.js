@@ -6,6 +6,7 @@ const {
     newProduct,
     getSingleProduct,
     getProducts,
+    getCategorySummary,
     updateProduct,
     deleteProduct,
     bulkDeleteProducts,
@@ -23,6 +24,7 @@ const admin = [isAuthenticatedUser, authorizeRoles('admin')];
 
 // ---- shop (public)
 router.get('/products', getProducts)
+router.get('/products/categories', getCategorySummary)
 router.get('/product/:id', getSingleProduct)
 
 // ---- MP1: admin product CRUD (+ multiple photos, bulk delete)

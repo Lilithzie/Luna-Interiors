@@ -8,7 +8,9 @@ import MetaData from '../Layout/MetaData'
 import Loader from '../Layout/Loader'
 import { Stars, StarInput } from '../Layout/Stars'
 import ListReviews from '../Review/ListReviews'
-import { peso, NO_IMAGE } from '../Utils/helpers'
+import { NO_IMAGE } from '../Utils/helpers'
+import { ProductPrice } from './Product'
+import WishlistButton from './WishlistButton'
 import { getProductDetails } from '../../slices/productSlice'
 import { addItemToCart } from '../../slices/cartSlice'
 import { getReviewEligibility, saveReview, resetReviewEligibility } from '../../slices/reviewSlice'
@@ -100,7 +102,7 @@ const ProductDetails = () => {
                         <Stars value={product.ratings} />
                         <span id="no_of_reviews">({product.numOfReviews} {product.numOfReviews === 1 ? 'Review' : 'Reviews'})</span>
                         <hr />
-                        <p id="product_price">{peso(product.price)}</p>
+                        <div id="product_price" className="product-detail-price"><ProductPrice product={product} /><WishlistButton productId={product._id} /></div>
                         {isAdmin ? (
                             <div className="alert alert-secondary" id="admin_notice">
                                 You are logged in as an admin. Admin accounts manage the shop and cannot order.{' '}

@@ -10,8 +10,10 @@ import { Header } from './Components/Layout/Header'
 import Footer from './Components/Layout/Footer'
 
 import './App.css'
+import './theme.css'
 import Home from './Components/Home'
 import ProductDetails from './Components/Product/ProductDetails';
+import Wishlist from './Components/Product/Wishlist';
 import Login from './Components/User/Login';
 import Register from './Components/User/Register';
 import ForgotPassword from './Components/User/ForgotPassword';
@@ -133,6 +135,7 @@ function App() {
           <Route path="/product/:id" element={<ProductDetails />} exact="true" />
 
           <Route path="/search/:keyword" element={<Home />} exact="true" />
+          <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/login" element={<Login />} exact="true" />
           <Route path="/register" element={<Register exact="true" />} />
           <Route path="/password/forgot" element={<ForgotPassword />} exact="true" />
@@ -218,10 +221,9 @@ function App() {
 
         </Routes></main>
         </div>
-
+        <Footer />
 
       </Router>
-      <Footer />
       <ToastContainer />
     </div>
   )

@@ -25,6 +25,13 @@ const productSchema = new mongoose.Schema({
         min: [0, 'Price cannot be negative'],
         default: 0.0
     },
+    // optional regular price, shown struck through when it is higher than `price`.
+    // Display only: orders are always charged `price`.
+    compareAtPrice: {
+        type: Number,
+        min: [0, 'Compare-at price cannot be negative'],
+        default: null
+    },
     description: {
         type: String,
         required: [true, 'Please enter product description'],

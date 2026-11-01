@@ -6,6 +6,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useDispatch, useSelector } from 'react-redux'
 import { resetPassword, clearPasswordState } from '../../slices/passwordSlice'
 import { validatePassword } from '../Utils/validation'
+import AuthBrand from '../Layout/AuthBrand'
 
 const NewPassword = () => {
     const [password, setPassword] = useState('')
@@ -52,6 +53,7 @@ const NewPassword = () => {
             <div className="row wrapper">
                 <div className="col-10 col-lg-5">
                     <form className="shadow-lg" onSubmit={submitHandler} noValidate>
+                        <AuthBrand />
                         <h1 className="mb-3">New Password</h1>
 
                         <div className="form-group">

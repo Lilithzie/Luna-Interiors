@@ -1,24 +1,28 @@
+import { useEffect } from 'react'
 import '../../App.css'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-// import { getUser, logout } from '../Utils/helpers';
 import { useDispatch, useSelector } from 'react-redux'
 import { logout } from '../../slices/authSlice'
+import { getCategorySummary } from '../../slices/catalogSlice'
+import { categoryLink } from '../Utils/helpers'
+import Logo from './Logo'
+import Search from './Search'
 
 export const Header = () => {
     const dispatch = useDispatch();
     const { user } = useSelector(state => state.auth)
     const { cartItems } = useSelector(state => state.cart)
-    // const [user, setUser] = useState({})
+    const { ids: wishlistIds } = useSelector(state => state.wishlist)
+    const { categories } = useSelector(state => state.catalog)
+    const { pathname } = useLocation()
+    const [searchParams] = useSearchParams()
+    const activeCategory = pathname === '/' ? searchParams.get('category') : null
+    const isAdmin = !!(user && user.role === 'admin')
+    const inAdminArea = pathname === '/dashboard' || pathname.startsWith('/admin')
 
-    // const logoutHandler = () => {
-    //     logout(navigate('/'));
-
-    //     toast.success('log out', {
-    //         position: 'bottom-right'
-    //     });
-    // }
+    useEffect(() => { dispatch(getCategorySummary()) }, [dispatch])
 
     const logoutHandler = () => {
         dispatch(logout());
@@ -26,66 +30,85 @@ export const Header = () => {
             position: 'bottom-right'
         });
     }
-    // useEffect(() => {
-    //     setUser(getUser())
-    // }, []);
+
     return (
-        <>
-            <nav className="navbar row">
-                <div className="col-12 col-md-3">
-                    <div className="navbar-brand">
-                        <Link to="/">
-                            <span className="luna-brand">Luna <span>Interiors</span></span>
-
-                        </Link>
-
-                    </div>
-
+        <header className="site-header">
+            {!inAdminArea && (
+                <div className="announcement-bar" id="announcement_bar">
+                    Free shipping on orders over ₱5,000 &nbsp;·&nbsp; Cash on delivery available
                 </div>
-                <div className="col-12 col-md-3 mt-4 mt-md-0 text-center">
+            )}
 
-                    {user ? (<div className="ml-4 dropdown d-inline">
-                        <Link to="#!" className="btn dropdown-toggle text-white mr-4" type="button" id="dropDownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <figure className="avatar avatar-nav">
-                                <img
-                                    src={user.avatar && user.avatar.url}
-                                    alt={user && user.name}
-                                    className="rounded-circle"
-                                />
-                            </figure>
-                            <span>{user && user.name}</span>
-                        </Link>
+            <div className="header-main">
+                <Link to="/" className="header-logo" aria-label="Luna Interiors home">
+                    <Logo className="d-none d-md-block" />
+                    <Logo symbol className="d-md-none" />
+                </Link>
 
-                        <div className="dropdown-menu" aria-labelledby="dropDownMenuButton">
-                            {user && user.role === 'admin' ? (
-                                <>
-                                    <Link className="dropdown-item" to="/dashboard">Dashboard</Link>
-                                    <Link className="dropdown-item" to="/admin/products">Products</Link>
-                                    <Link className="dropdown-item" to="/admin/orders">Orders</Link>
-                                </>
-                            ) : (
-                                <Link className="dropdown-item" to="/orders/me">My Orders</Link>
-                            )}
-                            <Link className="dropdown-item" to="/me">Profile</Link>
+                <div className="header-search"><Search /></div>
 
-                            <Link
-                                className="dropdown-item text-danger" to="/"
-                                onClick={logoutHandler}
-                            >
-                                Logout
+                <div className="header-actions">
+                    {user ? (
+                        <div className="dropdown">
+                            <Link to="#!" className="header-action dropdown-toggle" type="button" id="dropDownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <figure className="avatar avatar-nav">
+                                    <img
+                                        src={user.avatar && user.avatar.url}
+                                        alt={user && user.name}
+                                        className="rounded-circle"
+                                    />
+                                </figure>
+                                <span className="header-action-label d-none d-lg-inline">{user && user.name}</span>
                             </Link>
+                            <div className="dropdown-menu dropdown-menu-right" aria-labelledby="dropDownMenuButton">
+                                {isAdmin ? (
+                                    <>
+                                        <Link className="dropdown-item" to="/dashboard">Dashboard</Link>
+                                        <Link className="dropdown-item" to="/admin/products">Products</Link>
+                                        <Link className="dropdown-item" to="/admin/orders">Orders</Link>
+                                    </>
+                                ) : (
+                                    <Link className="dropdown-item" to="/orders/me">My Orders</Link>
+                                )}
+                                <Link className="dropdown-item" to="/me">Profile</Link>
+                                <Link
+                                    className="dropdown-item text-danger" to="/"
+                                    onClick={logoutHandler}
+                                >
+                                    Logout
+                                </Link>
+                            </div>
                         </div>
-                    </div>) : <Link to="/login" className="btn ml-4" id="login_btn">Login</Link>}
+                    ) : (
+                        <Link to="/login" className="header-action" id="login_btn" aria-label="Login">
+                            <i className="fa fa-user-o" aria-hidden="true"></i>
+                            <span className="header-action-label d-none d-lg-inline">Login</span>
+                        </Link>
+                    )}
 
-                    {!(user && user.role === 'admin') && <Link to="/cart" style={{ textDecoration: 'none' }} >
-                        <span id="cart" className="ml-3">Cart</span>
-                        <span className="ml-1" id="cart_count">{cartItems ? cartItems.length : null}</span>
-                        {/* <span className="ml-1" id="cart_count">2</span> */}
-                    </Link>}
-                    {/* <span className="ml-1" id="cart_count">{cartItems ? cartItems.length : null}</span>  */}
+                    {!isAdmin && (
+                        <>
+                            <Link to="/wishlist" className="header-action" id="wishlist_link" aria-label="Wishlist">
+                                <i className="fa fa-heart-o" aria-hidden="true"></i>
+                                <span className="header-count" id="wishlist_count">{wishlistIds.length}</span>
+                            </Link>
+                            <Link to="/cart" className="header-action" id="cart_link" aria-label="Cart">
+                                <i className="fa fa-shopping-cart" aria-hidden="true"></i>
+                                <span className="header-count" id="cart_count">{cartItems ? cartItems.length : null}</span>
+                            </Link>
+                        </>
+                    )}
                 </div>
+            </div>
 
-            </nav>
-        </>
+            {!inAdminArea && (
+                <nav className="category-nav" aria-label="Shop by category">
+                    <Link to="/" className={pathname === '/' && !activeCategory ? 'active' : ''}>All Furniture</Link>
+                    {categories.map(({ category }) => (
+                        <Link key={category} to={categoryLink(category)} className={activeCategory === category ? 'active' : ''}>{category}</Link>
+                    ))}
+                </nav>
+            )}
+        </header>
     )
 }

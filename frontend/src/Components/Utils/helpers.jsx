@@ -18,9 +18,17 @@ export const CATEGORIES = [
     'Kids & Nursery',
 ];
 
+export const categoryLink = (category) => `/?category=${encodeURIComponent(category)}`;
+
 export const NO_IMAGE = '/images/no-image.svg';
 
 export const peso = (n) => `₱${Number(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+
+// percent off when the product has a higher compare-at price, otherwise 0
+export const discountPercent = (product) =>
+    product && product.compareAtPrice > product.price
+        ? Math.round((1 - product.price / product.compareAtPrice) * 100)
+        : 0;
 
 export const firstImage = (product) =>
     product && product.images && product.images.length ? product.images[0].url : NO_IMAGE;

@@ -11,7 +11,7 @@ const ProductForm = ({ initial, submitLabel, submitting, onSubmit }) => {
     // React Hook Form handles the text fields; photos are managed separately below
     const { register, handleSubmit, reset, formState: { errors } } = useForm({
         mode: 'onTouched',
-        defaultValues: { name: '', price: '', stock: '', description: '', category: CATEGORIES[0], seller: 'Luna Interiors' },
+        defaultValues: { name: '', price: '', compareAtPrice: '', stock: '', description: '', category: CATEGORIES[0], seller: 'Luna Interiors' },
     })
     const [photoError, setPhotoError] = useState('')
     const [existing, setExisting] = useState([])     // images already saved (can be removed)
@@ -22,6 +22,7 @@ const ProductForm = ({ initial, submitLabel, submitting, onSubmit }) => {
         reset({
             name: initial.name || '',
             price: initial.price ?? '',
+            compareAtPrice: initial.compareAtPrice ?? '',
             stock: initial.stock ?? '',
             description: initial.description || '',
             category: initial.category || CATEGORIES[0],
@@ -56,6 +57,7 @@ const ProductForm = ({ initial, submitLabel, submitting, onSubmit }) => {
         const fd = new FormData()
         fd.set('name', values.name.trim())
         fd.set('price', values.price)
+        fd.set('compareAtPrice', values.compareAtPrice)
         fd.set('description', values.description.trim())
         fd.set('category', values.category)
         fd.set('stock', values.stock)
@@ -79,7 +81,7 @@ const ProductForm = ({ initial, submitLabel, submitting, onSubmit }) => {
                 {errors.name && <div className="invalid-feedback">{errors.name.message}</div>}
             </div>
             <div className="row">
-                <div className="form-group col-md-6">
+                <div className="form-group col-md-4">
                     <label htmlFor="price_field">Price (₱)</label>
                     <input type="number" id="price_field" className={`form-control ${errors.price ? 'is-invalid' : ''}`} step="0.01"
                         {...register('price', {
@@ -89,7 +91,15 @@ const ProductForm = ({ initial, submitLabel, submitting, onSubmit }) => {
                         })} />
                     {errors.price && <div className="invalid-feedback">{errors.price.message}</div>}
                 </div>
-                <div className="form-group col-md-6">
+                <div className="form-group col-md-4">
+                    <label htmlFor="compare_price_field">Compare-at price (₱) <small className="text-muted">optional</small></label>
+                    <input type="number" id="compare_price_field" className={`form-control ${errors.compareAtPrice ? 'is-invalid' : ''}`} step="0.01"
+                        {...register('compareAtPrice', {
+                            validate: (v, form) => v === '' || Number(v) > Number(form.price) || 'Must be higher than the price to show a discount',
+                        })} />
+                    {errors.compareAtPrice && <div className="invalid-feedback">{errors.compareAtPrice.message}</div>}
+                </div>
+                <div className="form-group col-md-4">
                     <label htmlFor="stock_field">Stock</label>
                     <input type="number" id="stock_field" className={`form-control ${errors.stock ? 'is-invalid' : ''}`}
                         {...register('stock', {

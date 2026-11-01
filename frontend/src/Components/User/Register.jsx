@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 import { register, clearAuthError } from '../../slices/authSlice'
 import { isValidEmail, validatePassword } from '../Utils/validation'
+import AuthBrand from '../Layout/AuthBrand'
 
 
 const Register = () => {
@@ -136,6 +137,7 @@ const Register = () => {
             <div className="row wrapper">
                 <div className="col-10 col-lg-5">
                     <form className="shadow-lg" onSubmit={submitHandler} encType='multipart/form-data' noValidate>
+                        <AuthBrand />
                         <h1 className="mb-3">Register</h1>
 
                         <div className="form-group">

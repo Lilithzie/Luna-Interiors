@@ -11,6 +11,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useDispatch, useSelector } from 'react-redux'
 import { login, loginWithGoogle, clearAuthError } from '../../slices/authSlice'
 import { signInWithGoogle } from '../../config/firebase'
+import AuthBrand from '../Layout/AuthBrand'
 
 const Login = () => {
     const { isAuthenticated, error, loading, user } = useSelector(state => state.auth)
@@ -93,6 +94,7 @@ const Login = () => {
                                 onSubmit={handleSubmit(submitHandler)}
                                 noValidate
                             >
+                                <AuthBrand />
                                 <h1 className="mb-3">Login</h1>
                                 <div className="form-group">
                                     <label htmlFor="email_field">Email</label>

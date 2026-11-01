@@ -19,6 +19,8 @@ const pickFields = (body) => {
     ['name', 'price', 'description', 'category', 'seller', 'stock'].forEach(k => {
         if (body[k] !== undefined) fields[k] = body[k];
     });
+    // optional "was" price: leaving the form field blank removes the discount
+    if (body.compareAtPrice !== undefined) fields.compareAtPrice = body.compareAtPrice === '' ? null : body.compareAtPrice;
     return fields;
 }
 
@@ -122,6 +124,17 @@ exports.getProducts = async (req, res) => {
         productsCount,
         categories: Product.CATEGORIES,
     })
+}
+
+// GET /products/categories  -> categories that have products, each with a count and a top-rated photo
+exports.getCategorySummary = async (req, res) => {
+    const categories = await Product.aggregate([
+        { $sort: { ratings: -1, numOfReviews: -1, _id: -1 } },
+        { $group: { _id: '$category', count: { $sum: 1 }, image: { $first: { $arrayElemAt: ['$images.url', 0] } } } },
+        { $project: { _id: 0, category: '$_id', count: 1, image: 1 } },
+    ]);
+    categories.sort((a, b) => Product.CATEGORIES.indexOf(a.category) - Product.CATEGORIES.indexOf(b.category));
+    return res.status(200).json({ success: true, categories })
 }
 
 /* ------------------------------------------------------------------ */

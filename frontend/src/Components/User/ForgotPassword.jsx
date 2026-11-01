@@ -5,6 +5,7 @@ import MetaData from '../Layout/MetaData'
 import { useDispatch, useSelector } from 'react-redux'
 import { forgotPassword, clearPasswordState } from '../../slices/passwordSlice';
 import { isValidEmail } from '../Utils/validation'
+import AuthBrand from '../Layout/AuthBrand'
 
 
 
@@ -65,6 +66,7 @@ const ForgotPassword = () => {
             <div className="row wrapper">
                 <div className="col-10 col-lg-5">
                     <form className="shadow-lg" onSubmit={submitHandler} noValidate>
+                        <AuthBrand />
                         <h1 className="mb-3">Forgot Password</h1>
                         <div className="form-group">
                             <label htmlFor="email_field">Enter Email</label>
