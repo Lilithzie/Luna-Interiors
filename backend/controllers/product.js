@@ -128,9 +128,9 @@ exports.getProducts = async (req, res) => {
 /* MP3 - Reviews & ratings                                             */
 /* ------------------------------------------------------------------ */
 
-// A user has "availed" a product when it appears in one of their orders.
+// A user has "availed" a product once an order containing it has been delivered.
 const hasAvailed = (userId, productId) =>
-    Order.exists({ user: userId, 'orderItems.product': productId });
+    Order.exists({ user: userId, orderStatus: 'Delivered', 'orderItems.product': productId });
 
 // GET /review/eligibility?productId=...
 exports.reviewEligibility = async (req, res) => {
@@ -159,7 +159,7 @@ exports.createProductReview = async (req, res) => {
         return res.status(404).json({ success: false, message: 'Product not found' })
     }
     if (!(await hasAvailed(req.user._id, product._id))) {
-        return res.status(403).json({ success: false, message: 'Only customers who ordered this product can review it' })
+        return res.status(403).json({ success: false, message: 'You can review this product once your order has been delivered' })
     }
 
     // bad-words: bad words in the comment are replaced with asterisks before saving

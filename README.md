@@ -192,9 +192,9 @@ npm run dev
 | -- | ------- | ----- |
 | MP1 (20) | Product CRUD datatable, multiple photo upload, bulk delete via checkboxes | `frontend/src/Components/Admin/ProductsList.jsx`, `ProductForm.jsx`, `NewProduct.jsx`, `UpdateProduct.jsx` · `backend/controllers/product.js` (`DELETE /api/v1/admin/products` = bulk) |
 | MP2 (20) | Price, category, ratings and review-count filters (+ sort, pagination) | `frontend/src/Components/Home.jsx` · `backend/utils/apiFeatures.js` |
-| MP3 (20) | Customers who ordered a product can review/rate it, edit their own review, admin can delete any review | `frontend/src/Components/Product/ProductDetails.jsx`, `Admin/ProductReviews.jsx` · `createProductReview`, `deleteReview` |
+| MP3 (20) | Customers whose order of a product was delivered can review/rate it, edit their own review, admin can delete any review | `frontend/src/Components/Product/ProductDetails.jsx`, `Admin/ProductReviews.jsx` · `createProductReview`, `deleteReview` |
 
-Built on the itcp318 reference system (same Express + Mongoose models, Redux, cookie/JWT auth, same MongoDB via `DB_URI`).
+Built on the itcp318 reference system (same Express + Mongoose models, Redux Toolkit slices in `frontend/src/slices`, cookie/JWT auth, same MongoDB via `DB_URI`).
 
 ### Setup
 ```bash

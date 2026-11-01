@@ -2,12 +2,10 @@ import React, { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import MetaData from '../Layout/MetaData'
 import { useNavigate } from "react-router-dom";
-import axios from 'axios';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { updateProfile, loadUser, clearErrors } from '../../actions/userActions'
+import { updateProfile, resetUserUpdate, clearUserError } from '../../slices/userSlice'
 
-import { UPDATE_PROFILE_RESET } from '../../constants/userConstants'
 import { useDispatch, useSelector } from 'react-redux'
 
 // import { getToken } from '../Utils/helpers';
@@ -21,7 +19,7 @@ const UpdateProfile = () => {
 
     const { register, handleSubmit, reset, formState: { errors } } = useForm({ mode: 'onTouched', defaultValues: { name: '', email: '' } })
     const [avatar, setAvatar] = useState('')
-    const [avatarPreview, setAvatarPreview] = useState('/images/default_avatar.jpg')
+    const [avatarPreview, setAvatarPreview] = useState('/images/default_avatar.svg')
     // const [error, setError] = useState('')
     // const [user, setUser] = useState({})
     // const [loading, setLoading] = useState(false)
@@ -84,25 +82,23 @@ const UpdateProfile = () => {
     // }, [])
 
     useEffect(() => {
-        console.log(user)
         if (user) {
             reset({ name: user.name, email: user.email })
             setAvatarPreview(user.avatar.url)
         }
+    }, [user, reset])
+
+    useEffect(() => {
         if (error) {
-            // alert.error(error);
-            console.log(error)
-            dispatch(clearErrors());
+            toast.error(error, { position: 'bottom-right' })
+            dispatch(clearUserError());
         }
         if (isUpdated) {
-            // alert.success('User updated successfully')
-            dispatch(loadUser());
+            toast.success('Profile updated', { position: 'bottom-right' })
             navigate('/me', { replace: true })
-            dispatch({
-                type: UPDATE_PROFILE_RESET
-            })
+            dispatch(resetUserUpdate())
         }
-    }, [dispatch, error, isUpdated, navigate, user, reset])
+    }, [dispatch, error, isUpdated, navigate])
 
     const submitHandler = ({ name, email }) => {
         const formData = new FormData();

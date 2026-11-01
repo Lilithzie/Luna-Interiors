@@ -135,6 +135,13 @@ exports.deleteOrder = async (req, res, next) => {
         })
 
     }
+    // undelivered items go back on the shelf; delivered ones have left the inventory.
+    // Runs after the delete so a repeated request cannot restore the stock twice.
+    if (order.orderStatus !== 'Delivered') {
+        for (const item of order.orderItems) {
+            await Product.updateOne({ _id: item.product }, { $inc: { stock: item.quantity } })
+        }
+    }
     return res.status(200).json({
         success: true
     })

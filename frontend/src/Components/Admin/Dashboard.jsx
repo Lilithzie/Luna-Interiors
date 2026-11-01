@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { Link } from 'react-router-dom';
 
 import MetaData from '../Layout/MetaData'
 import Loader from '../Layout/Loader'
 import Sidebar from './SideBar'
-import { getToken } from '../Utils/helpers';
-import axios from 'axios'
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { peso } from '../Utils/helpers';
+import { useDispatch, useSelector } from 'react-redux'
+import { getAdminProducts } from '../../slices/adminProductSlice'
+import { allOrders } from '../../slices/orderSlice'
+import { allUsers } from '../../slices/adminUserSlice'
 import ProductSalesChart from './ProductSalesChart';
 import UserSalesChart from './UserSalesChart';
 import MonthlySalesChart from './MonthlySalesChart';
@@ -16,43 +17,21 @@ import DateRangeSalesChart from './DateRangeSalesChart';
 
 const Dashboard = () => {
 
-    const [products, setProducts] = useState([])
-    const [error, setError] = useState('')
-    // const [users, setUsers] = useState([])
-    // const [orders, setOrders] = useState([])
-    const [loading, setLoading] = useState(true)
-    // const [totalAmount, setTotalAmount] = useState([])
+    const dispatch = useDispatch()
+    const { products, loading, error } = useSelector(state => state.adminProducts)
+    const { orders, totalAmount } = useSelector(state => state.adminOrders)
+    const { users } = useSelector(state => state.adminUsers)
     let outOfStock = 0;
     (products || []).forEach(product => {
         if (product.stock === 0) {
             outOfStock += 1;
         }
     })
-    const getAdminProducts = async () => {
-        try {
-
-            const config = {
-                headers: {
-                    'Authorization': `Bearer ${getToken()}`
-                }
-            }
-
-            const { data } = await axios.get(`${import.meta.env.VITE_API}/admin/products`, config)
-            console.log(data)
-            setProducts(data.products)
-            setLoading(false)
-        } catch (error) {
-            setError(error.response?.data?.message || 'Could not load dashboard data')
-            setLoading(false)
-
-        }
-    }
-
     useEffect(() => {
-        getAdminProducts()
-        // allOrders()
-        // allUsers()
-    }, [])
+        dispatch(getAdminProducts())
+        dispatch(allOrders())
+        dispatch(allUsers())
+    }, [dispatch])
 
     return (
         <>
@@ -70,10 +49,10 @@ const Dashboard = () => {
 
                             <div className="row pr-4">
                                 <div className="col-xl-12 col-sm-12 mb-3">
-                                    <div className="card text-white bg-primary o-hidden h-100">
+                                    <div className="card text-white luna-stat-total o-hidden h-100">
                                         <div className="card-body">
-                                            {/* <div className="text-center card-font-size">Total Amount<br /> <b>${totalAmount && totalAmount.toFixed(2)}</b>
-                                            </div> */}
+                                            <div className="text-center card-font-size">Total Amount<br /> <b>{peso(totalAmount)}</b>
+                                            </div>
 
                                         </div>
                                     </div>
@@ -81,7 +60,7 @@ const Dashboard = () => {
                             </div>
                             <div className="row pr-4">
                                 <div className="col-xl-3 col-sm-6 mb-3">
-                                    <div className="card text-white bg-success o-hidden h-100">
+                                    <div className="card text-white luna-stat-products o-hidden h-100">
                                         <div className="card-body">
                                             <div className="text-center card-font-size">Products<br /> <b>{products && products.length}</b></div>
                                         </div>
@@ -95,11 +74,11 @@ const Dashboard = () => {
                                     </div>
                                 </div>
                                 <div className="col-xl-3 col-sm-6 mb-3">
-                                    <div className="card text-white bg-danger o-hidden h-100">
+                                    <div className="card text-white luna-stat-orders o-hidden h-100">
 
-                                        {/* <div className="card-body">
+                                        <div className="card-body">
                                             <div className="text-center card-font-size">Orders<br /> <b>{orders && orders.length}</b></div>
-                                        </div> */}
+                                        </div>
 
                                         <Link className="card-footer text-white clearfix small z-1" to="/admin/orders">
                                             <span className="float-left">View Details</span>
@@ -112,11 +91,11 @@ const Dashboard = () => {
 
 
                                 <div className="col-xl-3 col-sm-6 mb-3">
-                                    <div className="card text-white bg-info o-hidden h-100">
+                                    <div className="card text-white luna-stat-users o-hidden h-100">
 
-                                        {/* <div className="card-body">
+                                        <div className="card-body">
                                             <div className="text-center card-font-size">Users<br /> <b>{users && users.length}</b></div>
-                                        </div> */}
+                                        </div>
 
                                         <Link className="card-footer text-white clearfix small z-1" to="/admin/users">
                                             <span className="float-left">View Details</span>
@@ -127,7 +106,7 @@ const Dashboard = () => {
                                     </div>
                                 </div>
                                 <div className="col-xl-3 col-sm-6 mb-3">
-                                    <div className="card text-white bg-warning o-hidden h-100">
+                                    <div className="card text-white luna-stat-stock o-hidden h-100">
                                         {/*<div className="card-body">
                                             <div className="text-center card-font-size">Out of Stock<br /> <b>0</b></div>
                                         </div>*/}

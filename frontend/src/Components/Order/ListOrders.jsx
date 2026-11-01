@@ -1,13 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import MetaData from '../Layout/MetaData'
 import Loader from '../Layout/Loader'
-import axios from 'axios'
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 // import { getToken } from '../Utils/helpers'
 import { useDispatch, useSelector } from 'react-redux'
-import { myOrders, clearErrors } from '../../actions/orderActions'
+import { myOrders, clearMyOrdersError } from '../../slices/orderSlice'
 
 import {
 
@@ -116,10 +115,14 @@ const ListOrders = () => {
     const inf = useInfiniteRows(allRows, 10)
     useEffect(() => {
         dispatch(myOrders());
+    }, [dispatch])
+
+    useEffect(() => {
         if (error) {
             toast.error(error, {
                 position: 'bottom-right'
             });
+            dispatch(clearMyOrdersError())
         }
     }, [error, dispatch])
 

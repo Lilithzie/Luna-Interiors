@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Carousel } from 'react-bootstrap'
-import axios from 'axios'
 import { toast } from 'react-toastify'
 import { useDispatch, useSelector } from 'react-redux'
 
@@ -10,20 +9,19 @@ import Loader from '../Layout/Loader'
 import { Stars, StarInput } from '../Layout/Stars'
 import ListReviews from '../Review/ListReviews'
 import { peso, NO_IMAGE } from '../Utils/helpers'
-import { getProductDetails } from '../../actions/productActions'
-import { addItemToCart } from '../../actions/cartActions'
+import { getProductDetails } from '../../slices/productSlice'
+import { addItemToCart } from '../../slices/cartSlice'
+import { getReviewEligibility, saveReview, resetReviewEligibility } from '../../slices/reviewSlice'
 
 const ProductDetails = () => {
     const { loading, error, product } = useSelector(state => state.productDetails);
     const { user, isAuthenticated } = useSelector(state => state.auth);
+    const { canReview, myReview, saving } = useSelector(state => state.reviews);
     const [quantity, setQuantity] = useState(1)
 
     // MP3 review state
-    const [canReview, setCanReview] = useState(false)
-    const [myReview, setMyReview] = useState(null)
     const [rating, setRating] = useState(0)
     const [comment, setComment] = useState('')
-    const [saving, setSaving] = useState(false)
     const [reviewErrors, setReviewErrors] = useState({})
     const [reviewAttempted, setReviewAttempted] = useState(false)
 
@@ -36,22 +34,21 @@ const ProductDetails = () => {
     const decreaseQty = () => { if (quantity > 1) setQuantity(quantity - 1) }
 
     const addToCart = async () => {
-        await dispatch(addItemToCart(id, quantity));
-        toast.success('Item added to cart', { position: 'bottom-right' })
+        try {
+            await dispatch(addItemToCart({ id, quantity })).unwrap();
+            toast.success('Item added to cart', { position: 'bottom-right' })
+        } catch (message) {
+            toast.error(message, { position: 'bottom-right' })
+        }
     }
 
     const loadEligibility = useCallback(async () => {
-        if (!isAuthenticated) { setCanReview(false); setMyReview(null); return }
-        try {
-            const { data } = await axios.get(`${import.meta.env.VITE_API}/review/eligibility`, { params: { productId: id }, withCredentials: true })
-            setCanReview(data.canReview)
-            setMyReview(data.review)
-            setRating(data.review ? data.review.rating : 0)
-            setComment(data.review ? data.review.comment : '')
-        } catch (e) {
-            setCanReview(false)
-        }
-    }, [id, isAuthenticated])
+        if (!isAuthenticated) { dispatch(resetReviewEligibility()); return }
+        const result = await dispatch(getReviewEligibility(id))
+        const review = result.payload?.myReview
+        setRating(review ? review.rating : 0)
+        setComment(review ? review.comment : '')
+    }, [dispatch, id, isAuthenticated])
 
     const submitReview = async (e) => {
         e.preventDefault()
@@ -61,17 +58,15 @@ const ProductDetails = () => {
         if (comment.trim().length < 3) nextErrors.comment = 'Review must be at least 3 characters.'
         setReviewErrors(nextErrors)
         if (Object.keys(nextErrors).length) return
-        setSaving(true)
         try {
-            const { data } = await axios.put(`${import.meta.env.VITE_API}/review`, { rating, comment, productId: id }, { withCredentials: true })
+            const data = await dispatch(saveReview({ rating, comment, productId: id })).unwrap()
             toast.success(data.updated ? 'Your review was updated' : 'Thanks! Your review was posted', { position: 'bottom-right' })
             if (data.masked) toast.info('Some words in your review were masked (****) because they are not allowed.', { position: 'bottom-right' })
             dispatch(getProductDetails(id))
             loadEligibility()
-        } catch (err) {
-            toast.error(err.response?.data?.message || 'Could not save review', { position: 'bottom-right' })
+        } catch (message) {
+            toast.error(message || 'Could not save review', { position: 'bottom-right' })
         }
-        setSaving(false)
     }
 
     useEffect(() => { dispatch(getProductDetails(id)) }, [dispatch, id]);
@@ -133,12 +128,12 @@ const ProductDetails = () => {
                         <div id="review_section" className="mt-4">
                             {!isAuthenticated && (
                                 <div className="alert alert-secondary">
-                                    <Link to="/login">Login</Link> to review products you've ordered.
+                                    <Link to="/login">Login</Link> to review products that have been delivered to you.
                                 </div>
                             )}
                             {isAuthenticated && !isAdmin && !canReview && (
                                 <div className="alert alert-secondary" id="review_locked">
-                                    Only customers who have ordered this product can write a review.
+                                    You can write a review once your order of this product has been delivered.
                                 </div>
                             )}
                             {isAuthenticated && !isAdmin && canReview && (

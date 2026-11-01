@@ -6,21 +6,19 @@ import Sidebar from './SideBar'
 
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import axios from 'axios'
-import { getToken } from '../Utils/helpers'
+import { useDispatch, useSelector } from 'react-redux'
+import { getOrderDetails, updateOrder, clearOrderDetailsError } from '../../slices/orderSlice'
 import { OrderTimeline, OrderTotals, ReceiptButton, STATUSES, fmtDate, paymentLabel } from '../Order/OrderParts'
 
 const ProcessOrder = () => {
 
-    const [status, setStatus] = useState('')
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState('')
-    const [order, setOrder] = useState({})
-    const [isUpdated, setIsUpdated] = useState(false)
+    const dispatch = useDispatch()
+    const { order, loading, updating, error } = useSelector(state => state.orderDetails)
+    const [selectedStatus, setSelectedStatus] = useState(null)
 
     let { id } = useParams();
     const { shippingInfo, orderItems, paymentInfo, user, totalPrice, orderStatus } = order
-    const orderId = id;
+    const status = selectedStatus ?? orderStatus ?? ''
     const errMsg = (message = '') => toast.error(message, {
         position: 'bottom-center'
     });
@@ -29,60 +27,26 @@ const ProcessOrder = () => {
         position: 'bottom-center'
     });
 
-    const getOrderDetails = async (id) => {
-        try {
-            const config = {
-                headers: {
-
-                    'Authorization': `Bearer ${getToken()}`
-                }
-            }
-
-            const { data } = await axios.get(`${import.meta.env.VITE_API}/order/${id}`, { ...config, withCredentials: true })
-            setOrder(data.order)
-            setStatus(data.order.orderStatus)
-            setLoading(false)
-        } catch (error) {
-            setError(error.response?.data?.message || error.message)
-        }
-    }
-    const updateOrder = async (id, formData) => {
-
-        try {
-            const config = {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${getToken()}`
-                }
-            }
-            const { data } = await axios.put(`${import.meta.env.VITE_API}/admin/order/${id}`, formData, { ...config, withCredentials: true })
-            setIsUpdated(data.success)
-            setOrder(data.order)                 // show the new status + timeline right away
-            setStatus(data.order.orderStatus)
-            // the server e-mails the customer (products, subtotal, grand total + PDF receipt)
-            if (data.emailSent) toast.info(`Email with the PDF receipt sent to ${data.emailTo}`, { position: 'bottom-center' })
-            else toast.warn('Status saved, but the email could not be sent. Check the SMTP settings in the backend .env.', { position: 'bottom-center' })
-
-
-        } catch (error) {
-            setError(error.response?.data?.message || error.message)
-        }
-    }
+    useEffect(() => {
+        dispatch(getOrderDetails(id))
+    }, [dispatch, id])
 
     useEffect(() => {
-        getOrderDetails(orderId)
         if (error) {
             errMsg(error);
-            setError('')
+            dispatch(clearOrderDetailsError())
         }
-        if (isUpdated) {
-            successMsg(`Order status updated to ${status}`);
-            setIsUpdated(false)
-        }
-    }, [error, isUpdated, orderId])
+    }, [dispatch, error])
 
-    const updateOrderHandler = (id) => {
-        updateOrder(id, { status })
+    const updateOrderHandler = async (id) => {
+        const result = await dispatch(updateOrder({ id, status }))
+        if (!updateOrder.fulfilled.match(result)) return
+        const data = result.payload
+        setSelectedStatus(null)
+        successMsg(`Order status updated to ${data.order.orderStatus}`);
+        // the server e-mails the customer (products, subtotal, grand total + PDF receipt)
+        if (data.emailSent) toast.info(`Email with the PDF receipt sent to ${data.emailTo}`, { position: 'bottom-center' })
+        else toast.warn('Status saved, but the email could not be sent. Check the SMTP settings in the backend .env.', { position: 'bottom-center' })
     }
 
     const shippingDetails = shippingInfo && `${shippingInfo.address}, ${shippingInfo.city}, ${shippingInfo.postalCode}, ${shippingInfo.country}`
@@ -149,14 +113,14 @@ const ProcessOrder = () => {
                                             className="form-control"
                                             name='status'
                                             value={status}
-                                            onChange={(e) => setStatus(e.target.value)}
+                                            onChange={(e) => setSelectedStatus(e.target.value)}
                                         >
                                             {STATUSES.map((s, i) => (
                                                 <option key={s} value={s} disabled={i < currentIdx}>{s}</option>
                                             ))}
                                         </select>
                                     </div>
-                                    <button id="update_status" className="btn btn-luna btn-block" disabled={delivered || status === orderStatus} onClick={() => updateOrderHandler(order._id)}>
+                                    <button id="update_status" className="btn btn-luna btn-block" disabled={delivered || updating || status === orderStatus} onClick={() => updateOrderHandler(order._id)}>
                                         Update Status
                                     </button>
                                     <small className="text-muted d-block mt-2">

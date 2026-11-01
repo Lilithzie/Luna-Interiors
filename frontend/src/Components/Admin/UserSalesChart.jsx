@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import {
     BarChart,
     Bar,
@@ -10,35 +10,16 @@ import {
     ResponsiveContainer,
     Cell,
 } from "recharts";
-import { getToken } from "../Utils/helpers";
-import axios from "axios";
+import { useDispatch, useSelector } from 'react-redux'
+import { getCustomerSales } from '../../slices/salesSlice'
 
 const UserSalesChart = () => {
-    const [sales, setSales] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState('')
-    const userSales = async () => {
-
-        try {
-            const config = {
-                headers: {
-
-                    'Authorization': `Bearer ${getToken()}`
-                }
-            }
-
-            const { data } = await axios.get(`${import.meta.env.VITE_API}/admin/customer-sales`, config)
-            setSales(data.customerSales)
-            setLoading(false)
-        } catch (error) {
-            setError(error.response.data.message)
-        }
-    }
-    const barColors = ["#1f77b4", "#ff7f0e", "#2ca02c"]
+    const dispatch = useDispatch()
+    const { byCustomer: sales } = useSelector(state => state.sales)
+    const barColors = ["#8B5A2B", "#C49A6C", "#6B4423"]
     useEffect(() => {
-        userSales()
-        // allUsers()
-    }, [])
+        dispatch(getCustomerSales())
+    }, [dispatch])
 
     return (
         <div className="card dashboard-chart-card shadow-sm border-0 p-3">
@@ -51,11 +32,10 @@ const UserSalesChart = () => {
                 <Tooltip />
                 <Legend />
 
-                <Bar dataKey="total" stroke="#000000"
-                    strokeWidth={5} >
+                <Bar dataKey="total">
                     {
                         sales.map((item, index) => (
-                            <Cell key={`cell-${index}`} fill={barColors[index % 20]} />
+                            <Cell key={`cell-${index}`} fill={barColors[index % barColors.length]} />
                         ))
                     }
                 </Bar>

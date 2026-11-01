@@ -1,8 +1,8 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import axios from 'axios'
 import Swal from 'sweetalert2'
 import { toast } from 'react-toastify'
+import { useDispatch, useSelector } from 'react-redux'
 import { DataGrid, GridToolbarContainer, GridToolbarQuickFilter } from '@mui/x-data-grid'
 import { useInfiniteRows, LoadMoreSentinel } from '../Utils/InfiniteScroll'
 
@@ -10,8 +10,8 @@ import MetaData from '../Layout/MetaData'
 import Loader from '../Layout/Loader'
 import Sidebar from './SideBar'
 import { Stars } from '../Layout/Stars'
+import { getAllReviews, deleteReview, clearReviewError } from '../../slices/reviewSlice'
 
-const API = import.meta.env.VITE_API
 const Toolbar = () => (
     <GridToolbarContainer sx={{ p: 1 }}>
         <GridToolbarQuickFilter debounceMs={200} placeholder="Search reviews…" />
@@ -20,19 +20,17 @@ const Toolbar = () => (
 
 // MP3 - admin can delete any review
 const ProductReviews = () => {
-    const [reviews, setReviews] = useState([])
-    const [loading, setLoading] = useState(true)
+    const dispatch = useDispatch()
+    const { reviews, loading, error } = useSelector(state => state.reviews)
 
-    const load = useCallback(async () => {
-        try {
-            const { data } = await axios.get(`${API}/admin/reviews`, { withCredentials: true })
-            setReviews(data.reviews)
-        } catch (e) {
-            toast.error(e.response?.data?.message || 'Could not load reviews', { position: 'bottom-right' })
+    useEffect(() => { dispatch(getAllReviews()) }, [dispatch])
+
+    useEffect(() => {
+        if (error) {
+            toast.error(error, { position: 'bottom-right' })
+            dispatch(clearReviewError())
         }
-        setLoading(false)
-    }, [])
-    useEffect(() => { load() }, [load])
+    }, [dispatch, error])
 
     const remove = async (row) => {
         const r = await Swal.fire({
@@ -41,10 +39,9 @@ const ProductReviews = () => {
         })
         if (!r.isConfirmed) return
         try {
-            await axios.delete(`${API}/reviews`, { params: { productId: row.productId, id: row.id }, withCredentials: true })
+            await dispatch(deleteReview({ productId: row.productId, id: row.id })).unwrap()
             toast.success('Review deleted', { position: 'bottom-right' })
-            load()
-        } catch (e) { toast.error(e.response?.data?.message || 'Delete failed', { position: 'bottom-right' }) }
+        } catch (message) { toast.error(message || 'Delete failed', { position: 'bottom-right' }) }
     }
 
     const columns = useMemo(() => [

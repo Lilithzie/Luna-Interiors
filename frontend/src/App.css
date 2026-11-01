@@ -743,6 +743,11 @@ ul.CTAs a {
 .thumb-grid .thumb .new-tag { position: absolute; left: 0; bottom: 0; background: var(--luna); color: #fff; font-size: 9px; padding: 0 5px; }
 .grid-thumb { width: 44px; height: 44px; object-fit: cover; border-radius: 6px; }
 .admin-page-title { color: var(--luna-ink); }
+.luna-stat-total { background: var(--luna-ink); }
+.luna-stat-products { background: var(--luna); }
+.luna-stat-orders { background: var(--luna-dark); }
+.luna-stat-users { background: #A67C52; }
+.luna-stat-stock { background: #B5651D; }
 
 
 /* ---------- Order status timeline + totals (term test lab) ---------- */

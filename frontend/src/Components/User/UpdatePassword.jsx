@@ -6,8 +6,7 @@ import 'react-toastify/dist/ReactToastify.css';
 // import axios from 'axios';
 // import { getToken } from '../Utils/helpers'
 import { useDispatch, useSelector } from 'react-redux'
-import { updatePassword, clearErrors } from '../../actions/userActions'
-import { UPDATE_PASSWORD_RESET } from '../../constants/userConstants'
+import { updatePassword, resetUserUpdate, clearUserError } from '../../slices/userSlice'
 import { validatePassword } from '../Utils/validation'
 
 
@@ -65,14 +64,13 @@ const UpdatePassword = () => {
 
     useEffect(() => {
         if (error) {
-            console.log(error)
-            dispatch(clearErrors());
+            toast.error(error, { position: 'bottom-right' })
+            dispatch(clearUserError());
         }
         if (isUpdated) {
+            toast.success('Password updated', { position: 'bottom-right' })
             navigate('/me')
-            dispatch({
-                type: UPDATE_PASSWORD_RESET
-            })
+            dispatch(resetUserUpdate())
         }
     }, [dispatch, error, navigate, isUpdated])
 
@@ -89,11 +87,7 @@ const UpdatePassword = () => {
         setFieldErrors(nextErrors)
         if (Object.keys(nextErrors).length) return
 
-        const formData = new FormData();
-        formData.set('oldPassword', oldPassword);
-        formData.set('password', password);
-
-        dispatch(updatePassword(formData))
+        dispatch(updatePassword({ oldPassword, password }))
     }
 
     return (

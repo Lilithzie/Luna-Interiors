@@ -113,7 +113,7 @@ exports.forgotPassword = async (req, res, next) => {
     const resetToken = user.getResetPasswordToken();
     await user.save({ validateBeforeSave: false });
     // Create reset password url
-    const resetUrl = `${req.protocol}://localhost:5173/password/reset/${resetToken}`;
+    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/password/reset/${resetToken}`;
     const message = `Your password reset token is as follow:\n\n${resetUrl}\n\nIf you have not requested this email, then ignore it.`
     try {
         await sendEmail({
@@ -137,15 +137,12 @@ exports.forgotPassword = async (req, res, next) => {
 }
 
 exports.resetPassword = async (req, res, next) => {
-    console.log(req.params.token)
     // Hash URL token
     const resetPasswordToken = crypto.createHash('sha256').update(req.params.token).digest('hex')
-    console.log(resetPasswordToken)
     const user = await User.findOne({
         resetPasswordToken,
         resetPasswordExpire: { $gt: Date.now() }
     })
-    console.log(user)
 
     if (!user) {
         return res.status(400).json({ message: 'Password reset token is invalid or has been expired' })
@@ -173,7 +170,6 @@ exports.resetPassword = async (req, res, next) => {
 
 exports.getUserProfile = async (req, res, next) => {
     const user = await User.findById(req.user.id);
-    console.log(user)
 
     return res.status(200).json({
         success: true,
@@ -221,7 +217,6 @@ exports.updateProfile = async (req, res, next) => {
 }
 
 exports.updatePassword = async (req, res, next) => {
-    console.log(req.body.password)
     if (!req.body.oldPassword || String(req.body.password || '').length < 8) {
         return res.status(400).json({ message: 'Current password is required and the new password must be at least 8 characters long' })
     }

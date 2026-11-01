@@ -10,7 +10,7 @@ import { LoadMoreSentinel } from './Utils/InfiniteScroll'
 import Search from './Layout/Search'
 
 import { useDispatch, useSelector } from 'react-redux'
-import { getProducts } from '../actions/productActions'
+import { getProducts } from '../slices/productSlice'
 
 const MAX_PRICE = 100000;
 const defaultFilters = { price: [0, MAX_PRICE], category: '', ratings: 0, reviews: 0, sort: 'newest' };

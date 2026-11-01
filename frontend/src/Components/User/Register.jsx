@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import MetaData from '../Layout/MetaData'
 // import axios from 'axios'
 import { useDispatch, useSelector } from 'react-redux'
-import { register, clearErrors } from '../../actions/userActions'
+import { toast } from 'react-toastify'
+import { register, clearAuthError } from '../../slices/authSlice'
 import { isValidEmail, validatePassword } from '../Utils/validation'
 
 
@@ -25,7 +26,7 @@ const Register = () => {
     const { name, email, password } = user;
 
     const [avatar, setAvatar] = useState('')
-    const [avatarPreview, setAvatarPreview] = useState('/images/default_avatar.jpg')
+    const [avatarPreview, setAvatarPreview] = useState('/images/default_avatar.svg')
     const [errors, setErrors] = useState({})
     const [attempted, setAttempted] = useState(false)
 
@@ -40,12 +41,12 @@ const Register = () => {
         }
 
         if (error) {
-            console.log(error)
-            dispatch(clearErrors());
+            toast.error(error, { position: 'bottom-right' })
+            dispatch(clearAuthError());
 
         }
 
-    }, [error, navigate, isAuthenticated])
+    }, [dispatch, error, navigate, isAuthenticated])
 
     const submitHandler = (e) => {
         e.preventDefault();

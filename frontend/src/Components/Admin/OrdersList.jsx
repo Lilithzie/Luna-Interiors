@@ -1,22 +1,20 @@
-import React, { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import React, { useEffect } from 'react'
+import { Link } from 'react-router-dom'
 
 import MetaData from '../Layout/MetaData'
 import Loader from '../Layout/Loader'
 import Sidebar from './SideBar'
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Swal from 'sweetalert2'
 import { DataGrid, } from '@mui/x-data-grid'
 import { useInfiniteRows, LoadMoreSentinel } from '../Utils/InfiniteScroll'
-import { getToken } from '../Utils/helpers'
-import axios from 'axios'
+import { useDispatch, useSelector } from 'react-redux'
+import { allOrders, deleteOrder, clearAdminOrdersError } from '../../slices/orderSlice'
 
 const OrdersList = () => {
-    let navigate = useNavigate();
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState('')
-    const [allOrders, setAllOrders] = useState([])
-    const [isDeleted, setIsDeleted] = useState(false)
+    const dispatch = useDispatch()
+    const { orders, loading, error } = useSelector(state => state.adminOrders)
     const errMsg = (message = '') => toast.error(message, {
         position: 'bottom-right'
     });
@@ -24,50 +22,25 @@ const OrdersList = () => {
         position: 'bottom-right'
     });
 
-    const listOrders = async () => {
-        try {
-            const config = {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${getToken()}`
-                }
-            }
-            const { data } = await axios.get(`${import.meta.env.VITE_API}/admin/orders`, config)
-            setAllOrders(data.orders)
-            setLoading(false)
-        } catch (error) {
-            setError(error.response?.data?.message || error.message)
-        }
-    }
-    const deleteOrder = async (id) => {
-        try {
-            const config = {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${getToken()}`
-                }
-            }
-            const { data } = await axios.delete(`${import.meta.env.VITE_API}/admin/order/${id}`, config)
-            setIsDeleted(data.success)
-            setLoading(false)
-        } catch (error) {
-            setError(error.response?.data?.message || error.message)
-
-        }
-    }
     useEffect(() => {
-        listOrders()
+        dispatch(allOrders())
+    }, [dispatch])
+
+    useEffect(() => {
         if (error) {
             errMsg(error)
-            setError('')
+            dispatch(clearAdminOrdersError())
         }
-        if (isDeleted) {
-            successMsg('Order deleted successfully');
-            navigate('/admin/orders');
-        }
-    }, [error, isDeleted])
-    const deleteOrderHandler = (id) => {
-        deleteOrder(id)
+    }, [dispatch, error])
+
+    const deleteOrderHandler = async (id, status) => {
+        const text = status === 'Delivered'
+            ? 'This order was delivered, so its items will not return to stock. This cannot be undone.'
+            : 'Its items will go back into stock. This cannot be undone.'
+        const r = await Swal.fire({ title: 'Delete this order?', text, icon: 'warning', showCancelButton: true, confirmButtonColor: '#8B5A2B', confirmButtonText: 'Yes, delete' })
+        if (!r.isConfirmed) return
+        const result = await dispatch(deleteOrder(id))
+        if (deleteOrder.fulfilled.match(result)) successMsg('Order deleted successfully')
     }
 
     const columns = [
@@ -114,18 +87,17 @@ const OrdersList = () => {
             renderCell: (params) => (
 
                 <>
-                    {console.log(params)}
                     <Link to={`/admin/order/${params.id}`} className="btn btn-primary py-1 px-2">
                         <i className="fa fa-eye"></i>
                     </Link>
-                    <button className="btn btn-danger py-1 px-2 ml-2" onClick={() => deleteOrderHandler(params.id)}>
+                    <button className="btn btn-danger py-1 px-2 ml-2" onClick={() => deleteOrderHandler(params.id, params.row.status)}>
                         <i className="fa fa-trash"></i>
                     </button>
                 </>
             )
         }
     ];
-    const allRows = allOrders.map(order => ({
+    const allRows = orders.map(order => ({
         id: order._id,
         numofItems: order.orderItems.length,
         amount: `₱${order.totalPrice}`,

@@ -3,7 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import MetaData from '../Layout/MetaData'
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import axios from 'axios';
+import { useDispatch, useSelector } from 'react-redux'
+import { resetPassword, clearPasswordState } from '../../slices/passwordSlice'
 import { validatePassword } from '../Utils/validation'
 
 const NewPassword = () => {
@@ -11,30 +12,13 @@ const NewPassword = () => {
     const [confirmPassword, setConfirmPassword] = useState('')
 
     let navigate = useNavigate();
-    const [error, setError] = useState('')
-    const [success, setSuccess] = useState(false)
+    const dispatch = useDispatch()
+    const { error, success } = useSelector(state => state.forgotPassword)
     const [fieldErrors, setFieldErrors] = useState({})
     const [attempted, setAttempted] = useState(false)
 
     let { token } = useParams();
-    console.log(token)
 
-    const resetPassword = async (token, passwords) => {
-        console.log(passwords)
-        try {
-            const config = {
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            }
-            const { data } = await axios.put(`http://localhost:4001/api/v1/password/reset/${token}`, passwords, config)
-            
-            setSuccess(data.success)
-        } catch (error) {
-            console.log(error)
-            setError(error)
-        }
-    }
     useEffect(() => {
         if (error) {
             toast.error(error, {
@@ -47,8 +31,8 @@ const NewPassword = () => {
             });
             navigate('/login')
         }
-
-    }, [error, success,])
+        if (error || success) dispatch(clearPasswordState())
+    }, [dispatch, navigate, error, success])
 
     const submitHandler = (e) => {
         e.preventDefault();
@@ -59,10 +43,7 @@ const NewPassword = () => {
         if (password !== confirmPassword) nextErrors.confirmPassword = 'Passwords do not match.'
         setFieldErrors(nextErrors)
         if (Object.keys(nextErrors).length) return
-        const formData = new FormData();
-        formData.set('password', password);
-        formData.set('confirmPassword', confirmPassword);
-        resetPassword(token, formData)
+        dispatch(resetPassword({ token, passwords: { password, confirmPassword } }))
     }
 
     return (

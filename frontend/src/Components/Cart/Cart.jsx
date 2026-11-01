@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import MetaData from '../Layout/MetaData'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { addItemToCart, removeItemFromCart } from '../../actions/cartActions'
+import { addItemToCart, removeItemFromCart } from '../../slices/cartSlice'
 
 
 const Cart = () => {
@@ -17,13 +17,13 @@ const Cart = () => {
     const increaseQty = (id, quantity, stock) => {
         const newQty = quantity + 1;
         if (newQty > stock) return;
-        dispatch(addItemToCart(id, newQty))
+        dispatch(addItemToCart({ id, quantity: newQty }))
     }
 
     const decreaseQty = (id, quantity) => {
         const newQty = quantity - 1;
         if (newQty <= 0) return;
-        dispatch(addItemToCart(id, newQty))
+        dispatch(addItemToCart({ id, quantity: newQty }))
     }
 
     const removeCartItemHandler = (id) => {
@@ -47,13 +47,13 @@ const Cart = () => {
                         <div className="col-12 col-lg-8">
 
                             {cartItems.map(item => (
-                                <>
+                                <React.Fragment key={item.product}>
                                     <hr />
 
-                                    <div className="cart-item" key={item.product}>
+                                    <div className="cart-item">
                                         <div className="row">
                                             <div className="col-4 col-lg-3">
-                                                <img src={item.image} alt="Laptop" height="90" width="115" />
+                                                <img src={item.image} alt={item.name} height="90" width="115" />
                                             </div>
 
                                             <div className="col-5 col-lg-3">
@@ -83,7 +83,7 @@ const Cart = () => {
                                         </div>
                                     </div>
                                     <hr />
-                                </>
+                                </React.Fragment>
                             ))}
 
                         </div>

@@ -3,8 +3,8 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ToastContainer, } from 'react-toastify';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import store from './store';
-import { loadUser } from './actions/userActions';
+import { useDispatch } from 'react-redux';
+import { loadUser } from './slices/authSlice';
 
 import { Header } from './Components/Layout/Header'
 import Footer from './Components/Layout/Footer'
@@ -38,11 +38,12 @@ import UpdateUser from './Components/Admin/UpdateUser';
 import ProtectedRoute from './Components/Route/ProtectedRoute';
 import ProductReviews from './Components/Admin/ProductReviews';
 function App() {
+  const dispatch = useDispatch()
   const [ready, setReady] = useState(false)
   useEffect(() => {
     // restore the login session (cookie) after a page refresh
-    Promise.resolve(store.dispatch(loadUser())).finally(() => setReady(true))
-  }, [])
+    dispatch(loadUser()).finally(() => setReady(true))
+  }, [dispatch])
 
   // const [state, setState] = useState({
   //   cartItems: localStorage.getItem('cartItems')
@@ -136,10 +137,10 @@ function App() {
           <Route path="/register" element={<Register exact="true" />} />
           <Route path="/password/forgot" element={<ForgotPassword />} exact="true" />
           <Route path="/password/reset/:token" element={<NewPassword />} exact="true" />
-          <Route path="/me" element={<Profile />} exact="true" />
-          <Route path="/me/update" element={<UpdateProfile />} exact="true"
+          <Route path="/me" element={<ProtectedRoute><Profile /></ProtectedRoute>} exact="true" />
+          <Route path="/me/update" element={<ProtectedRoute><UpdateProfile /></ProtectedRoute>} exact="true"
           />
-          <Route path="/password/update" element={<UpdatePassword />} />
+          <Route path="/password/update" element={<ProtectedRoute><UpdatePassword /></ProtectedRoute>} />
           {/* <Route path="/cart" element={<Cart cartItems={state.cartItems} addItemToCart={addItemToCart} removeItemFromCart={removeItemFromCart} />} exact="true" />
           <Route path="/shipping" element={<Shipping shipping={state.shippingInfo} saveShippingInfo={saveShippingInfo} />} />
           <Route path="/confirm" element={<ConfirmOrder cartItems={state.cartItems} shippingInfo={state.shippingInfo} />} />

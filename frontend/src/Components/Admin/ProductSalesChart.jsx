@@ -1,33 +1,22 @@
-import React, { useState, useEffect } from 'react'
-import { getToken } from "../Utils/helpers";
-import axios from "axios";
+import React, { useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { getProductSales } from '../../slices/salesSlice'
 
 import { PieChart, Pie, Legend, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 export default function ProductSalesChart() {
-    const [sales, setSales] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState('')
+    const dispatch = useDispatch()
+    const { byProduct: sales } = useSelector(state => state.sales)
     const pieColors = [
-        "#FF6633",
-        "#FFB399",
-        "#FF33FF",
-        "#FFFF99",
-        "#00B3E6",
-        "#E6B333",
-        "#3366E6",
-        "#999966",
-        "#809980",
-        "#E6FF80",
-        "#1AFF33",
-        "#999933",
-        "#FF3380",
-        "#CCCC00",
-        "#66E64D",
-        "#4D80CC",
-        "#FF4D4D",
-        "#99E6E6",
-        "#6666FF"
+        "#8B5A2B",
+        "#C49A6C",
+        "#6B4423",
+        "#A67C52",
+        "#D9B48F",
+        "#2E1F14",
+        "#7A8450",
+        "#B5651D",
+        "#9C7A5B",
     ]
     // console.log(data)
 
@@ -43,26 +32,9 @@ export default function ProductSalesChart() {
             </text>
         );
     };
-    const productSales = async () => {
-        try {
-            const config = {
-                headers: {
-
-                    'Authorization': `Bearer ${getToken()}`
-                }
-            }
-
-            const { data } = await axios.get(`${import.meta.env.VITE_API}/admin/product-sales`, config)
-            setSales(data.totalPercentage)
-
-        } catch (error) {
-            setError(error.response.data.message)
-
-        }
-    }
     useEffect(() => {
-        productSales()
-    }, [])
+        dispatch(getProductSales())
+    }, [dispatch])
 
 
     return (
@@ -79,7 +51,7 @@ export default function ProductSalesChart() {
                     cx="50%"
                     cy="50%"
                     outerRadius="65%"
-                    fill="#8884d8"
+                    fill="#8B5A2B"
                     label={renderCustomizedLabel}
                     labelLine={false}
                 // label

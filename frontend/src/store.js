@@ -1,68 +1,43 @@
-import { legacy_createStore as createStore, combineReducers, applyMiddleware } from 'redux';
-import { thunk } from 'redux-thunk';
+import { configureStore } from '@reduxjs/toolkit'
 
-import {
-    productsReducer,
-    productDetailsReducer,
-    // newProductReducer,
-    // newReviewReducer,
+import authReducer from './slices/authSlice'
+import userReducer from './slices/userSlice'
+import passwordReducer from './slices/passwordSlice'
+import adminUsersReducer from './slices/adminUserSlice'
+import { productsReducer, productDetailsReducer } from './slices/productSlice'
+import adminProductsReducer from './slices/adminProductSlice'
+import reviewsReducer from './slices/reviewSlice'
+import cartReducer from './slices/cartSlice'
+import { newOrderReducer, myOrdersReducer, orderDetailsReducer, adminOrdersReducer } from './slices/orderSlice'
+import salesReducer from './slices/salesSlice'
 
-
-} from './reducers/productReducers'
-import {
-    authReducer,
-    userReducer,
-    forgotPasswordReducer,
-    // allUsersReducer,
-    userDetailsReducer,
-} from './reducers/userReducers'
-
-import { cartReducer } from './reducers/cartReducers';
-
-import {
-    newOrderReducer,
-    myOrdersReducer,
-    orderDetailsReducer,
-    // allOrdersReducer,
-    // orderReducer,
-} from './reducers/orderReducers';
-
-let initialState = {
-    cart: {
-        cartItems: localStorage.getItem('cartItems')
-            ? JSON.parse(localStorage.getItem('cartItems'))
-            : [],
-        shippingInfo: localStorage.getItem('shippingInfo')
-            ? JSON.parse(localStorage.getItem('shippingInfo'))
-            : {}
+const store = configureStore({
+    reducer: {
+        auth: authReducer,
+        user: userReducer,
+        forgotPassword: passwordReducer,
+        adminUsers: adminUsersReducer,
+        products: productsReducer,
+        productDetails: productDetailsReducer,
+        adminProducts: adminProductsReducer,
+        reviews: reviewsReducer,
+        cart: cartReducer,
+        newOrder: newOrderReducer,
+        myOrders: myOrdersReducer,
+        orderDetails: orderDetailsReducer,
+        adminOrders: adminOrdersReducer,
+        sales: salesReducer,
     },
-    user: {},
-    auth: {},
-
-}
-
-
-
-const reducer = combineReducers({
-    products: productsReducer,
-    productDetails: productDetailsReducer,
-    auth: authReducer,
-    user: userReducer,
-    forgotPassword: forgotPasswordReducer,
-    // newProduct: newProductReducer,
-    cart: cartReducer,
-    newOrder: newOrderReducer,
-    myOrders: myOrdersReducer,
-    orderDetails: orderDetailsReducer,
-    // newReview: newReviewReducer,
-    // allOrders: allOrdersReducer,
-    // order: orderReducer,
-    // allUsers: allUsersReducer,
-    userDetails: userDetailsReducer,
-
-
 })
 
-const middlware = [thunk]
-const store = createStore(reducer, initialState, applyMiddleware(...middlware))
-export default store;
+// keep the cart across page refreshes
+let savedCart = store.getState().cart
+store.subscribe(() => {
+    const { cart } = store.getState()
+    if (cart === savedCart) return
+    savedCart = cart
+    localStorage.setItem('cartItems', JSON.stringify(cart.cartItems))
+    localStorage.setItem('shippingInfo', JSON.stringify(cart.shippingInfo))
+})
+
+export default store

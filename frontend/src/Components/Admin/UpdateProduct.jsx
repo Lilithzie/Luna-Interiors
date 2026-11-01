@@ -1,34 +1,34 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import axios from 'axios'
 import { toast } from 'react-toastify'
+import { useDispatch, useSelector } from 'react-redux'
 
 import MetaData from '../Layout/MetaData'
 import Loader from '../Layout/Loader'
 import Sidebar from './SideBar'
 import ProductForm from './ProductForm'
+import { getProductDetails } from '../../slices/productSlice'
+import { updateProduct } from '../../slices/adminProductSlice'
 
 const UpdateProduct = () => {
-    const [product, setProduct] = useState(null)
-    const [submitting, setSubmitting] = useState(false)
+    const dispatch = useDispatch()
+    const { product } = useSelector(state => state.productDetails)
+    const { submitting } = useSelector(state => state.adminProducts)
     const { id } = useParams()
     const navigate = useNavigate()
 
     useEffect(() => {
-        axios.get(`${import.meta.env.VITE_API}/product/${id}`)
-            .then(({ data }) => setProduct(data.product))
+        dispatch(getProductDetails(id)).unwrap()
             .catch(() => { toast.error('Product not found', { position: 'bottom-right' }); navigate('/admin/products') })
-    }, [id, navigate])
+    }, [dispatch, id, navigate])
 
     const update = async (formData) => {
-        setSubmitting(true)
         try {
-            await axios.put(`${import.meta.env.VITE_API}/admin/product/${id}`, formData, { withCredentials: true })
+            await dispatch(updateProduct({ id, formData })).unwrap()
             toast.success('Product updated', { position: 'bottom-right' })
             navigate('/admin/products')
-        } catch (err) {
-            toast.error(err.response?.data?.message || 'Could not update product', { position: 'bottom-right' })
-            setSubmitting(false)
+        } catch (message) {
+            toast.error(message || 'Could not update product', { position: 'bottom-right' })
         }
     }
 
@@ -40,7 +40,7 @@ const UpdateProduct = () => {
                 <div className="col-12 col-md-10">
                     <div className="wrapper my-5" style={{ maxWidth: 760, margin: '0 auto' }}>
                         <h1 className="mb-4 admin-page-title">Update Product</h1>
-                        {product ? <ProductForm initial={product} submitLabel="UPDATE PRODUCT" submitting={submitting} onSubmit={update} /> : <Loader />}
+                        {product._id === id ? <ProductForm initial={product} submitLabel="UPDATE PRODUCT" submitting={submitting} onSubmit={update} /> : <Loader />}
                     </div>
                 </div>
             </div>

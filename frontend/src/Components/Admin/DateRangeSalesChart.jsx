@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Line, LineChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import axios from 'axios'
-import { getToken } from '../Utils/helpers'
+import { useDispatch, useSelector } from 'react-redux'
+import { getSalesChart } from '../../slices/salesSlice'
 
 const formatDate = (date) => date.toISOString().slice(0, 10)
 const initialEnd = new Date()
@@ -10,31 +10,12 @@ initialStart.setDate(initialStart.getDate() - 30)
 
 export default function DateRangeSalesChart() {
     const [range, setRange] = useState({ startDate: formatDate(initialStart), endDate: formatDate(initialEnd) })
-    const [sales, setSales] = useState([])
-    const [loading, setLoading] = useState(false)
-    const [error, setError] = useState('')
+    const dispatch = useDispatch()
+    const { range: sales, rangeLoading: loading, rangeError: error } = useSelector(state => state.sales)
 
     useEffect(() => {
-        let cancelled = false
-        const load = async () => {
-            setLoading(true)
-            setError('')
-            try {
-                const { data } = await axios.get(`${import.meta.env.VITE_API}/admin/sales-chart`, {
-                    params: range,
-                    headers: { Authorization: `Bearer ${getToken()}` },
-                    withCredentials: true,
-                })
-                if (!cancelled) setSales(data.sales)
-            } catch (requestError) {
-                if (!cancelled) setError(requestError.response?.data?.message || 'Could not load sales data')
-            } finally {
-                if (!cancelled) setLoading(false)
-            }
-        }
-        load()
-        return () => { cancelled = true }
-    }, [range])
+        dispatch(getSalesChart(range))
+    }, [dispatch, range])
 
     const total = useMemo(() => sales.reduce((sum, day) => sum + day.total, 0), [sales])
 

@@ -1,13 +1,12 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
 import MetaData from '../Layout/MetaData'
 import Loader from '../Layout/Loader'
-import axios from 'axios'
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useDispatch, useSelector } from 'react-redux'
-import { clearErrors, getOrderDetails } from '../../actions/orderActions'
+import { clearOrderDetailsError, getOrderDetails } from '../../slices/orderSlice'
 import { OrderTimeline, OrderTotals, ReceiptButton, fmtDate, paymentLabel } from './OrderParts'
 
 // import { getToken } from '../Utils/helpers'
@@ -45,13 +44,16 @@ const OrderDetails = () => {
 
     useEffect(() => {
         dispatch(getOrderDetails(id))
+    }, [dispatch, id])
 
+    useEffect(() => {
         if (error) {
             toast.error(error, {
                 position: 'bottom-right'
             });
+            dispatch(clearOrderDetailsError())
         }
-    }, [error, id])
+    }, [dispatch, error])
 
     const shippingDetails = shippingInfo && `${shippingInfo.address}, ${shippingInfo.city}, ${shippingInfo.postalCode}, ${shippingInfo.country}`
 

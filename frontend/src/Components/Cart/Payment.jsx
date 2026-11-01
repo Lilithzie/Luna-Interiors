@@ -5,8 +5,8 @@ import CheckoutSteps from './CheckoutSteps'
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useDispatch, useSelector } from 'react-redux'
-import { createOrder } from '../../actions/orderActions'
-import { clearCart } from '../../actions/cartActions';
+import { createOrder } from '../../slices/orderSlice'
+import { clearCart } from '../../slices/cartSlice';
 
 const COD = 'Cash on Delivery'
 const CARD = 'Card'
@@ -15,13 +15,13 @@ const Payment = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { cartItems, shippingInfo } = useSelector(state => state.cart)
+    const { loading: submitting } = useSelector(state => state.newOrder)
     const [method, setMethod] = useState(COD)
     const [cardName, setCardName] = useState('')
     const [cardNumber, setCardNumber] = useState('')
     const [expiry, setExpiry] = useState('')
     const [cvc, setCvc] = useState('')
     const [errors, setErrors] = useState({})
-    const [submitting, setSubmitting] = useState(false)
 
     let orderInfo = null
     try { orderInfo = JSON.parse(sessionStorage.getItem('orderInfo')) } catch { orderInfo = null }
@@ -56,7 +56,6 @@ const Payment = () => {
         }
         if (method === CARD && !validateCard()) return
 
-        setSubmitting(true)
         // The server recalculates prices from the database; the browser only sends what was chosen.
         const order = {
             orderItems: cartItems.map(i => ({ product: i.product, quantity: i.quantity })),
@@ -65,14 +64,13 @@ const Payment = () => {
             // card payment is simulated: never send the full number or the CVC
             paymentInfo: method === CARD ? { last4: cardNumber.replace(/\s/g, '').slice(-4) } : {}
         }
-        const ok = await dispatch(createOrder(order))
-        if (ok) {
+        try {
+            await dispatch(createOrder(order)).unwrap()
             dispatch(clearCart())
             sessionStorage.removeItem('orderInfo')
             navigate('/success')
-        } else {
-            toast.error('Your order could not be placed. Please check your cart and try again.', { position: 'bottom-right' })
-            setSubmitting(false)
+        } catch (message) {
+            toast.error(message || 'Your order could not be placed. Please check your cart and try again.', { position: 'bottom-right' })
         }
     }
 

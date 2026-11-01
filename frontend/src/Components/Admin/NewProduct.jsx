@@ -1,25 +1,25 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
 import { toast } from 'react-toastify'
+import { useDispatch, useSelector } from 'react-redux'
 
 import MetaData from '../Layout/MetaData'
 import Sidebar from './SideBar'
 import ProductForm from './ProductForm'
+import { createProduct } from '../../slices/adminProductSlice'
 
 const NewProduct = () => {
-    const [submitting, setSubmitting] = useState(false)
+    const dispatch = useDispatch()
+    const { submitting } = useSelector(state => state.adminProducts)
     const navigate = useNavigate()
 
     const create = async (formData) => {
-        setSubmitting(true)
         try {
-            await axios.post(`${import.meta.env.VITE_API}/admin/product/new`, formData, { withCredentials: true })
+            await dispatch(createProduct(formData)).unwrap()
             toast.success('Product created', { position: 'bottom-right' })
             navigate('/admin/products')
-        } catch (err) {
-            toast.error(err.response?.data?.message || 'Could not create product', { position: 'bottom-right' })
-            setSubmitting(false)
+        } catch (message) {
+            toast.error(message || 'Could not create product', { position: 'bottom-right' })
         }
     }
 

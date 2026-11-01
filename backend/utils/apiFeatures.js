@@ -51,11 +51,12 @@ class APIFeatures {
     }
 
     sort() {
+        // _id breaks ties: without it, products with equal values can repeat or go missing between pages
         const sorts = {
-            newest: { createdAt: -1 },
-            'price-asc': { price: 1 },
-            'price-desc': { price: -1 },
-            rating: { ratings: -1, numOfReviews: -1 },
+            newest: { createdAt: -1, _id: -1 },
+            'price-asc': { price: 1, _id: -1 },
+            'price-desc': { price: -1, _id: -1 },
+            rating: { ratings: -1, numOfReviews: -1, _id: -1 },
         };
         this.query = this.query.sort(sorts[this.queryStr.sort] || sorts.newest);
         return this;

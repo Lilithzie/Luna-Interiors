@@ -42,13 +42,13 @@ const ConfirmOrder = () => {
                     <h4 className="mt-4">Your Cart Items:</h4>
 
                     {cartItems.map(item => (
-                        <>
+                        <React.Fragment key={item.product}>
 
-                            <div className="cart-item my-1" key={item.product}>
+                            <div className="cart-item my-1">
                                 <hr />
                                 <div className="row">
                                     <div className="col-4 col-lg-2">
-                                        <img src={item.image} alt="Laptop" height="45" width="65" />
+                                        <img src={item.image} alt={item.name} height="45" width="65" />
                                     </div>
 
                                     <div className="col-5 col-lg-6">
@@ -63,7 +63,7 @@ const ConfirmOrder = () => {
                                 </div>
                             </div>
                             <hr />
-                        </>
+                        </React.Fragment>
                     ))}
 
                 </div>

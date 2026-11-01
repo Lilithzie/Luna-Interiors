@@ -1,15 +1,16 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { toast } from 'react-toastify'
 
 import MetaData from '../Layout/MetaData'
 import { useDispatch, useSelector } from 'react-redux'
-import { forgotPassword } from '../../actions/userActions';
+import { forgotPassword, clearPasswordState } from '../../slices/passwordSlice';
 import { isValidEmail } from '../Utils/validation'
 
 
 
 const ForgotPassword = () => {
     const dispatch = useDispatch();
-    const { loading } = useSelector(state => state.forgotPassword)
+    const { loading, message, error } = useSelector(state => state.forgotPassword)
 
 
     const [email, setEmail] = useState('')
@@ -41,6 +42,12 @@ const ForgotPassword = () => {
     // }
 
 
+    useEffect(() => {
+        if (message) toast.success(message, { position: 'bottom-right' })
+        if (error) toast.error(error, { position: 'bottom-right' })
+        if (message || error) dispatch(clearPasswordState())
+    }, [dispatch, message, error])
+
     const submitHandler = (e) => {
         e.preventDefault();
         setAttempted(true)
@@ -49,9 +56,7 @@ const ForgotPassword = () => {
             return
         }
         setEmailError('')
-        const formData = new FormData();
-        formData.set('email', email);
-        dispatch(forgotPassword(formData))
+        dispatch(forgotPassword(email.trim()))
     }
 
     return (

@@ -3,73 +3,44 @@ import { useNavigate, useParams } from "react-router-dom";
 import MetaData from '../Layout/MetaData'
 import Sidebar from './SideBar'
 
-import { errMsg, successMsg, getToken } from '../Utils/helpers'
+import { errMsg, successMsg } from '../Utils/helpers'
 
-import axios from 'axios';
+import { useDispatch, useSelector } from 'react-redux'
+import { getUserDetails, updateUser, clearAdminUserError } from '../../slices/adminUserSlice'
 import { isValidEmail } from '../Utils/validation'
 
 const UpdateUser = () => {
     const [name, setName] = useState('')
     const [email, setEmail] = useState('')
     const [role, setRole] = useState('')
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState('')
-    const [user, setUser] = useState(true)
-    const [isUpdated, setIsUpdated] = useState(false)
+    const dispatch = useDispatch()
+    const { user, error } = useSelector(state => state.adminUsers)
     const [fieldErrors, setFieldErrors] = useState({})
     const [attempted, setAttempted] = useState(false)
     let navigate = useNavigate();
 
     const { id } = useParams();
-    const config = {
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${getToken()}`
-        }
-    }
-    const getUserDetails = async (id) => {
-
-        try {
-            const { data } = await axios.get(`${import.meta.env.VITE_API}/admin/user/${id}`, config)
-            setUser(data.user)
-            setLoading(false)
-
-        } catch (error) {
-            setError(error.response.data.message)
-        }
-    }
-
-    const updateUser = async (id, userData) => {
-        try {
-            const { data } = await axios.put(`${import.meta.env.VITE_API}/admin/user/${id}`, userData, config)
-            setIsUpdated(data.success)
-            setLoading(false)
-
-        } catch (error) {
-            setError(error.response.data.message)
-        }
-    }
 
     useEffect(() => {
-        // console.log(user && user._id !== userId);
-        if (user && user._id !== id) {
-            getUserDetails(id)
-        } else {
+        dispatch(getUserDetails(id))
+    }, [dispatch, id])
+
+    useEffect(() => {
+        if (user._id === id) {
             setName(user.name);
             setEmail(user.email);
             setRole(user.role)
         }
+    }, [id, user])
+
+    useEffect(() => {
         if (error) {
             errMsg(error);
-            setError('');
+            dispatch(clearAdminUserError())
         }
-        if (isUpdated) {
-            successMsg('User updated successfully')
-            navigate('/admin/users')
+    }, [dispatch, error])
 
-        }
-    }, [error, isUpdated, id, user])
-    const submitHandler = (e) => {
+    const submitHandler = async (e) => {
         e.preventDefault();
         setAttempted(true)
         const nextErrors = {}
@@ -78,11 +49,13 @@ const UpdateUser = () => {
         if (!['user', 'admin'].includes(role)) nextErrors.role = 'Please select a valid role.'
         setFieldErrors(nextErrors)
         if (Object.keys(nextErrors).length) return
-        const formData = new FormData();
-        formData.set('name', name.trim());
-        formData.set('email', email.trim());
-        formData.set('role', role);
-        updateUser(user._id, formData)
+        try {
+            await dispatch(updateUser({ id, userData: { name: name.trim(), email: email.trim(), role } })).unwrap()
+            successMsg('User updated successfully')
+            navigate('/admin/users')
+        } catch (message) {
+            errMsg(message)
+        }
     }
 
     return (

@@ -9,7 +9,7 @@ import 'react-toastify/dist/ReactToastify.css';
 // import axios from 'axios';
 // import { getUser, authenticate } from '../Utils/helpers';
 import { useDispatch, useSelector } from 'react-redux'
-import { login, loginWithGoogle, clearErrors } from '../../actions/userActions'
+import { login, loginWithGoogle, clearAuthError } from '../../slices/authSlice'
 import { signInWithGoogle } from '../../config/firebase'
 
 const Login = () => {
@@ -22,7 +22,7 @@ const Login = () => {
     const dispatch = useDispatch()
 
     const submitHandler = ({ email, password }) => {
-        dispatch(login(email.trim(), password))
+        dispatch(login({ email: email.trim(), password }))
     }
 
     const googleLoginHandler = async () => {
@@ -54,7 +54,6 @@ const Login = () => {
     // }
 
     const redirect = location.search ? new URLSearchParams(location.search).get('redirect') : ''
-    console.log(redirect)
     // useEffect(() => {
     //     if (getUser()) {
     //         navigate('/')
@@ -77,9 +76,8 @@ const Login = () => {
         else if (isAuthenticated)
             navigate('/')
         if (error) {
-            // alert.error(error);
-            console.log(error)
-            dispatch(clearErrors());
+            toast.error(error, { position: 'bottom-right' })
+            dispatch(clearAuthError());
         }
     }, [error, isAuthenticated, user, dispatch, navigate, redirect])
 

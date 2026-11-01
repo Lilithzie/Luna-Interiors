@@ -1,8 +1,8 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import axios from 'axios'
 import Swal from 'sweetalert2'
 import { toast } from 'react-toastify'
+import { useDispatch, useSelector } from 'react-redux'
 import { DataGrid, GridToolbarContainer, GridToolbarQuickFilter, useGridApiRef, gridFilteredSortedRowIdsSelector } from '@mui/x-data-grid'
 
 import MetaData from '../Layout/MetaData'
@@ -10,8 +10,7 @@ import Loader from '../Layout/Loader'
 import Sidebar from './SideBar'
 import { peso, firstImage } from '../Utils/helpers'
 import { useInfiniteRows, LoadMoreSentinel } from '../Utils/InfiniteScroll'
-
-const API = import.meta.env.VITE_API
+import { getAdminProducts, deleteProduct, bulkDeleteProducts, clearAdminProductError } from '../../slices/adminProductSlice'
 
 const Toolbar = () => (
     <GridToolbarContainer sx={{ p: 1 }}>
@@ -20,31 +19,27 @@ const Toolbar = () => (
 )
 
 const ProductsList = () => {
-    const [products, setProducts] = useState([])
-    const [loading, setLoading] = useState(true)
+    const dispatch = useDispatch()
+    const { products, loading, error } = useSelector(state => state.adminProducts)
     const [selection, setSelection] = useState({ type: 'include', ids: new Set() })
     const apiRef = useGridApiRef()
 
-    const load = useCallback(async () => {
-        try {
-            const { data } = await axios.get(`${API}/admin/products`, { withCredentials: true })
-            setProducts(data.products)
-        } catch (error) {
-            toast.error(error.response?.data?.message || 'Could not load products', { position: 'bottom-right' })
-        }
-        setLoading(false)
-    }, [])
-    useEffect(() => { load() }, [load])
+    useEffect(() => { dispatch(getAdminProducts()) }, [dispatch])
 
-    // MUI v9 can report "select all" as {type:'exclude'} - normalise to a plain id list
-    const selectedIds = () => {
-        if (selection.type === 'include') return [...selection.ids].map(String)
-        const visible = apiRef.current ? gridFilteredSortedRowIdsSelector(apiRef) : products.map(p => p._id)
-        return visible.filter(id => !selection.ids.has(id)).map(String)
+    useEffect(() => {
+        if (error) {
+            toast.error(error, { position: 'bottom-right' })
+            dispatch(clearAdminProductError())
+        }
+    }, [dispatch, error])
+
+    // MUI v9 can report "select all" as {type:'exclude'} - normalise to a plain id list of the rows in the table
+    const onSelectionChange = (model) => {
+        if (model.type === 'include') return setSelection(model)
+        const visible = gridFilteredSortedRowIdsSelector(apiRef)
+        setSelection({ type: 'include', ids: new Set(visible.filter(id => !model.ids.has(id))) })
     }
-    const selectedCount = selection.type === 'include'
-        ? selection.ids.size
-        : Math.max(products.length - selection.ids.size, 0)
+    const selectedCount = selection.ids.size
 
     const confirmDelete = async (title, text) => {
         const r = await Swal.fire({ title, text, icon: 'warning', showCancelButton: true, confirmButtonColor: '#8B5A2B', confirmButtonText: 'Yes, delete' })
@@ -54,24 +49,22 @@ const ProductsList = () => {
     const deleteOne = async (id, name) => {
         if (!(await confirmDelete('Delete this product?', name))) return
         try {
-            await axios.delete(`${API}/admin/product/${id}`, { withCredentials: true })
+            await dispatch(deleteProduct(id)).unwrap()
             toast.success('Product deleted', { position: 'bottom-right' })
             setSelection({ type: 'include', ids: new Set() })
-            load()
-        } catch (e) { toast.error(e.response?.data?.message || 'Delete failed', { position: 'bottom-right' }) }
+        } catch (message) { toast.error(message || 'Delete failed', { position: 'bottom-right' }) }
     }
 
     // MP1 - bulk delete with checkboxes
     const deleteSelected = async () => {
-        const ids = selectedIds()
+        const ids = [...selection.ids].map(String)
         if (!ids.length) return
         if (!(await confirmDelete(`Delete ${ids.length} product${ids.length > 1 ? 's' : ''}?`, 'This cannot be undone.'))) return
         try {
-            const { data } = await axios.delete(`${API}/admin/products`, { data: { ids }, withCredentials: true })
+            const data = await dispatch(bulkDeleteProducts(ids)).unwrap()
             toast.success(`${data.deletedCount} product${data.deletedCount > 1 ? 's' : ''} deleted`, { position: 'bottom-right' })
             setSelection({ type: 'include', ids: new Set() })
-            load()
-        } catch (e) { toast.error(e.response?.data?.message || 'Bulk delete failed', { position: 'bottom-right' }) }
+        } catch (message) { toast.error(message || 'Bulk delete failed', { position: 'bottom-right' }) }
     }
 
     const columns = useMemo(() => [
@@ -124,7 +117,7 @@ const ProductsList = () => {
                                 checkboxSelection
                                 disableRowSelectionOnClick
                                 rowSelectionModel={selection}
-                                onRowSelectionModelChange={setSelection}
+                                onRowSelectionModelChange={onSelectionChange}
                                 slots={{ toolbar: Toolbar }}
                                 showToolbar
                                 rowHeight={58}
