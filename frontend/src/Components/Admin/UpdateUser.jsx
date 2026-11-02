@@ -12,12 +12,14 @@ const UpdateUser = () => {
     const [role, setRole] = useState('')
     const dispatch = useDispatch()
     const { user, error } = useSelector(state => state.adminUsers)
+    const { user: currentUser } = useSelector(state => state.auth)
     const [fieldErrors, setFieldErrors] = useState({})
     const [attempted, setAttempted] = useState(false)
     let navigate = useNavigate();
 
     const { id } = useParams();
     const loaded = user._id === id   // name and email are shown only: admins change the role alone
+    const isEditingOwnAccount = loaded && currentUser?._id === id
 
     useEffect(() => {
         dispatch(getUserDetails(id))
@@ -93,14 +95,16 @@ const UpdateUser = () => {
                                         className={`form-control ${fieldErrors.role ? 'is-invalid' : ''}`}
                                         name='role'
                                         value={role}
+                                        disabled={isEditingOwnAccount}
                                         onChange={(e) => { setRole(e.target.value); if (attempted) setFieldErrors(current => ({ ...current, role: '' })) }}
                                     >
                                         <option value="user">user</option>
                                         <option value="admin">admin</option>
                                     </select>
+                                    {isEditingOwnAccount && <small className="form-text text-muted">You can't change your own role.</small>}
                                     {fieldErrors.role && <div className="invalid-feedback">{fieldErrors.role}</div>}
                                 </div>
-                                <button type="submit" className="btn update-btn btn-block mt-4 mb-3" >Update</button>
+                                <button type="submit" className="btn update-btn btn-block mt-4 mb-3" disabled={isEditingOwnAccount}>Update</button>
                             </form>
                         </div>
                     </div>

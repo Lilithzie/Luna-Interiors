@@ -253,6 +253,14 @@ exports.deleteUser = async (req, res, next) => {
         // return next(new ErrorHandler(`User does not found with id: ${req.params.id}`))
     }
 
+    if (req.user._id.equals(user._id)) {
+        return res.status(400).json({ message: "You can't delete your own account." })
+    }
+
+    if (user.role === 'admin' && await User.countDocuments({ role: 'admin' }) <= 1) {
+        return res.status(400).json({ message: "You are the last admin. You can't delete this account." })
+    }
+
     // Remove avatar from cloudinary
     const image_id = user.avatar.public_id;
     await cloudinary.v2.uploader.destroy(image_id);
@@ -283,15 +291,24 @@ exports.updateUser = async (req, res, next) => {
         return res.status(400).json({ message: 'Please select a valid role' })
     }
 
-    const user = await User.findByIdAndUpdate(req.params.id, { role }, {
+    const user = await User.findById(req.params.id)
+    if (!user) {
+        return res.status(404).json({ message: `User does not found with id: ${req.params.id}` })
+    }
+
+    if (req.user._id.equals(user._id) && role !== user.role) {
+        return res.status(400).json({ message: "You can't change your own role." })
+    }
+
+    if (user.role === 'admin' && role !== 'admin' && await User.countDocuments({ role: 'admin' }) <= 1) {
+        return res.status(400).json({ message: "You are the last admin. You can't change your role." })
+    }
+
+    await User.findByIdAndUpdate(req.params.id, { role }, {
         new: true,
         runValidators: true,
         // useFindAndModify: false
     })
-
-    if (!user) {
-        return res.status(404).json({ message: `User does not found with id: ${req.params.id}` })
-    }
 
     return res.status(200).json({
         success: true

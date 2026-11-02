@@ -17,6 +17,7 @@ import { useInfiniteRows, LoadMoreSentinel } from '../Utils/InfiniteScroll'
 const UsersList = () => {
     const dispatch = useDispatch()
     const { users, loading, error } = useSelector(state => state.adminUsers)
+    const { user: currentUser } = useSelector(state => state.auth)
 
     useEffect(() => {
         dispatch(allUsers());
@@ -72,17 +73,26 @@ const UsersList = () => {
             width: 120,
             sortable: false,
             filterable: false,
-            renderCell: (params) => (
+            renderCell: (params) => {
+                const isCurrentUser = currentUser?._id === params.id
 
-                <>
-                    <Link to={`/admin/user/${params.id}`} className="btn btn-primary py-1 px-2">
-                        <i className="fa fa-pencil"></i>
-                    </Link>
-                    <button className="btn btn-danger py-1 px-2 ml-2" onClick={() => deleteUserHandler(params.id, params.row.name)}>
-                        <i className="fa fa-trash"></i>
-                    </button>
-                </>
-            )
+                return (
+
+                    <>
+                        <Link to={`/admin/user/${params.id}`} className="btn btn-primary py-1 px-2">
+                            <i className="fa fa-pencil"></i>
+                        </Link>
+                        <button
+                            className="btn btn-danger py-1 px-2 ml-2"
+                            onClick={() => deleteUserHandler(params.id, params.row.name)}
+                            disabled={isCurrentUser}
+                            title={isCurrentUser ? "You can't delete your own account." : 'Delete user'}
+                        >
+                            <i className="fa fa-trash"></i>
+                        </button>
+                    </>
+                )
+            }
         }
     ];
     const allRows = users.map(user => ({
@@ -125,4 +135,3 @@ const UsersList = () => {
 }
 
 export default UsersList
-
