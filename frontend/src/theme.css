@@ -46,6 +46,7 @@ a:hover { color: var(--luna-dark); }
 .header-search #search_btn { background: var(--luna-maple); color: var(--luna-ink); border-radius: 0 4px 4px 0; padding: 0 1.1rem; }
 .header-search #search_btn:hover { background: var(--luna-gold); }
 .header-actions { display: flex; align-items: center; gap: clamp(12px, 2vw, 24px); flex: none; }
+.site-header .header-main:not(:has(.header-search)) .header-actions { margin-left: auto; }
 .header-action { position: relative; display: inline-flex; align-items: center; gap: .5rem; color: var(--luna-cream); font-size: .875rem; background: transparent; padding: .25rem; }
 .header-action .fa { font-size: 1.3rem; }
 .header-action:hover { color: var(--luna-gold); text-decoration: none; }
@@ -225,6 +226,12 @@ footer.site-footer { background: var(--luna-ink); color: var(--luna-sand); margi
 .card-font-size { font-weight: 500; }
 .dashboard-chart-card { border-radius: 4px; }
 .route-content:has(.sidebar-wrapper) h1 { font-size: 1.75rem; }
+.admin-form-page { width: min(calc(100% - 2rem), 760px); margin-left: auto; margin-right: auto; }
+.product-form { border-radius: 12px; }
+.product-form-title { margin: 0 0 1.5rem; color: var(--luna-ink); font-family: var(--serif); font-size: 2rem; font-weight: 600; line-height: 1.15; }
+.date-range-controls { display: flex; align-items: center; gap: 1rem; }
+.date-range-field { display: flex; align-items: center; gap: .45rem; margin: 0; white-space: nowrap; color: var(--luna-muted); font-size: .8rem; }
+.date-range-field .form-control { width: 166px; }
 
 /* ---------- Tablet + phone ---------- */
 @media (max-width: 991.98px) {
@@ -237,6 +244,9 @@ footer.site-footer { background: var(--luna-ink); color: var(--luna-sand); margi
   .announcement-bar { padding-left: 2.5rem; padding-right: 2.5rem; }
   .login-drawer { width: 100%; }
   .filter-panel { position: static; max-height: none; margin-bottom: 1.25rem; }
+  .date-range-controls { width: 100%; gap: .65rem; }
+  .date-range-field { flex: 1; min-width: 0; }
+  .date-range-field .form-control { width: 100%; }
   .header-main { flex-wrap: wrap; padding-top: .5rem; padding-bottom: .5rem; }
   .header-search { order: 3; flex: 0 0 100%; }
   .header-actions { margin-left: auto; }

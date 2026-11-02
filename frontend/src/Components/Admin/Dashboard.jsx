@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom';
 
 import MetaData from '../Layout/MetaData'
@@ -122,9 +122,9 @@ const Dashboard = () => {
                     {error && <div className="alert alert-danger">{error}</div>}
                     <div className="dashboard-charts">
                         <DateRangeSalesChart />
+                        <MonthlySalesChart />
                         <ProductSalesChart />
                         <UserSalesChart />
-                        <MonthlySalesChart />
                     </div>
 
                 </div>

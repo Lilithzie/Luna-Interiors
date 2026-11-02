@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { useDispatch, useSelector } from 'react-redux'
@@ -38,9 +38,8 @@ const UpdateProduct = () => {
             <div className="row">
                 <div className="col-12 col-md-2"><Sidebar /></div>
                 <div className="col-12 col-md-10">
-                    <div className="wrapper my-5" style={{ maxWidth: 760, margin: '0 auto' }}>
-                        <h1 className="mb-4 admin-page-title">Update Product</h1>
-                        {product._id === id ? <ProductForm initial={product} submitLabel="UPDATE PRODUCT" submitting={submitting} onSubmit={update} /> : <Loader />}
+                    <div className="admin-form-page my-5">
+                        {product._id === id ? <ProductForm title="Update Product" initial={product} submitLabel="UPDATE PRODUCT" submitting={submitting} onSubmit={update} /> : <Loader />}
                     </div>
                 </div>
             </div>

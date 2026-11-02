@@ -26,11 +26,15 @@ export default function DateRangeSalesChart() {
                     <h2 className="h4 mb-1">Sales performance</h2>
                     <p className="text-muted mb-0">Order sales within the selected date range</p>
                 </div>
-                <div className="d-flex align-items-center gap-2 mt-2 mt-md-0">
-                    <label className="small text-muted" htmlFor="sales_start">From</label>
-                    <input id="sales_start" type="date" className="form-control form-control-sm" value={range.startDate} onChange={event => setRange(current => ({ ...current, startDate: event.target.value }))} />
-                    <label className="small text-muted" htmlFor="sales_end">To</label>
-                    <input id="sales_end" type="date" className="form-control form-control-sm" value={range.endDate} onChange={event => setRange(current => ({ ...current, endDate: event.target.value }))} />
+                <div className="date-range-controls mt-2 mt-md-0">
+                    <label className="date-range-field" htmlFor="sales_start">
+                        <span>From</span>
+                        <input id="sales_start" type="date" className="form-control form-control-sm" value={range.startDate} onChange={event => setRange(current => ({ ...current, startDate: event.target.value }))} />
+                    </label>
+                    <label className="date-range-field" htmlFor="sales_end">
+                        <span>To</span>
+                        <input id="sales_end" type="date" className="form-control form-control-sm" value={range.endDate} onChange={event => setRange(current => ({ ...current, endDate: event.target.value }))} />
+                    </label>
                 </div>
             </div>
             {error && <div className="alert alert-danger">{error}</div>}

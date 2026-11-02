@@ -1,4 +1,3 @@
-import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { useDispatch, useSelector } from 'react-redux'
@@ -29,9 +28,8 @@ const NewProduct = () => {
             <div className="row">
                 <div className="col-12 col-md-2"><Sidebar /></div>
                 <div className="col-12 col-md-10">
-                    <div className="wrapper my-5" style={{ maxWidth: 760, margin: '0 auto' }}>
-                        <h1 className="mb-4 admin-page-title">New Product</h1>
-                        <ProductForm submitLabel="CREATE PRODUCT" submitting={submitting} onSubmit={create} />
+                    <div className="admin-form-page my-5">
+                        <ProductForm title="New Product" submitLabel="CREATE PRODUCT" submitting={submitting} onSubmit={create} />
                     </div>
                 </div>
             </div>

@@ -66,7 +66,7 @@ export const Header = () => {
                     <Logo symbol className="d-md-none" />
                 </Link>
 
-                <div className="header-search"><Search /></div>
+                {!inAdminArea && <div className="header-search"><Search /></div>}
 
                 <div className="header-actions">
                     {user ? (

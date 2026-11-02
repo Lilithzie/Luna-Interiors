@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'react-toastify'
 import { CATEGORIES } from '../Utils/helpers'
@@ -7,7 +7,7 @@ const MAX_FILES = 10
 const MAX_SIZE = 5 * 1024 * 1024
 
 // Shared by NewProduct and UpdateProduct. Supports MULTIPLE photo upload with previews.
-const ProductForm = ({ initial, submitLabel, submitting, onSubmit }) => {
+const ProductForm = ({ initial, title, submitLabel, submitting, onSubmit }) => {
     // React Hook Form handles the text fields; photos are managed separately below
     const { register, handleSubmit, reset, formState: { errors } } = useForm({
         mode: 'onTouched',
@@ -68,7 +68,8 @@ const ProductForm = ({ initial, submitLabel, submitting, onSubmit }) => {
     }
 
     return (
-        <form className="shadow-lg p-4 bg-white" onSubmit={handleSubmit(submit, () => { if (existing.length + files.length === 0) setPhotoError('Please add at least one product photo') })} noValidate encType="multipart/form-data" style={{ borderRadius: 12 }}>
+        <form className="product-form shadow-lg p-4 bg-white" onSubmit={handleSubmit(submit, () => { if (existing.length + files.length === 0) setPhotoError('Please add at least one product photo') })} noValidate encType="multipart/form-data">
+            {title && <h1 className="product-form-title">{title}</h1>}
             <div className="form-group">
                 <label htmlFor="name_field">Name</label>
                 <input type="text" id="name_field" className={`form-control ${errors.name ? 'is-invalid' : ''}`}

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import {
     BarChart,
     Bar,
@@ -6,7 +6,6 @@ import {
     YAxis,
     CartesianGrid,
     Tooltip,
-    Legend,
     ResponsiveContainer,
     Cell,
 } from "recharts";
@@ -24,13 +23,13 @@ const UserSalesChart = () => {
     return (
         <div className="card dashboard-chart-card shadow-sm border-0 p-3">
             <h2 className="h5">Sales by customer</h2>
+            <div className="dashboard-chart-visual">
             <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={sales}>
+            <BarChart data={sales} margin={{ top: 8, right: 12, left: 30, bottom: 18 }}>
                 <CartesianGrid strokeDasharray="2 2" />
                 <XAxis dataKey="userDetails.name" />
                 <YAxis />
                 <Tooltip />
-                <Legend />
 
                 <Bar dataKey="total">
                     {
@@ -41,6 +40,7 @@ const UserSalesChart = () => {
                 </Bar>
             </BarChart>
             </ResponsiveContainer>
+            </div>
         </div>
 
 
