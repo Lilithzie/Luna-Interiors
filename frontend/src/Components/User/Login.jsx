@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link, useNavigate, useLocation, useParams } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 
 import Loader from '../Layout/Loader'
 import MetaData from '../Layout/MetaData';
@@ -82,20 +82,32 @@ const Login = () => {
         }
     }, [error, isAuthenticated, user, dispatch, navigate, redirect])
 
-    return (
-        <>
-            {loading ? <Loader /> : (
-                <>
-                    <MetaData title={'Login'} />
+    const closeDrawer = useCallback(() => navigate('/'), [navigate])
 
-                    <div className="row wrapper">
-                        <div className="col-10 col-lg-5">
-                            <form className="shadow-lg"
-                                onSubmit={handleSubmit(submitHandler)}
-                                noValidate
-                            >
+    useEffect(() => {
+        const handleEscape = (event) => {
+            if (event.key === 'Escape') closeDrawer()
+        }
+        document.addEventListener('keydown', handleEscape)
+        return () => document.removeEventListener('keydown', handleEscape)
+    }, [closeDrawer])
+
+    return (
+        <div className="login-drawer-layer" role="dialog" aria-modal="true" aria-labelledby="login_drawer_title">
+            <button type="button" className="login-drawer-backdrop" onClick={closeDrawer} aria-label="Close login panel"></button>
+            <aside className="login-drawer" onClick={event => event.stopPropagation()}>
+                {loading ? <Loader /> : (
+                    <>
+                        <MetaData title={'Login'} />
+                        <button type="button" className="login-drawer-close" onClick={closeDrawer} aria-label="Close login panel">
+                            <i className="fa fa-times" aria-hidden="true"></i>
+                        </button>
+                        <form
+                            onSubmit={handleSubmit(submitHandler)}
+                            noValidate
+                        >
                                 <AuthBrand />
-                                <h1 className="mb-3">Login</h1>
+                                <h1 className="mb-3" id="login_drawer_title">Login</h1>
                                 <div className="form-group">
                                     <label htmlFor="email_field">Email</label>
                                     <input
@@ -143,14 +155,11 @@ const Login = () => {
                                 <div className="auth-register">
                                     <Link to="/register">New User?</Link>
                                 </div>
-                            </form>
-                        </div>
-                    </div>
-
-
-                </>
-            )}
-        </>
+                        </form>
+                    </>
+                )}
+            </aside>
+        </div>
     )
 }
 export default Login

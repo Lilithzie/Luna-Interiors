@@ -105,12 +105,13 @@ const Home = () => {
                     {/* ---------------- MP2 FILTERS ---------------- */}
                     <div className="col-12 col-md-4 col-lg-3">
                         <div className={`filter-panel ${filtersOpen ? 'open' : ''}`} id="filters">
-                            <div className="d-flex justify-content-between align-items-center">
-                                <h5 className="mb-0">Filters</h5>
+                        <div className="filter-panel-header">
+                            <h5 className="mb-0">Refine your search</h5>
                                 {filtersActive && <button className="btn btn-link btn-sm p-0" id="clear_filters" onClick={clearFilters}>Clear all</button>}
                             </div>
 
-                            <h6>Price</h6>
+                        <div className="filter-section">
+                            <h6>Price range</h6>
                             <Slider
                                 value={priceDraft.map(Number)}
                                 min={0}
@@ -122,47 +123,66 @@ const Home = () => {
                                 valueLabelFormat={peso}
                                 sx={{ color: '#8B5A2B' }}
                             />
-                            <div className="d-flex align-items-center">
-                                <input type="number" className="form-control form-control-sm" id="price_min" placeholder="Min" min="0"
-                                    value={priceDraft[0]} onChange={e => setPriceInput(0, e.target.value)} onBlur={applyPriceInputs}
-                                    onKeyDown={e => e.key === 'Enter' && applyPriceInputs()} />
-                                <span className="mx-2">–</span>
-                                <input type="number" className="form-control form-control-sm" id="price_max" placeholder="Max" min="0"
-                                    value={priceDraft[1]} onChange={e => setPriceInput(1, e.target.value)} onBlur={applyPriceInputs}
-                                    onKeyDown={e => e.key === 'Enter' && applyPriceInputs()} />
+                            <div className="price-inputs">
+                                <label className="price-input">
+                                    <span aria-hidden="true">₱</span>
+                                    <input type="number" className="form-control form-control-sm" id="price_min" placeholder="Min" min="0"
+                                        value={priceDraft[0]} onChange={e => setPriceInput(0, e.target.value)} onBlur={applyPriceInputs}
+                                        onKeyDown={e => e.key === 'Enter' && applyPriceInputs()} />
+                                </label>
+                                <span>to</span>
+                                <label className="price-input">
+                                    <span aria-hidden="true">₱</span>
+                                    <input type="number" className="form-control form-control-sm" id="price_max" placeholder="Max" min="0"
+                                        value={priceDraft[1]} onChange={e => setPriceInput(1, e.target.value)} onBlur={applyPriceInputs}
+                                        onKeyDown={e => e.key === 'Enter' && applyPriceInputs()} />
+                                </label>
+                            </div>
+                        </div>
+
+                        <div className="filter-section">
+                        <h6>Category</h6>
+                        <div className="filter-options">
+                        <label className="filter-option" htmlFor="cat_all">
+                            <input className="form-check-input" type="radio" name="category" id="cat_all" checked={category === ''} onChange={() => setCategory('')} />
+                            <span>All categories</span>
+                        </label>
+                        {CATEGORIES.map((c, i) => (
+                            <label className="filter-option" key={c} htmlFor={`cat_${i}`}>
+                                <input className="form-check-input" type="radio" name="category" id={`cat_${i}`} checked={category === c} onChange={() => setCategory(c)} />
+                                <span>{c}</span>
+                            </label>
+                        ))}
+                        </div>
                             </div>
 
-                            <h6>Category</h6>
-                            <div className="form-check">
-                                <input className="form-check-input" type="radio" name="category" id="cat_all" checked={category === ''} onChange={() => setCategory('')} />
-                                <label className="form-check-label" htmlFor="cat_all">All categories</label>
-                            </div>
-                            {CATEGORIES.map((c, i) => (
-                                <div className="form-check" key={c}>
-                                    <input className="form-check-input" type="radio" name="category" id={`cat_${i}`} checked={category === c} onChange={() => setCategory(c)} />
-                                    <label className="form-check-label" htmlFor={`cat_${i}`}>{c}</label>
-                                </div>
+                        <div className="filter-section">
+                        <h6>Rating</h6>
+                        <div className="filter-options">
+                        <label className="filter-option" htmlFor="rate_0">
+                            <input className="form-check-input" type="radio" name="ratings" id="rate_0" checked={filters.ratings === 0} onChange={() => setFilter({ ratings: 0 })} />
+                            <span>Any rating</span>
+                        </label>
+                        {[4, 3, 2, 1].map(r => (
+                            <label className="filter-option" key={r} htmlFor={`rate_${r}`}>
+                                <input className="form-check-input" type="radio" name="ratings" id={`rate_${r}`} checked={filters.ratings === r} onChange={() => setFilter({ ratings: r })} />
+                                <span><Stars value={r} /> &amp; up</span>
+                            </label>
                             ))}
+                        </div>
+                        </div>
 
-                            <h6>Rating</h6>
-                            <div className="form-check">
-                                <input className="form-check-input" type="radio" name="ratings" id="rate_0" checked={filters.ratings === 0} onChange={() => setFilter({ ratings: 0 })} />
-                                <label className="form-check-label" htmlFor="rate_0">Any rating</label>
-                            </div>
-                            {[4, 3, 2, 1].map(r => (
-                                <div className="form-check" key={r}>
-                                    <input className="form-check-input" type="radio" name="ratings" id={`rate_${r}`} checked={filters.ratings === r} onChange={() => setFilter({ ratings: r })} />
-                                    <label className="form-check-label" htmlFor={`rate_${r}`}><Stars value={r} /> &amp; up</label>
-                                </div>
-                            ))}
-
-                            <h6>Reviews</h6>
-                            {[[0, 'Any'], [1, 'With reviews'], [5, '5+ reviews'], [10, '10+ reviews']].map(([n, label]) => (
-                                <div className="form-check" key={n}>
-                                    <input className="form-check-input" type="radio" name="reviews" id={`rev_${n}`} checked={filters.reviews === n} onChange={() => setFilter({ reviews: n })} />
-                                    <label className="form-check-label" htmlFor={`rev_${n}`}>{label}</label>
-                                </div>
-                            ))}
+                        <div className="filter-section">
+                        <h6>Reviews</h6>
+                        <div className="filter-options">
+                        {[[0, 'Any'], [1, 'With reviews'], [5, '5+ reviews'], [10, '10+ reviews']].map(([n, label]) => (
+                            <label className="filter-option" key={n} htmlFor={`rev_${n}`}>
+                                <input className="form-check-input" type="radio" name="reviews" id={`rev_${n}`} checked={filters.reviews === n} onChange={() => setFilter({ reviews: n })} />
+                                <span>{label}</span>
+                            </label>
+                        ))}
+                        </div>
+                        </div>
                         </div>
                     </div>
 

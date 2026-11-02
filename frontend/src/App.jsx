@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ToastContainer, } from 'react-toastify';
-import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useDispatch } from 'react-redux';
 import { loadUser } from './slices/authSlice';
@@ -136,7 +135,7 @@ function App() {
 
           <Route path="/search/:keyword" element={<Home />} exact="true" />
           <Route path="/wishlist" element={<Wishlist />} />
-          <Route path="/login" element={<Login />} exact="true" />
+          <Route path="/login" element={<><Home /><Login /></>} exact="true" />
           <Route path="/register" element={<Register exact="true" />} />
           <Route path="/password/forgot" element={<ForgotPassword />} exact="true" />
           <Route path="/password/reset/:token" element={<NewPassword />} exact="true" />

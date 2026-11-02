@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import '../../App.css'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { toast } from 'react-toastify';
@@ -11,6 +11,14 @@ import Logo from './Logo'
 import Search from './Search'
 
 export const Header = () => {
+    const [announcementVisible, setAnnouncementVisible] = useState(() => {
+        try {
+            return sessionStorage.getItem('luna-announcement-dismissed') !== 'true'
+        } catch {
+            return true
+        }
+    })
+    const [announcementClosing, setAnnouncementClosing] = useState(false)
     const dispatch = useDispatch();
     const { user } = useSelector(state => state.auth)
     const { cartItems } = useSelector(state => state.cart)
@@ -24,6 +32,16 @@ export const Header = () => {
 
     useEffect(() => { dispatch(getCategorySummary()) }, [dispatch])
 
+    const dismissAnnouncement = () => {
+        setAnnouncementClosing(true)
+        window.setTimeout(() => setAnnouncementVisible(false), 200)
+        try {
+            sessionStorage.setItem('luna-announcement-dismissed', 'true')
+        } catch {
+            // Session storage may be unavailable in privacy-restricted browsers.
+        }
+    }
+
     const logoutHandler = () => {
         dispatch(logout());
         toast.success('log out', {
@@ -33,9 +51,12 @@ export const Header = () => {
 
     return (
         <header className="site-header">
-            {!inAdminArea && (
-                <div className="announcement-bar" id="announcement_bar">
-                    Free shipping on orders over ₱5,000 &nbsp;·&nbsp; Cash on delivery available
+            {!inAdminArea && announcementVisible && (
+                <div className={`announcement-bar ${announcementClosing ? 'is-closing' : ''}`} id="announcement_bar">
+                    <span>Free shipping on orders over ₱5,000 &nbsp;·&nbsp; Cash on delivery available</span>
+                    <button type="button" className="announcement-dismiss" onClick={dismissAnnouncement} aria-label="Dismiss announcement">
+                        <i className="fa fa-times" aria-hidden="true"></i>
+                    </button>
                 </div>
             )}
 
