@@ -92,7 +92,6 @@ exports.loginUser = async (req, res, next) => {
     if (!isPasswordMatched) {
         return res.status(401).json({ message: 'Invalid Email or Password' })
     }
-    const token = user.getJwtToken();
 
     // res.status(201).json({
     //     success: true,
@@ -159,10 +158,9 @@ exports.resetPassword = async (req, res, next) => {
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
     await user.save();
-    const token = user.getJwtToken();
+    // the JWT only ever travels in the httpOnly cookie (see sendToken), so it is not returned here
     return res.status(201).json({
         success: true,
-        token,
         user
     });
 
@@ -279,17 +277,21 @@ exports.getUserDetails = async (req, res, next) => {
 }
 
 exports.updateUser = async (req, res, next) => {
-    const newUserData = {
-        name: req.body.name,
-        email: req.body.email,
-        role: req.body.role
+    // admins manage the role only: name and email belong to the account owner
+    const { role } = req.body
+    if (!['user', 'admin'].includes(role)) {
+        return res.status(400).json({ message: 'Please select a valid role' })
     }
 
-    const user = await User.findByIdAndUpdate(req.params.id, newUserData, {
+    const user = await User.findByIdAndUpdate(req.params.id, { role }, {
         new: true,
         runValidators: true,
         // useFindAndModify: false
     })
+
+    if (!user) {
+        return res.status(404).json({ message: `User does not found with id: ${req.params.id}` })
+    }
 
     return res.status(200).json({
         success: true

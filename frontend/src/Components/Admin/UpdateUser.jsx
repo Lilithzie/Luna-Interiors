@@ -7,11 +7,8 @@ import { errMsg, successMsg } from '../Utils/helpers'
 
 import { useDispatch, useSelector } from 'react-redux'
 import { getUserDetails, updateUser, clearAdminUserError } from '../../slices/adminUserSlice'
-import { isValidEmail } from '../Utils/validation'
 
 const UpdateUser = () => {
-    const [name, setName] = useState('')
-    const [email, setEmail] = useState('')
     const [role, setRole] = useState('')
     const dispatch = useDispatch()
     const { user, error } = useSelector(state => state.adminUsers)
@@ -20,6 +17,7 @@ const UpdateUser = () => {
     let navigate = useNavigate();
 
     const { id } = useParams();
+    const loaded = user._id === id   // name and email are shown only: admins change the role alone
 
     useEffect(() => {
         dispatch(getUserDetails(id))
@@ -27,8 +25,6 @@ const UpdateUser = () => {
 
     useEffect(() => {
         if (user._id === id) {
-            setName(user.name);
-            setEmail(user.email);
             setRole(user.role)
         }
     }, [id, user])
@@ -44,13 +40,11 @@ const UpdateUser = () => {
         e.preventDefault();
         setAttempted(true)
         const nextErrors = {}
-        if (name.trim().length < 2) nextErrors.name = 'Name must be at least 2 characters.'
-        if (!isValidEmail(email)) nextErrors.email = 'Please enter a valid email address.'
         if (!['user', 'admin'].includes(role)) nextErrors.role = 'Please select a valid role.'
         setFieldErrors(nextErrors)
         if (Object.keys(nextErrors).length) return
         try {
-            await dispatch(updateUser({ id, userData: { name: name.trim(), email: email.trim(), role } })).unwrap()
+            await dispatch(updateUser({ id, userData: { role } })).unwrap()
             successMsg('User updated successfully')
             navigate('/admin/users')
         } catch (message) {
@@ -75,24 +69,22 @@ const UpdateUser = () => {
                                     <input
                                         type="name"
                                         id="name_field"
-                                        className={`form-control ${fieldErrors.name ? 'is-invalid' : ''}`}
+                                        className="form-control"
                                         name='name'
-                                        value={name}
-                                        onChange={(e) => { setName(e.target.value); if (attempted) setFieldErrors(current => ({ ...current, name: '' })) }}
+                                        value={loaded ? user.name : ''}
+                                        disabled
                                     />
-                                    {fieldErrors.name && <div className="invalid-feedback">{fieldErrors.name}</div>}
                                 </div>
                                 <div className="form-group">
                                     <label htmlFor="email_field">Email</label>
                                     <input
                                         type="email"
                                         id="email_field"
-                                        className={`form-control ${fieldErrors.email ? 'is-invalid' : ''}`}
+                                        className="form-control"
                                         name='email'
-                                        value={email}
-                                        onChange={(e) => { setEmail(e.target.value); if (attempted) setFieldErrors(current => ({ ...current, email: '' })) }}
+                                        value={loaded ? user.email : ''}
+                                        disabled
                                     />
-                                    {fieldErrors.email && <div className="invalid-feedback">{fieldErrors.email}</div>}
                                 </div>
                                 <div className="form-group">
                                     <label htmlFor="role_field">Role</label>
