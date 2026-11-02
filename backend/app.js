@@ -3,6 +3,7 @@ const path = require('path');
 const app = express();
 const cors = require('cors')
 const cookieParser = require('cookie-parser')
+const connectDatabase = require('./config/database');
 const products = require('./routes/product');
 const auth = require('./routes/auth');
 const order = require('./routes/order');
@@ -14,6 +15,15 @@ app.use(cors({
 app.use(cookieParser());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
+app.use(async (req, res, next) => {
+    try {
+        await connectDatabase();
+        next();
+    } catch (error) {
+        next(error);
+    }
+});
 
 // local image fallback (used when Cloudinary keys are not configured)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
