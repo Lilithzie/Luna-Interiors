@@ -43,6 +43,7 @@ store.subscribe(() => {
         savedCart = cart
         localStorage.setItem('cartItems', JSON.stringify(cart.cartItems))
         localStorage.setItem('shippingInfo', JSON.stringify(cart.shippingInfo))
+        localStorage.setItem('selectedCartItems', JSON.stringify(cart.selectedCartItems))
     }
     if (wishlist.ids !== savedWishlist) {
         savedWishlist = wishlist.ids

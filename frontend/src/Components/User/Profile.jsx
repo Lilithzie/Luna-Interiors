@@ -1,15 +1,23 @@
-import React, { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useCallback, useEffect } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Loader from '../Layout/Loader'
 import MetaData from '../Layout/MetaData'
 
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-// import { getToken } from '../Utils/helpers';
 import { useSelector } from 'react-redux'
 
 const Profile = () => {
     const { user, loading } = useSelector(state => state.auth)
+    const navigate = useNavigate()
+    const location = useLocation()
+    const closeDrawer = useCallback(() => navigate(location.state?.backgroundLocation ? -1 : '/'), [location, navigate])
+
+    useEffect(() => {
+        const handleEscape = event => {
+            if (event.key === 'Escape') closeDrawer()
+        }
+        document.addEventListener('keydown', handleEscape)
+        return () => document.removeEventListener('keydown', handleEscape)
+    }, [closeDrawer])
 
     // const [loading, setLoading] = useState(true)
     // const [user, setUser] = useState({})
@@ -46,37 +54,53 @@ const Profile = () => {
                 <>
                     <MetaData title={'Your Profile'} />
 
-                    <h2 className="mt-5 ml-5">My Profile</h2>
-                    <div className="row justify-content-around mt-5 user-info">
-                        <div className="col-12 col-md-3">
-                            <figure className='avatar avatar-profile'>
-                                <img className="rounded-circle img-fluid" src={user.avatar ? user.avatar.url : null} alt={user.name} />
-                            </figure>
-                            <Link to="/me/update" id="edit_profile" className="btn btn-primary btn-block my-5">
-                                Edit Profile
-                            </Link>
-                        </div>
+                    <div className="profile-drawer-layer" role="dialog" aria-modal="true" aria-labelledby="profile_drawer_title">
+                        <button type="button" className="profile-drawer-backdrop" onClick={closeDrawer} aria-label="Close profile panel"></button>
+                        <aside className="profile-drawer">
+                            <button type="button" className="profile-drawer-close" onClick={closeDrawer} aria-label="Close profile panel">
+                                <i className="fa fa-times" aria-hidden="true"></i>
+                            </button>
+                            <h1 className="profile-page-title" id="profile_drawer_title">My Profile</h1>
+                            <section className="profile-card">
+                            <div className="profile-identity">
+                                <figure className="avatar avatar-profile">
+                                    <img className="rounded-circle img-fluid" src={user.avatar ? user.avatar.url : null} alt={user.name} />
+                                </figure>
+                                <h2>{user.name}</h2>
+                                <p>{user.email}</p>
+                                {user.role === 'admin' && <span className="profile-role">Administrator</span>}
+                            </div>
 
-                        <div className="col-12 col-md-5">
-                            <h4>Full Name</h4>
-                            <p>{user.name}</p>
+                            <div className="profile-details">
+                                <div className="profile-detail">
+                                    <span className="profile-detail-label">Full Name</span>
+                                    <strong>{user.name}</strong>
+                                </div>
+                                <div className="profile-detail">
+                                    <span className="profile-detail-label">Email Address</span>
+                                    <strong>{user.email}</strong>
+                                </div>
+                                <div className="profile-detail">
+                                    <span className="profile-detail-label">Joined On</span>
+                                    <strong>{String(user.createdAt).substring(0, 10)}</strong>
+                                </div>
+                            </div>
 
-                            <h4>Email Address</h4>
-                            <p>{user.email}</p>
-
-                            <h4>Joined On</h4>
-                            <p>{String(user.createdAt).substring(0, 10)}</p>
-
-                            {user.role !== 'admin' && (
-                                <Link to="/orders/me" className="btn btn-danger btn-block mt-5">
-                                    My Orders
+                            <div className="profile-actions">
+                                <Link to="/me/update" id="edit_profile" className="btn btn-luna">
+                                    Edit Profile
                                 </Link>
-                            )}
-
-                            <Link to="/password/update" className="btn btn-primary btn-block mt-3">
-                                Change Password
-                            </Link>
-                        </div>
+                                {user.role !== 'admin' && (
+                                    <Link to="/orders/me" className="btn btn-outline-luna">
+                                        My Orders
+                                    </Link>
+                                )}
+                                <Link to="/password/update" className="btn btn-outline-luna">
+                                    Change Password
+                                </Link>
+                            </div>
+                            </section>
+                        </aside>
                     </div>
                 </>
             )}

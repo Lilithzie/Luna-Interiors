@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { ToastContainer, } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useDispatch } from 'react-redux';
@@ -125,21 +125,34 @@ function App() {
   return (
     <div className="site-shell">
       <Router>
+        <AppRoutes />
+      </Router>
+      <ToastContainer />
+    </div>
+  )
+}
+
+function AppRoutes() {
+  const location = useLocation()
+  const backgroundLocation = location.state?.backgroundLocation
+
+  return (
+    <>
         <div className="site-main">
         {/* <Header cartItems={state.cartItems} /> */}
         <Header />
-        <main className="route-content"><Routes>
+        <main className="route-content"><Routes location={backgroundLocation || location}>
           <Route path="/" element={<Home />} exact="true" />
           {/* <Route path="/product/:id" element={<ProductDetails cartItems={state.cartItems} addItemToCart={addItemToCart} />} exact="true" /> */}
           <Route path="/product/:id" element={<ProductDetails />} exact="true" />
 
           <Route path="/search/:keyword" element={<Home />} exact="true" />
-          <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/wishlist" element={<><Home /><Wishlist /></>} />
           <Route path="/login" element={<><Home /><Login /></>} exact="true" />
           <Route path="/register" element={<Register exact="true" />} />
           <Route path="/password/forgot" element={<ForgotPassword />} exact="true" />
           <Route path="/password/reset/:token" element={<NewPassword />} exact="true" />
-          <Route path="/me" element={<ProtectedRoute><Profile /></ProtectedRoute>} exact="true" />
+          <Route path="/me" element={<ProtectedRoute><><Home /><Profile /></></ProtectedRoute>} exact="true" />
           <Route path="/me/update" element={<ProtectedRoute><UpdateProfile /></ProtectedRoute>} exact="true"
           />
           <Route path="/password/update" element={<ProtectedRoute><UpdatePassword /></ProtectedRoute>} />
@@ -218,13 +231,19 @@ function App() {
                 <ProductReviews />
               </ProtectedRoute>} />
 
-        </Routes></main>
+        </Routes>
+        {backgroundLocation && (
+          <Routes location={location}>
+            <Route path="/wishlist" element={<Wishlist />} />
+            <Route path="/login" element={<Login />} exact="true" />
+            <Route path="/me" element={<ProtectedRoute><Profile /></ProtectedRoute>} exact="true" />
+            <Route path="/cart" element={<ProtectedRoute customerOnly={true}><Cart /></ProtectedRoute>} />
+          </Routes>
+        )}
+        </main>
         </div>
         <Footer />
-
-      </Router>
-      <ToastContainer />
-    </div>
+    </>
   )
 }
 

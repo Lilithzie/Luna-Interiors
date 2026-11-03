@@ -82,7 +82,7 @@ const Login = () => {
         }
     }, [error, isAuthenticated, user, dispatch, navigate, redirect])
 
-    const closeDrawer = useCallback(() => navigate('/'), [navigate])
+    const closeDrawer = useCallback(() => navigate(location.state?.backgroundLocation ? -1 : '/'), [location, navigate])
 
     useEffect(() => {
         const handleEscape = (event) => {

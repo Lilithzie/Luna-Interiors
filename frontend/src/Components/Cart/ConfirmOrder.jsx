@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import MetaData from '../Layout/MetaData'
 import CheckoutSteps from './CheckoutSteps'
@@ -7,10 +7,13 @@ import { useSelector } from 'react-redux'
 const ConfirmOrder = () => {
     // const [user, setUser] = useState(getUser() ? getUser() : {})
     let navigate = useNavigate();
-    const { cartItems, shippingInfo } = useSelector(state => state.cart)
+    const { cartItems, selectedCartItems, shippingInfo } = useSelector(state => state.cart)
+    const checkoutItems = selectedCartItems === null
+        ? cartItems
+        : cartItems.filter(item => selectedCartItems.includes(item.product))
     const { user } = useSelector(state => state.auth)
     // Calculate Order Prices
-    const itemsPrice = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0)
+    const itemsPrice = checkoutItems.reduce((acc, item) => acc + item.price * item.quantity, 0)
     const shippingPrice = itemsPrice > 5000 ? 0 : 250
     const taxPrice = Number((0.05 * itemsPrice).toFixed(2))
     const totalPrice = (itemsPrice + shippingPrice + taxPrice).toFixed(2)
@@ -41,7 +44,7 @@ const ConfirmOrder = () => {
                     <hr />
                     <h4 className="mt-4">Your Cart Items:</h4>
 
-                    {cartItems.map(item => (
+                    {checkoutItems.map(item => (
                         <React.Fragment key={item.product}>
 
                             <div className="cart-item my-1">

@@ -23,15 +23,24 @@ export const addItemToCart = apiThunk('cart/addItem', async ({ id, quantity }) =
 
 const cartSlice = createSlice({
     name: 'cart',
-    initialState: { cartItems: saved('cartItems', []), shippingInfo: saved('shippingInfo', {}) },
+    initialState: {
+        cartItems: saved('cartItems', []),
+        shippingInfo: saved('shippingInfo', {}),
+        selectedCartItems: saved('selectedCartItems', null),
+    },
     reducers: {
         removeItemFromCart: (state, action) => {
             state.cartItems = state.cartItems.filter(item => item.product !== action.payload)
+            if (Array.isArray(state.selectedCartItems)) {
+                state.selectedCartItems = state.selectedCartItems.filter(id => id !== action.payload)
+            }
         },
         saveShippingInfo: (state, action) => { state.shippingInfo = action.payload },
+        setSelectedCartItems: (state, action) => { state.selectedCartItems = action.payload },
         clearCart: (state) => {
             state.cartItems = []
             state.shippingInfo = {}
+            state.selectedCartItems = null
         },
     },
     extraReducers: (builder) => {
@@ -44,5 +53,5 @@ const cartSlice = createSlice({
     },
 })
 
-export const { removeItemFromCart, saveShippingInfo, clearCart } = cartSlice.actions
+export const { removeItemFromCart, saveShippingInfo, setSelectedCartItems, clearCart } = cartSlice.actions
 export default cartSlice.reducer

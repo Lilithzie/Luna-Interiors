@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from "react-router-dom";
 import MetaData from '../Layout/MetaData'
 import CheckoutSteps from './CheckoutSteps'
@@ -14,7 +14,10 @@ const CARD = 'Card'
 const Payment = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const { cartItems, shippingInfo } = useSelector(state => state.cart)
+    const { cartItems, selectedCartItems, shippingInfo } = useSelector(state => state.cart)
+    const checkoutItems = selectedCartItems === null
+        ? cartItems
+        : cartItems.filter(item => selectedCartItems.includes(item.product))
     const { loading: submitting } = useSelector(state => state.newOrder)
     const [method, setMethod] = useState(COD)
     const [cardName, setCardName] = useState('')
@@ -50,7 +53,7 @@ const Payment = () => {
 
     const submitHandler = async (e) => {
         e.preventDefault();
-        if (!orderInfo || cartItems.length === 0) {
+        if (!orderInfo || checkoutItems.length === 0) {
             toast.error('Your cart is empty', { position: 'bottom-right' })
             return navigate('/cart')
         }
@@ -58,7 +61,7 @@ const Payment = () => {
 
         // The server recalculates prices from the database; the browser only sends what was chosen.
         const order = {
-            orderItems: cartItems.map(i => ({ product: i.product, quantity: i.quantity })),
+            orderItems: checkoutItems.map(i => ({ product: i.product, quantity: i.quantity })),
             shippingInfo,
             paymentMethod: method,
             // card payment is simulated: never send the full number or the CVC

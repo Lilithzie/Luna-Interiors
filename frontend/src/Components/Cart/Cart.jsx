@@ -1,17 +1,27 @@
-import React, { useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useCallback, useEffect } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import MetaData from '../Layout/MetaData'
-import { useParams, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { addItemToCart, removeItemFromCart } from '../../slices/cartSlice'
+import { addItemToCart, removeItemFromCart, setSelectedCartItems } from '../../slices/cartSlice'
+import { toast } from 'react-toastify'
 
 
 const Cart = () => {
     const dispatch = useDispatch();
-    const { cartItems } = useSelector(state => state.cart)
+    const { cartItems, selectedCartItems } = useSelector(state => state.cart)
     const { isAuthenticated } = useSelector(state => state.auth)
 
     const navigate = useNavigate()
+    const location = useLocation()
+    const closeDrawer = useCallback(() => navigate(location.state?.backgroundLocation ? -1 : '/'), [location, navigate])
+
+    useEffect(() => {
+        const handleEscape = event => {
+            if (event.key === 'Escape') closeDrawer()
+        }
+        document.addEventListener('keydown', handleEscape)
+        return () => document.removeEventListener('keydown', handleEscape)
+    }, [closeDrawer])
 
 
     const increaseQty = (id, quantity, stock) => {
@@ -29,7 +39,29 @@ const Cart = () => {
     const removeCartItemHandler = (id) => {
         dispatch(removeItemFromCart(id))
     }
+
+    const selectedIds = selectedCartItems === null
+        ? cartItems.map(item => item.product)
+        : selectedCartItems
+    const selectedItems = cartItems.filter(item => selectedIds.includes(item.product))
+    const allItemsSelected = cartItems.length > 0 && selectedItems.length === cartItems.length
+
+    const toggleItemSelection = (id) => {
+        const nextIds = selectedIds.includes(id)
+            ? selectedIds.filter(itemId => itemId !== id)
+            : [...selectedIds, id]
+        dispatch(setSelectedCartItems(nextIds))
+    }
+
+    const toggleAllItems = () => {
+        dispatch(setSelectedCartItems(allItemsSelected ? [] : cartItems.map(item => item.product)))
+    }
+
     const checkoutHandler = () => {
+        if (selectedItems.length === 0) {
+            toast.error('Select at least one item to continue.', { position: 'bottom-right' })
+            return
+        }
         navigate(isAuthenticated ? '/shipping' : '/login?redirect=shipping')
     }
     // localStorage.setItem('cartItems', JSON.stringify(cartItems))
@@ -37,74 +69,83 @@ const Cart = () => {
     //     localStorage.setItem('cartItems', JSON.stringify(cartItems));
     // }, [cartItems]);
     return (
-        <>
+        <div className="cart-drawer-layer" role="dialog" aria-modal="true" aria-labelledby="cart_drawer_title">
             <MetaData title={'Your Cart'} />
-            {cartItems.length === 0 ? <h2 className="mt-5">Your Cart is Empty</h2> : (
-                <>
-                    <h2 className="mt-5">Your Cart: <b>{cartItems.length} items</b></h2>
+            <button type="button" className="cart-drawer-backdrop" onClick={closeDrawer} aria-label="Close cart panel"></button>
+            <aside className="cart-drawer">
+                <button type="button" className="cart-drawer-close" onClick={closeDrawer} aria-label="Close cart panel">
+                    <i className="fa fa-times" aria-hidden="true"></i>
+                </button>
+                <div className="cart-drawer-header">
+                    <p className="cart-drawer-eyebrow">LUNA INTERIORS</p>
+                    <h1 id="cart_drawer_title">Your Cart</h1>
+                    <p>{selectedItems.length} of {cartItems.length} {cartItems.length === 1 ? 'item' : 'items'} selected</p>
+                </div>
 
-                    <div className="row d-flex justify-content-between">
-                        <div className="col-12 col-lg-8">
-
+                {cartItems.length === 0 ? (
+                    <div className="cart-empty-state">
+                        <i className="fa fa-shopping-bag" aria-hidden="true"></i>
+                        <h2>Your cart is empty</h2>
+                        <p>Discover something beautiful for your home.</p>
+                        <button type="button" className="btn btn-luna" onClick={closeDrawer}>Browse Furniture</button>
+                    </div>
+                ) : (
+                    <>
+                        <div className="cart-selection-toolbar">
+                            <label htmlFor="select_all_cart_items">
+                                <input
+                                    type="checkbox"
+                                    id="select_all_cart_items"
+                                    checked={allItemsSelected}
+                                    onChange={toggleAllItems}
+                                />
+                                <span>Select all items</span>
+                            </label>
+                            <span>{selectedItems.length} selected</span>
+                        </div>
+                        <div className="cart-drawer-items">
                             {cartItems.map(item => (
-                                <React.Fragment key={item.product}>
-                                    <hr />
-
-                                    <div className="cart-item">
-                                        <div className="row">
-                                            <div className="col-4 col-lg-3">
-                                                <img src={item.image} alt={item.name} height="90" width="115" />
+                                <article className="cart-drawer-item" key={item.product}>
+                                    <label className="cart-item-selection" htmlFor={`cart_item_${item.product}`}>
+                                        <input
+                                            type="checkbox"
+                                            id={`cart_item_${item.product}`}
+                                            checked={selectedIds.includes(item.product)}
+                                            onChange={() => toggleItemSelection(item.product)}
+                                            aria-label={`Select ${item.name} for checkout`}
+                                        />
+                                    </label>
+                                    <Link to={`/product/${item.product}`} onClick={closeDrawer} className="cart-drawer-image">
+                                        <img src={item.image} alt={item.name} />
+                                    </Link>
+                                    <div className="cart-drawer-item-details">
+                                        <div className="cart-drawer-item-heading">
+                                            <Link to={`/product/${item.product}`} onClick={closeDrawer}>{item.name}</Link>
+                                            <button type="button" className="cart-item-remove" onClick={() => removeCartItemHandler(item.product)} aria-label={`Remove ${item.name}`}>
+                                                <i className="fa fa-trash-o" aria-hidden="true"></i>
+                                            </button>
+                                        </div>
+                                        <strong className="cart-drawer-price">₱{Number(item.price).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</strong>
+                                        <div className="cart-drawer-item-footer">
+                                            <div className="cart-quantity">
+                                                <button type="button" onClick={() => decreaseQty(item.product, item.quantity)} aria-label={`Decrease ${item.name} quantity`}>−</button>
+                                                <span>{item.quantity}</span>
+                                                <button type="button" onClick={() => increaseQty(item.product, item.quantity, item.stock)} aria-label={`Increase ${item.name} quantity`}>+</button>
                                             </div>
-
-                                            <div className="col-5 col-lg-3">
-                                                <Link to={`/product/${item.product}`}>{item.name}</Link>
-                                            </div>
-
-
-                                            <div className="col-4 col-lg-2 mt-4 mt-lg-0">
-                                                <p id="card_item_price">₱{item.price}</p>
-                                            </div>
-
-                                            <div className="col-4 col-lg-3 mt-4 mt-lg-0">
-                                                <div className="stockCounter d-inline">
-                                                    <span className="btn btn-danger minus" onClick={() => decreaseQty(item.product, item.quantity)}>-</span>
-
-                                                    <input type="number" className="form-control count d-inline" value={item.quantity} readOnly />
-
-                                                    <span className="btn btn-primary plus" onClick={() => increaseQty(item.product, item.quantity, item.stock)}>+</span>
-                                                </div>
-                                            </div>
-
-                                            <div className="col-4 col-lg-1 mt-4 mt-lg-0">
-                                                <i id="delete_cart_item" className="fa fa-trash btn btn-danger" onClick={() => removeCartItemHandler(item.product)} ></i>
-                                                {/* <i id="delete_cart_item" className="fa fa-trash btn btn-danger" ></i> */}
-                                            </div>
-
+                                            <span className="cart-item-total">₱{(item.quantity * item.price).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
                                         </div>
                                     </div>
-                                    <hr />
-                                </React.Fragment>
+                                </article>
                             ))}
-
                         </div>
-
-                        <div className="col-12 col-lg-3 my-4">
-                            <div id="order_summary">
-                                <h4>Order Summary</h4>
-                                <hr />
-                                <p>Subtotal:  <span className="order-summary-values">{cartItems.reduce((acc, item) => (acc + Number(item.quantity)), 0)} (Units)</span></p>
-                                <p>Est. total: <span className="order-summary-values">₱{cartItems.reduce((acc, item) => acc + item.quantity * item.price, 0).toFixed(2)}</span></p>
-
-
-                                <hr />
-                                <button id="checkout_btn" className="btn btn-primary btn-block" onClick={checkoutHandler}>Check out</button>
-                                {/*<button id="checkout_btn" className="btn btn-primary btn-block" >Check out</button>*/}
-                            </div>
+                        <div className="cart-drawer-summary">
+                            <div><span>Subtotal ({selectedItems.reduce((acc, item) => acc + Number(item.quantity), 0)} items)</span><strong>₱{selectedItems.reduce((acc, item) => acc + item.quantity * item.price, 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</strong></div>
+                            <button id="checkout_btn" className="btn btn-luna btn-block" onClick={checkoutHandler} disabled={selectedItems.length === 0}>Continue to checkout</button>
                         </div>
-                    </div>
-                </>
-            )}
-        </>
+                    </>
+                )}
+            </aside>
+        </div>
     )
 }
 

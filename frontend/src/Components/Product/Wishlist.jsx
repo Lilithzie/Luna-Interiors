@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useCallback, useEffect } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import MetaData from '../Layout/MetaData'
 import Loader from '../Layout/Loader'
@@ -9,6 +9,9 @@ import { getWishlistProducts } from '../../slices/wishlistSlice'
 const Wishlist = () => {
     const dispatch = useDispatch()
     const { ids, products, loading, error } = useSelector(state => state.wishlist)
+    const navigate = useNavigate()
+    const location = useLocation()
+    const closeDrawer = useCallback(() => navigate(location.state?.backgroundLocation ? -1 : '/'), [location, navigate])
 
     useEffect(() => {
         dispatch(getWishlistProducts(ids))
@@ -19,8 +22,14 @@ const Wishlist = () => {
     return (
         <>
             <MetaData title={'Wishlist'} />
-            <div className="store-container page-section" id="wishlist_page">
-                <h1>Wishlist</h1>
+            <div className="wishlist-drawer-layer" role="dialog" aria-modal="true" aria-labelledby="wishlist_drawer_title">
+                <button type="button" className="wishlist-drawer-backdrop" onClick={closeDrawer} aria-label="Close wishlist panel"></button>
+                <aside className="wishlist-drawer">
+                    <button type="button" className="wishlist-drawer-close" onClick={closeDrawer} aria-label="Close wishlist panel">
+                        <i className="fa fa-times" aria-hidden="true"></i>
+                    </button>
+                    <div className="wishlist-drawer-content" id="wishlist_page">
+                        <h1 id="wishlist_drawer_title">Wishlist</h1>
                 {loading && <Loader />}
                 {error && <div className="alert alert-danger">{error}</div>}
                 {!loading && !error && products.length === 0 && (
@@ -34,6 +43,8 @@ const Wishlist = () => {
                         {products.map(product => <Product key={product._id} product={product} />)}
                     </div>
                 )}
+                    </div>
+                </aside>
             </div>
         </>
     )

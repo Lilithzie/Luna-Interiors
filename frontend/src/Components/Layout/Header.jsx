@@ -24,7 +24,10 @@ export const Header = () => {
     const { cartItems } = useSelector(state => state.cart)
     const { ids: wishlistIds } = useSelector(state => state.wishlist)
     const { categories } = useSelector(state => state.catalog)
-    const { pathname } = useLocation()
+    const location = useLocation()
+    const backgroundLocation = location.state?.backgroundLocation
+    const displayedLocation = backgroundLocation || location
+    const { pathname } = displayedLocation
     const [searchParams] = useSearchParams()
     const activeCategory = pathname === '/' ? searchParams.get('category') : null
     const isAdmin = !!(user && user.role === 'admin')
@@ -91,7 +94,7 @@ export const Header = () => {
                                 ) : (
                                     <Link className="dropdown-item" to="/orders/me">My Orders</Link>
                                 )}
-                                <Link className="dropdown-item" to="/me">Profile</Link>
+                                <Link className="dropdown-item" to="/me" state={{ backgroundLocation: displayedLocation }}>Profile</Link>
                                 <Link
                                     className="dropdown-item text-danger" to="/"
                                     onClick={logoutHandler}
@@ -101,7 +104,7 @@ export const Header = () => {
                             </div>
                         </div>
                     ) : (
-                        <Link to="/login" className="header-action" id="login_btn" aria-label="Login">
+                        <Link to="/login" state={{ backgroundLocation: displayedLocation }} className="header-action" id="login_btn" aria-label="Login">
                             <i className="fa fa-user-o" aria-hidden="true"></i>
                             <span className="header-action-label d-none d-lg-inline">Login</span>
                         </Link>
@@ -109,11 +112,11 @@ export const Header = () => {
 
                     {!isAdmin && (
                         <>
-                            <Link to="/wishlist" className="header-action" id="wishlist_link" aria-label="Wishlist">
+                            <Link to="/wishlist" state={{ backgroundLocation: displayedLocation }} className="header-action" id="wishlist_link" aria-label="Wishlist">
                                 <i className="fa fa-heart-o" aria-hidden="true"></i>
                                 <span className="header-count" id="wishlist_count">{wishlistIds.length}</span>
                             </Link>
-                            <Link to="/cart" className="header-action" id="cart_link" aria-label="Cart">
+                            <Link to="/cart" state={{ backgroundLocation: displayedLocation }} className="header-action" id="cart_link" aria-label="Cart">
                                 <i className="fa fa-shopping-cart" aria-hidden="true"></i>
                                 <span className="header-count" id="cart_count">{cartItems ? cartItems.length : null}</span>
                             </Link>
