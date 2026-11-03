@@ -1,7 +1,7 @@
 const User = require('../models/user');
 const crypto = require('crypto')
 const validator = require('validator')
-const cloudinary = require('cloudinary')
+const { requireCloudinary } = require('../config/cloudinary')
 const sendEmail = require('../utils/sendEmail')
 const sendToken = require('../utils/jwtToken');
 
@@ -40,7 +40,7 @@ exports.registerUser = async (req, res, next) => {
     if (!validator.isEmail(email)) return res.status(400).json({ success: false, message: 'Please enter a valid email address' });
     if (password.length < 8) return res.status(400).json({ success: false, message: 'Password must be at least 8 characters long' });
     if (!req.body.avatar) return res.status(400).json({ success: false, message: 'Please choose an avatar image' });
-    const result = await cloudinary.v2.uploader.upload(req.body.avatar, {
+    const result = await requireCloudinary().uploader.upload(req.body.avatar, {
         folder: 'avatars',
         width: 150,
         crop: "scale"
@@ -187,9 +187,9 @@ exports.updateProfile = async (req, res, next) => {
         let user = await User.findById(req.user.id)
         // console.log(user)
         const image_id = user.avatar.public_id;
-        const res = await cloudinary.v2.uploader.destroy(image_id);
+        const res = await requireCloudinary().uploader.destroy(image_id);
         // console.log("Res", res)
-        const result = await cloudinary.v2.uploader.upload(req.body.avatar, {
+        const result = await requireCloudinary().uploader.upload(req.body.avatar, {
             folder: 'avatars',
             width: 150,
             crop: "scale"
@@ -263,7 +263,7 @@ exports.deleteUser = async (req, res, next) => {
 
     // Remove avatar from cloudinary
     const image_id = user.avatar.public_id;
-    await cloudinary.v2.uploader.destroy(image_id);
+    await requireCloudinary().uploader.destroy(image_id);
     await User.findByIdAndDelete(req.params.id);
     return res.status(200).json({
         success: true,

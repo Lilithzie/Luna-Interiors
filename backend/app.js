@@ -4,6 +4,7 @@ const app = express();
 const cors = require('cors')
 const cookieParser = require('cookie-parser')
 const connectDatabase = require('./config/database');
+require('./config/cloudinary');
 const products = require('./routes/product');
 const auth = require('./routes/auth');
 const order = require('./routes/order');

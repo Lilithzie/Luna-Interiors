@@ -207,4 +207,20 @@ cd ../frontend && npm install
 npm run dev                            # http://localhost:5173  (VITE_API in frontend/.env)
 ```
 Seeded logins: `admin@lunainteriors.com / admin123` · `customer@lunainteriors.com / customer123`.
-If the Cloudinary keys are blank, product photos are saved to `backend/uploads` instead.
+Cloudinary credentials are required for product photos; uploads return a clear configuration
+error when any required key is missing.
+
+### Vercel backend deployment
+
+Deploy `backend` as the Vercel project root. The backend includes `api/index.js`, which
+exports the Express application for Vercel; `server.js` is only used for local `npm run dev`.
+Configure these variables in the backend Vercel project for the **Production** environment:
+
+* `CLOUDINARY_CLOUD_NAME`
+* `CLOUDINARY_API_KEY`
+* `CLOUDINARY_API_SECRET`
+* `DB_URI`, `JWT_SECRET`, and the other backend settings required by the application
+
+Cloudinary credentials are read only by the backend. After changing Production variables,
+redeploy the backend and verify the deployment logs show only boolean credential-detection
+flags, never credential values.

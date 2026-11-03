@@ -1,47 +1,77 @@
-const cloudinary = require('cloudinary').v2;
-const fs = require('fs');
+const fs = require('fs/promises');
 const path = require('path');
+const { requireCloudinary } = require('../config/cloudinary');
 
 const UPLOAD_DIR = path.join(__dirname, '..', 'uploads');
 
-// Cloudinary is the primary storage. When the CLOUDINARY_* variables are not
-// filled in (e.g. first run on a classmate's laptop) images fall back to the
-// local /uploads folder so the system still works.
-const useCloudinary = () =>
-    !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
+const removeTempFile = async (file) => {
+    if (!file || !file.path) return;
+    try {
+        await fs.unlink(file.path);
+    } catch (error) {
+        if (error.code !== 'ENOENT') {
+            console.warn('Unable to remove temporary upload:', error.code);
+        }
+    }
+};
+
+const uploadError = (error) => {
+    if (error.code === 'CLOUDINARY_NOT_CONFIGURED') return error;
+
+    const wrapped = new Error('Image upload failed. Check the Cloudinary configuration and try again.');
+    wrapped.statusCode = 502;
+    wrapped.code = 'IMAGE_UPLOAD_FAILED';
+    console.error('Cloudinary upload failed:', {
+        name: error.name,
+        code: error.http_code || error.code,
+    });
+    return wrapped;
+};
 
 exports.uploadImages = async (files = [], req, folder = 'products') => {
-    const results = [];
-    for (const file of files) {
-        if (useCloudinary()) {
-            const r = await cloudinary.uploader.upload(file.path, { folder, width: 800, crop: 'scale' });
-            results.push({ public_id: r.public_id, url: r.secure_url });
-        } else {
-            const dir = path.join(UPLOAD_DIR, folder);
-            fs.mkdirSync(dir, { recursive: true });
-            const name = `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname).toLowerCase()}`;
-            fs.copyFileSync(file.path, path.join(dir, name));
-            results.push({
-                public_id: `local:${folder}/${name}`,
-                url: `${req.protocol}://${req.get('host')}/uploads/${folder}/${name}`
+    if (!Array.isArray(files) || files.length === 0) return [];
+
+    const uploaded = [];
+
+    try {
+        const cloudinary = requireCloudinary();
+        for (const file of files) {
+            try {
+                const result = await cloudinary.uploader.upload(file.path, {
+                    folder,
+                    width: 800,
+                    crop: 'scale',
             });
+                uploaded.push({ public_id: result.public_id, url: result.secure_url });
+            } finally {
+                await removeTempFile(file);
+            }
         }
-        fs.unlink(file.path, () => { });
+        return uploaded;
+    } catch (error) {
+        await Promise.all(files.map(removeTempFile));
+        await exports.destroyImages(uploaded);
+        throw uploadError(error);
     }
-    return results;
 };
 
 exports.destroyImages = async (images = []) => {
-    for (const img of images) {
+    if (!Array.isArray(images) || images.length === 0) return;
+
+    for (const image of images) {
+        if (!image || !image.public_id) continue;
         try {
-            if (img.public_id && img.public_id.startsWith('local:')) {
-                const rel = img.public_id.slice('local:'.length);
-                fs.unlink(path.join(UPLOAD_DIR, rel), () => { });
-            } else if (img.public_id && useCloudinary()) {
-                await cloudinary.uploader.destroy(img.public_id);
+            if (image.public_id.startsWith('local:')) {
+                await fs.unlink(path.join(UPLOAD_DIR, image.public_id.slice('local:'.length)));
+                continue;
             }
-        } catch (e) {
-            console.log('Image cleanup failed:', e.message);
+            const cloudinary = requireCloudinary();
+            await cloudinary.uploader.destroy(image.public_id);
+        } catch (error) {
+            console.error('Cloudinary image cleanup failed:', {
+                publicId: image.public_id,
+                code: error.http_code || error.code,
+            });
         }
     }
 };
