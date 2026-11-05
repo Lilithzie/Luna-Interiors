@@ -654,9 +654,7 @@ ul.CTAs a {
   grid-column: 1 / -1;
 }
 
-.monthly-sales-chart {
-  grid-column: 1 / -1;
-}
+/* monthly and yearly sales share a row, side by side */
 
 @media (max-width: 900px) {
   .dashboard-charts {
@@ -664,10 +662,6 @@ ul.CTAs a {
   }
 
   .sales-range-chart {
-    grid-column: auto;
-  }
-
-  .monthly-sales-chart {
     grid-column: auto;
   }
 }

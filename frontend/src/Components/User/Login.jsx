@@ -153,7 +153,7 @@ const Login = () => {
                                 </button>
 
                                 <div className="auth-register">
-                                    <Link to="/register">New User?</Link>
+                                    <Link to="/register" state={location.state} replace>New User?</Link>
                                 </div>
                         </form>
                     </>

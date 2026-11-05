@@ -14,6 +14,11 @@ export const getMonthlySales = apiThunk('sales/monthly', async () => {
     return data.salesPerMonth
 })
 
+export const getYearlySales = apiThunk('sales/yearly', async () => {
+    const { data } = await axios.get(`${API}/admin/sales-per-year`)
+    return data.salesPerYear
+})
+
 export const getProductSales = apiThunk('sales/byProduct', async () => {
     const { data } = await axios.get(`${API}/admin/product-sales`)
     return data.totalPercentage
@@ -26,7 +31,7 @@ export const getCustomerSales = apiThunk('sales/byCustomer', async () => {
 
 const salesSlice = createSlice({
     name: 'sales',
-    initialState: { range: [], rangeLoading: false, rangeError: '', latestRangeRequest: null, monthly: [], byProduct: [], byCustomer: [] },
+    initialState: { range: [], rangeLoading: false, rangeError: '', latestRangeRequest: null, monthly: [], yearly: [], byProduct: [], byCustomer: [] },
     reducers: {},
     extraReducers: (builder) => {
         builder
@@ -46,6 +51,7 @@ const salesSlice = createSlice({
                 state.rangeError = action.payload
             })
             .addCase(getMonthlySales.fulfilled, (state, action) => { state.monthly = action.payload })
+            .addCase(getYearlySales.fulfilled, (state, action) => { state.yearly = action.payload })
             .addCase(getProductSales.fulfilled, (state, action) => { state.byProduct = action.payload })
             .addCase(getCustomerSales.fulfilled, (state, action) => { state.byCustomer = action.payload })
     },

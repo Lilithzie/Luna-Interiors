@@ -87,7 +87,7 @@ const Profile = () => {
                             </div>
 
                             <div className="profile-actions">
-                                <Link to="/me/update" id="edit_profile" className="btn btn-luna">
+                                <Link to="/me/update" state={location.state} id="edit_profile" className="btn btn-luna">
                                     Edit Profile
                                 </Link>
                                 {user.role !== 'admin' && (

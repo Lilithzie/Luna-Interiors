@@ -12,6 +12,7 @@ import { allUsers } from '../../slices/adminUserSlice'
 import ProductSalesChart from './ProductSalesChart';
 import UserSalesChart from './UserSalesChart';
 import MonthlySalesChart from './MonthlySalesChart';
+import YearlySalesChart from './YearlySalesChart';
 import DateRangeSalesChart from './DateRangeSalesChart';
 
 
@@ -123,6 +124,7 @@ const Dashboard = () => {
                     <div className="dashboard-charts">
                         <DateRangeSalesChart />
                         <MonthlySalesChart />
+                        <YearlySalesChart />
                         <ProductSalesChart />
                         <UserSalesChart />
                     </div>

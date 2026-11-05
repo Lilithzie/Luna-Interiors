@@ -131,8 +131,13 @@ nav.category-nav a.active { color: #fff; border-bottom-color: var(--luna-gold); 
 .login-drawer .form-control { min-height: 2.8rem; border-color: var(--luna-line); background: #fff; }
 .login-drawer .form-control:focus { border-color: var(--luna-oak); box-shadow: 0 0 0 2px rgba(166, 124, 82, .18); }
 .login-drawer form .btn { margin-top: 1.1rem; }
-.login-drawer #login_button { display: block; width: 100%; min-height: 3.15rem; border: 1px solid var(--luna); border-radius: 3px; background: var(--luna); color: #fff; font-weight: 600; letter-spacing: .05em; }
-.login-drawer #login_button:hover, .login-drawer #login_button:focus { border-color: var(--luna-dark); background: var(--luna-dark); color: #fff; box-shadow: 0 0 0 2px rgba(139, 90, 43, .2); }
+.login-drawer #login_button, .login-drawer #register_button { display: block; width: 100%; min-height: 3.15rem; border: 1px solid var(--luna); border-radius: 3px; background: var(--luna); color: #fff; font-weight: 600; letter-spacing: .05em; }
+.login-drawer #login_button:hover, .login-drawer #login_button:focus, .login-drawer #register_button:hover, .login-drawer #register_button:focus { border-color: var(--luna-dark); background: var(--luna-dark); color: #fff; box-shadow: 0 0 0 2px rgba(139, 90, 43, .2); }
+.login-drawer .auth-register a { color: var(--luna-dark); }
+/* Edit Profile drawer: same fields as the login drawer */
+.update-profile-drawer .form-group { margin-bottom: 1.15rem; }
+.update-profile-drawer .form-control { min-height: 2.8rem; border-color: var(--luna-line); background: #fff; }
+.update-profile-drawer .form-control:focus { border-color: var(--luna-oak); box-shadow: 0 0 0 2px rgba(166, 124, 82, .18); }
 .login-drawer .google-login-btn { min-height: 3.15rem; border: 1px solid var(--luna) !important; color: var(--luna-ink) !important; }
 .login-drawer .loader { margin: auto; }
 @keyframes drawer-slide-in { from { transform: translateX(100%); } to { transform: translateX(0); } }

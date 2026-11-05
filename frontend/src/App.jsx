@@ -149,11 +149,11 @@ function AppRoutes() {
           <Route path="/search/:keyword" element={<Home />} exact="true" />
           <Route path="/wishlist" element={<><Home /><Wishlist /></>} />
           <Route path="/login" element={<><Home /><Login /></>} exact="true" />
-          <Route path="/register" element={<Register exact="true" />} />
+          <Route path="/register" element={<><Home /><Register /></>} />
           <Route path="/password/forgot" element={<ForgotPassword />} exact="true" />
           <Route path="/password/reset/:token" element={<NewPassword />} exact="true" />
           <Route path="/me" element={<ProtectedRoute><><Home /><Profile /></></ProtectedRoute>} exact="true" />
-          <Route path="/me/update" element={<ProtectedRoute><UpdateProfile /></ProtectedRoute>} exact="true"
+          <Route path="/me/update" element={<ProtectedRoute><><Home /><UpdateProfile /></></ProtectedRoute>} exact="true"
           />
           <Route path="/password/update" element={<ProtectedRoute><UpdatePassword /></ProtectedRoute>} />
           {/* <Route path="/cart" element={<Cart cartItems={state.cartItems} addItemToCart={addItemToCart} removeItemFromCart={removeItemFromCart} />} exact="true" />
@@ -236,7 +236,9 @@ function AppRoutes() {
           <Routes location={location}>
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/login" element={<Login />} exact="true" />
+            <Route path="/register" element={<Register />} />
             <Route path="/me" element={<ProtectedRoute><Profile /></ProtectedRoute>} exact="true" />
+            <Route path="/me/update" element={<ProtectedRoute><UpdateProfile /></ProtectedRoute>} />
             <Route path="/cart" element={<ProtectedRoute customerOnly={true}><Cart /></ProtectedRoute>} />
           </Routes>
         )}

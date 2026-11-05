@@ -348,14 +348,15 @@ exports.salesPerMonth = async (req, res, next) => {
                         vars: {
                             monthsInString: [null, 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
                         },
+                        // "Jan 2026": the year keeps the same month of different years apart
                         in: {
-                            $arrayElemAt: ['$$monthsInString', "$_id.month"]
+                            $concat: [{ $arrayElemAt: ['$$monthsInString', "$_id.month"] }, ' ', { $toString: "$_id.year" }]
                         }
                     }
                 }
             }
         },
-        { $sort: { "_id.month": 1 } },
+        { $sort: { "_id.year": 1, "_id.month": 1 } },
         {
             $project: {
                 _id: 0,
@@ -376,6 +377,24 @@ exports.salesPerMonth = async (req, res, next) => {
         salesPerMonth
     })
 
+}
+
+// GET /admin/sales-per-year -> [{ year: '2026', total }], oldest year first. Years are Manila calendar years.
+exports.salesPerYear = async (req, res) => {
+    const salesPerYear = await Order.aggregate([
+        {
+            $group: {
+                _id: { $year: { date: { $ifNull: ["$paidAt", "$createdAt"] }, timezone: SHOP_TIMEZONE } },
+                total: { $sum: "$totalPrice" },
+            },
+        },
+        { $sort: { _id: 1 } },
+        { $project: { _id: 0, year: { $toString: "$_id" }, total: true } },
+    ])
+    res.status(200).json({
+        success: true,
+        salesPerYear
+    })
 }
 
 // GET /admin/sales-chart?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, useCallback } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import MetaData from '../Layout/MetaData'
 // import axios from 'axios'
 import { useDispatch, useSelector } from 'react-redux'
@@ -36,6 +36,18 @@ const Register = () => {
 
 
     let navigate = useNavigate()
+    const location = useLocation()
+    // side drawer like Login: opened over the current page when it was opened from a link
+    const closeDrawer = useCallback(() => navigate(location.state?.backgroundLocation ? -1 : '/'), [location, navigate])
+
+    useEffect(() => {
+        const handleEscape = (event) => {
+            if (event.key === 'Escape') closeDrawer()
+        }
+        document.addEventListener('keydown', handleEscape)
+        return () => document.removeEventListener('keydown', handleEscape)
+    }, [closeDrawer])
+
     useEffect(() => {
         if (isAuthenticated) {
             navigate('/')
@@ -134,11 +146,15 @@ const Register = () => {
 
             <MetaData title={'Register User'} />
 
-            <div className="row wrapper">
-                <div className="col-10 col-lg-5">
-                    <form className="shadow-lg" onSubmit={submitHandler} encType='multipart/form-data' noValidate>
+            <div className="login-drawer-layer" role="dialog" aria-modal="true" aria-labelledby="register_drawer_title">
+                <button type="button" className="login-drawer-backdrop" onClick={closeDrawer} aria-label="Close register panel"></button>
+                <aside className="login-drawer register-drawer">
+                    <button type="button" className="login-drawer-close" onClick={closeDrawer} aria-label="Close register panel">
+                        <i className="fa fa-times" aria-hidden="true"></i>
+                    </button>
+                    <form onSubmit={submitHandler} encType='multipart/form-data' noValidate>
                         <AuthBrand />
-                        <h1 className="mb-3">Register</h1>
+                        <h1 className="mb-3" id="register_drawer_title">Register</h1>
 
                         <div className="form-group">
                             <label htmlFor="email_field">Name</label>
@@ -216,8 +232,12 @@ const Register = () => {
                         >
                             REGISTER
                         </button>
+
+                        <div className="auth-register">
+                            <Link to="/login" state={location.state} replace>Already have an account? Login</Link>
+                        </div>
                     </form>
-                </div>
+                </aside>
             </div>
 
         </>

@@ -2,11 +2,18 @@
 //  - buildReceiptPdf(order, customer) -> Buffer   (PDF receipt)
 //  - buildOrderEmail(order, customer, kind) -> { subject, html }
 //  - sendOrderEmail(order, customer, kind) -> { sent, to, error? }   (never throws)
+const fs = require('fs');
+const path = require('path');
 const PDFDocument = require('pdfkit');
 const sendEmail = require('./sendEmail');
 
 const BROWN = '#8B5A2B';
 const DARK = '#2E1F14';
+
+// light gold logo: it sits on the dark header band, like the site header. Skipped if the file is missing.
+const LOGO = path.join(__dirname, '..', 'assets', 'luna-logo.png');
+const LOGO_CID = 'luna-logo';
+const hasLogo = () => fs.existsSync(LOGO);
 
 const transactionNo = (order) => order.transactionNo || `LUNA-${String(order._id).slice(-8).toUpperCase()}`;
 
@@ -33,9 +40,11 @@ const buildReceiptPdf = (order, customer = {}) => new Promise((resolve, reject) 
     const left = 50, right = 545, width = right - left;
 
     // header band
-    doc.rect(0, 0, 595.28, 95).fill(BROWN);
-    doc.fillColor('#fff').font('Helvetica-Bold').fontSize(24).text('Luna Interiors', left, 30);
-    doc.font('Helvetica').fontSize(11).text('Official Receipt', left, 60);
+    doc.rect(0, 0, 595.28, 95).fill(DARK);
+    const brandX = hasLogo() ? left + 78 : left;
+    if (hasLogo()) doc.image(LOGO, left, 14, { fit: [67, 67] });
+    doc.fillColor('#fff').font('Helvetica-Bold').fontSize(24).text('Luna Interiors', brandX, 30);
+    doc.font('Helvetica').fontSize(11).text('Official Receipt', brandX, 60);
     doc.font('Helvetica-Bold').fontSize(11).text(transactionNo(order), left, 32, { width, align: 'right' });
     doc.font('Helvetica').fontSize(10).text(when(order.createdAt), left, 50, { width, align: 'right' });
 
@@ -112,7 +121,8 @@ const HEADLINES = {
     Delivered: { subject: 'Order delivered', title: 'Your order has been delivered.', note: 'Thank you for shopping with us. You can now write a review for the products you bought.' },
 };
 
-const buildOrderEmail = (order, customer = {}, kind = 'placed') => {
+// logo: true when the e-mail carries the logo as an inline (cid) attachment - see sendOrderEmail
+const buildOrderEmail = (order, customer = {}, kind = 'placed', logo = hasLogo()) => {
     const h = HEADLINES[kind] || HEADLINES.placed;
     const tn = transactionNo(order);
     const rows = (order.orderItems || []).map(i => `
@@ -125,9 +135,14 @@ const buildOrderEmail = (order, customer = {}, kind = 'placed') => {
     const s = order.shippingInfo || {};
     const html = `
     <div style="font-family:Arial,Helvetica,sans-serif;max-width:640px;margin:auto;color:${DARK}">
-      <div style="background:${BROWN};color:#fff;padding:18px 22px;border-radius:10px 10px 0 0">
-        <div style="font-size:22px;font-weight:bold">Luna Interiors</div>
-        <div style="opacity:.9">${esc(h.subject)} &middot; ${esc(tn)}</div>
+      <div style="background:${DARK};color:#fff;padding:18px 22px;border-radius:10px 10px 0 0">
+        <table role="presentation" style="border-collapse:collapse"><tr>
+          ${logo ? `<td style="padding:0 14px 0 0;vertical-align:middle"><img src="cid:${LOGO_CID}" width="56" height="56" alt="Luna Interiors" style="display:block;border:0"></td>` : ''}
+          <td style="padding:0;vertical-align:middle;color:#fff">
+            <div style="font-size:22px;font-weight:bold">Luna Interiors</div>
+            <div style="opacity:.9">${esc(h.subject)} &middot; ${esc(tn)}</div>
+          </td>
+        </tr></table>
       </div>
       <div style="border:1px solid #e6dccf;border-top:0;padding:22px;border-radius:0 0 10px 10px">
         <p>Hi ${esc(customer.name || 'there')},</p>
@@ -168,12 +183,15 @@ const sendOrderEmail = async (order, customer, kind = 'placed') => {
     }
     try {
         const pdf = await buildReceiptPdf(order, customer);
-        const { subject, html } = buildOrderEmail(order, customer, kind);
+        const logo = hasLogo();
+        const { subject, html } = buildOrderEmail(order, customer, kind, logo);
+        const attachments = [{ filename: `Receipt-${transactionNo(order)}.pdf`, content: pdf, contentType: 'application/pdf' }];
+        if (logo) attachments.push({ filename: 'luna-logo.png', path: LOGO, cid: LOGO_CID });
         await sendEmail({
             email: to,
             subject,
             html,
-            attachments: [{ filename: `Receipt-${transactionNo(order)}.pdf`, content: pdf, contentType: 'application/pdf' }],
+            attachments,
         });
         return { sent: true, to };
     } catch (err) {

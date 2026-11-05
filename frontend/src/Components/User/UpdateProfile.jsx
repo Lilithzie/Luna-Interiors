@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import MetaData from '../Layout/MetaData'
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { updateProfile, resetUserUpdate, clearUserError } from '../../slices/userSlice'
@@ -25,6 +25,20 @@ const UpdateProfile = () => {
     // const [loading, setLoading] = useState(false)
     // const [isUpdated, setIsUpdated] = useState(false)
     let navigate = useNavigate();
+    const location = useLocation()
+    // side drawer like Profile: going back returns to the profile drawer it was opened from
+    const closeDrawer = useCallback(() => {
+        if (location.state?.backgroundLocation) navigate(-1)
+        else navigate('/me', { replace: true })
+    }, [location, navigate])
+
+    useEffect(() => {
+        const handleEscape = (event) => {
+            if (event.key === 'Escape') closeDrawer()
+        }
+        document.addEventListener('keydown', handleEscape)
+        return () => document.removeEventListener('keydown', handleEscape)
+    }, [closeDrawer])
 
     // const getProfile = async () => {
     //     const config = {
@@ -95,10 +109,10 @@ const UpdateProfile = () => {
         }
         if (isUpdated) {
             toast.success('Profile updated', { position: 'bottom-right' })
-            navigate('/me', { replace: true })
+            closeDrawer()
             dispatch(resetUserUpdate())
         }
-    }, [dispatch, error, isUpdated, navigate])
+    }, [dispatch, error, isUpdated, closeDrawer])
 
     const submitHandler = ({ name, email }) => {
         const formData = new FormData();
@@ -132,10 +146,14 @@ const UpdateProfile = () => {
         <>
             <MetaData title={'Update Profile'} />
 
-            <div className="row wrapper">
-                <div className="col-10 col-lg-5">
-                    <form className="shadow-lg" onSubmit={handleSubmit(submitHandler)} encType='multipart/form-data' noValidate>
-                        <h1 className="mt-2 mb-5">Update Profile</h1>
+            <div className="profile-drawer-layer" role="dialog" aria-modal="true" aria-labelledby="update_profile_drawer_title">
+                <button type="button" className="profile-drawer-backdrop" onClick={closeDrawer} aria-label="Close edit profile panel"></button>
+                <aside className="profile-drawer update-profile-drawer">
+                    <button type="button" className="profile-drawer-close" onClick={closeDrawer} aria-label="Close edit profile panel">
+                        <i className="fa fa-times" aria-hidden="true"></i>
+                    </button>
+                    <h1 className="profile-page-title" id="update_profile_drawer_title">Edit Profile</h1>
+                    <form className="profile-card" onSubmit={handleSubmit(submitHandler)} encType='multipart/form-data' noValidate>
 
                         <div className="form-group">
                             <label htmlFor="name_field">Name</label>
@@ -197,7 +215,7 @@ const UpdateProfile = () => {
 
                         <button type="submit" className="btn update-btn btn-block mt-4 mb-3" disabled={loading ? true : false} >Update</button>
                     </form>
-                </div>
+                </aside>
             </div>
         </>
     )

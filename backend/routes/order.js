@@ -12,6 +12,7 @@ const { newOrder,
 	totalSales,
 	customerSales,
 	salesPerMonth,
+	salesPerYear,
 	salesChart,
 	downloadReceipt,
 
@@ -30,5 +31,6 @@ router.get('/admin/total-orders', isAuthenticatedUser, authorizeRoles('admin'), 
 router.get('/admin/total-sales', isAuthenticatedUser, authorizeRoles('admin'), totalSales);
 router.get('/admin/customer-sales', isAuthenticatedUser, authorizeRoles('admin'), customerSales);
 router.get('/admin/sales-per-month', isAuthenticatedUser, authorizeRoles('admin'), salesPerMonth);
+router.get('/admin/sales-per-year', isAuthenticatedUser, authorizeRoles('admin'), salesPerYear);
 router.get('/admin/sales-chart', isAuthenticatedUser, authorizeRoles('admin'), salesChart);
 module.exports = router;
