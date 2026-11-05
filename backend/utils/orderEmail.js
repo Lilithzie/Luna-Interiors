@@ -5,6 +5,11 @@
 const fs = require('fs');
 const path = require('path');
 const PDFDocument = require('pdfkit');
+// pdfkit loads its built-in fonts with a dynamic require that Vercel's bundler cannot see, so the
+// font files were left out of the deployment and every PDF failed there. Requiring the two fonts
+// the receipt uses makes the bundler include them.
+require('pdfkit/standard-fonts/Helvetica');
+require('pdfkit/standard-fonts/HelveticaBold');
 const sendEmail = require('./sendEmail');
 
 const BROWN = '#8B5A2B';

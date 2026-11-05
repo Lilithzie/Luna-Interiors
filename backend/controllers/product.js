@@ -175,13 +175,14 @@ exports.createProductReview = async (req, res) => {
         return res.status(403).json({ success: false, message: 'You can review this product once your order has been delivered' })
     }
 
-    // bad-words: bad words in the comment are replaced with asterisks before saving
-    const { text: cleanComment, masked } = maskBadWords(String(comment).trim());
+    // bad-words: the comment is saved as written; it is masked whenever it is sent to the website
+    const originalComment = String(comment).trim();
+    const { masked } = maskBadWords(originalComment);
 
     const existing = product.reviews.find(r => r.user.toString() === req.user._id.toString());
     if (existing) {
         existing.rating = value;
-        existing.comment = cleanComment;
+        existing.comment = originalComment;
         existing.name = req.user.name;
         existing.updatedAt = Date.now();
     } else {
@@ -189,7 +190,7 @@ exports.createProductReview = async (req, res) => {
             user: req.user._id,
             name: req.user.name,
             rating: value,
-            comment: cleanComment,
+            comment: originalComment,
         });
     }
     recalcRatings(product);

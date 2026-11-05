@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const { maskBadWords } = require('../utils/profanity')
 
 // Luna Interiors furniture categories (shared with the frontend filter + forms)
 const CATEGORIES = [
@@ -113,6 +114,16 @@ const productSchema = new mongoose.Schema({
         default: Date.now
     }
 })
+
+// Review comments are stored as written; every product sent to the website has its bad words masked
+productSchema.set('toJSON', {
+    transform: (doc, ret) => {
+        if (Array.isArray(ret.reviews)) {
+            ret.reviews = ret.reviews.map(r => ({ ...r, comment: maskBadWords(r.comment).text }));
+        }
+        return ret;
+    }
+});
 
 module.exports = mongoose.model('Product', productSchema);
 module.exports.CATEGORIES = CATEGORIES;
