@@ -221,7 +221,25 @@ footer.site-footer { background: var(--luna-ink); color: var(--luna-sand); margi
 .product-detail-price .product-price { margin: 0; font-size: 1.5rem; }
 .product-detail-price .wishlist-btn { background: var(--luna-cream); }
 #product_id { font-size: .8rem; }
-#order_summary { background: var(--luna-cream); border: 1px solid var(--luna-line); border-radius: 4px; }
+/* ---------- Order pages: confirm, success, details, admin process ---------- */
+.panel-card { padding: 1.15rem 1.25rem; border: 1px solid var(--luna-line); border-radius: 10px; background: var(--luna-cream); box-shadow: 0 8px 26px rgba(46, 31, 20, .08); }
+.panel-card h5 { margin-bottom: .85rem; font-size: 1.05rem; font-weight: 600; color: var(--luna-ink); }
+#order_summary { padding: 1.15rem 1.25rem; border-radius: 10px; }
+.order-page { margin-top: 2.5rem; margin-bottom: 2.5rem; }
+.order-page-header { margin-bottom: 1.5rem; text-align: center; }
+.order-page-header h2 { margin-bottom: .35rem; font-size: 1.7rem; }
+.status-pill { display: inline-block; padding: .25rem .8rem; border-radius: 999px; background: rgba(139, 90, 43, .12); color: var(--luna-dark); font-size: .8rem; font-weight: 600; letter-spacing: .03em; }
+.status-pill.done { background: rgba(79, 107, 58, .14); color: #4F6B3A; }
+.order-items { margin-bottom: .75rem; }
+.order-items th { border-top: 0; color: var(--luna-muted); font-size: .78rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.order-items td { vertical-align: middle; }
+.order-item-name { display: flex; align-items: center; gap: .75rem; color: var(--luna-ink); }
+.order-item-name:hover { color: var(--luna); text-decoration: none; }
+.order-item-name img { flex: 0 0 48px; width: 48px; height: 48px; object-fit: cover; border-radius: 6px; background: #fff; }
+.order-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; margin: 1.5rem 0; }
+.order-actions .btn-link { color: var(--luna-dark); }
+.order-status-card { position: sticky; top: 16px; }
+@media (min-width: 992px) { .order-page-header.text-lg-left { text-align: left; } }
 .review-card { background: var(--luna-cream); box-shadow: none; }
 .active-step { background: var(--luna); }
 .cart-item a { color: var(--luna-ink); }

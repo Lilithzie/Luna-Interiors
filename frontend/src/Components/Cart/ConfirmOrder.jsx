@@ -1,7 +1,7 @@
-import React from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import MetaData from '../Layout/MetaData'
 import CheckoutSteps from './CheckoutSteps'
+import { OrderItemsTable, OrderTotals } from '../Order/OrderParts'
 // import { getUser } from '../Utils/helpers'
 import { useSelector } from 'react-redux'
 const ConfirmOrder = () => {
@@ -34,63 +34,27 @@ const ConfirmOrder = () => {
         <>
             <MetaData title={'Confirm Order'} />
             <CheckoutSteps shipping confirmOrder />
-            <div className="row d-flex justify-content-between">
-                <div className="col-12 col-lg-8 mt-5 order-confirm">
-                    <h4 className="mb-3">Shipping Info</h4>
-                    {user && <p><b>Name:</b> {user && user.name}</p>}
-                    <p><b>Phone:</b> {shippingInfo.phoneNo}</p>
-                    <p className="mb-4"><b>Address:</b> {`${shippingInfo.address}, ${shippingInfo.city}, ${shippingInfo.postalCode}, ${shippingInfo.country}`}</p>
+            <div className="row order-page">
+                <div className="col-12 col-lg-8">
+                    <div className="panel-card">
+                        <h5>Ship to</h5>
+                        {user && <p className="mb-1"><b>{user.name}</b></p>}
+                        <p className="mb-0">{shippingInfo.address}, {shippingInfo.city}, {shippingInfo.postalCode}, {shippingInfo.country}<br />Phone: {shippingInfo.phoneNo}</p>
+                    </div>
 
-                    <hr />
-                    <h4 className="mt-4">Your Cart Items:</h4>
-
-                    {checkoutItems.map(item => (
-                        <React.Fragment key={item.product}>
-
-                            <div className="cart-item my-1">
-                                <hr />
-                                <div className="row">
-                                    <div className="col-4 col-lg-2">
-                                        <img src={item.image} alt={item.name} height="45" width="65" />
-                                    </div>
-
-                                    <div className="col-5 col-lg-6">
-                                        <Link to={`/product/${item.product}`}>{item.name}</Link>
-                                    </div>
-
-
-                                    <div className="col-4 col-lg-4 mt-4 mt-lg-0">
-                                        <p>{item.quantity} x ₱{item.price} = <b>₱{(item.quantity * item.price).toFixed(2)}</b></p>
-                                    </div>
-
-                                </div>
-                            </div>
-                            <hr />
-                        </React.Fragment>
-                    ))}
-
-                </div>
-
-                <div className="col-12 col-lg-3 my-4">
-                    <div id="order_summary">
-                        <h4>Order Summary</h4>
-                        <hr />
-                        <p>Subtotal:  <span className="order-summary-values">₱{itemsPrice}</span></p>
-                        <p>Shipping: <span className="order-summary-values">₱{shippingPrice}</span></p>
-                        <p>Tax:  <span className="order-summary-values">₱{taxPrice}</span></p>
-
-                        <hr />
-
-                        <p>Total: <span className="order-summary-values">₱{totalPrice}</span></p>
-
-                        <hr />
-                        <button id="checkout_btn" className="btn btn-primary btn-block" onClick={processToPayment}>Proceed to Payment</button>
+                    <div className="panel-card mt-3">
+                        <h5>Items</h5>
+                        <OrderItemsTable items={checkoutItems} />
                     </div>
                 </div>
 
-
+                <div className="col-12 col-lg-4 mt-3 mt-lg-0">
+                    <div className="panel-card order-status-card" id="order_summary">
+                        <h5>Order summary</h5>
+                        <OrderTotals order={{ itemsPrice, shippingPrice, taxPrice, totalPrice }} />
+                        <button id="checkout_btn" className="btn btn-luna btn-block" onClick={processToPayment}>Proceed to Payment</button>                    </div>
+                </div>
             </div>
-
         </>
     )
 }

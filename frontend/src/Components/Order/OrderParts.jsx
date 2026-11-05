@@ -1,6 +1,8 @@
 import React from 'react'
 import axios from 'axios'
+import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import { NO_IMAGE } from '../Utils/helpers'
 
 export const STATUSES = ['Processing', 'Shipped', 'Delivered']
 export const money = (n) => `₱${Number(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -43,6 +45,59 @@ export const OrderTotals = ({ order }) => (
     </table>
 )
 
+// product rows: photo + name, price, qty, line subtotal (used by confirm, success, details and admin pages)
+export const OrderItemsTable = ({ items = [] }) => (
+    <div className="table-responsive">
+        <table className="table table-sm order-items" id="order_items">
+            <thead><tr><th>Product</th><th className="text-right">Price</th><th className="text-right">Qty</th><th className="text-right">Subtotal</th></tr></thead>
+            <tbody>
+                {items.map(item => (
+                    <tr key={item.product}>
+                        <td>
+                            <Link to={`/product/${item.product}`} className="order-item-name">
+                                <img src={item.image || NO_IMAGE} alt="" />
+                                <span>{item.name}</span>
+                            </Link>
+                        </td>
+                        <td className="text-right">{money(item.price)}</td>
+                        <td className="text-right">{item.quantity}</td>
+                        <td className="text-right">{money(item.price * item.quantity)}</td>
+                    </tr>
+                ))}
+            </tbody>
+        </table>
+    </div>
+)
+
+export const StatusPill = ({ status, id }) => (
+    <span id={id} className={`status-pill ${status === 'Delivered' ? 'done' : ''}`}>{status}</span>
+)
+
+// Payment and Ship to, side by side
+export const PaymentAndShipping = ({ order, name, collect = false }) => {
+    const pay = paymentLabel(order)
+    const s = order.shippingInfo || {}
+    return (
+        <div className="row">
+            <div className="col-md-6 mt-3">
+                <div className="panel-card h-100">
+                    <h5>Payment</h5>
+                    <p className="mb-1"><b>Method:</b> {order.paymentMethod || 'Card'}</p>
+                    <p className={`mb-0 ${pay.cls}`}><b>{collect && pay.text === 'TO PAY ON DELIVERY' ? 'TO COLLECT ON DELIVERY' : pay.text}</b></p>
+                    {collect && order.paymentInfo && <p className="mb-0 mt-2 text-muted small">Reference: {order.paymentInfo.id}</p>}
+                </div>
+            </div>
+            <div className="col-md-6 mt-3">
+                <div className="panel-card h-100">
+                    <h5>Ship to</h5>
+                    {name && <p className="mb-1"><b>{name}</b></p>}
+                    <p className="mb-0">{s.address}, {s.city}, {s.postalCode}, {s.country}<br />Phone: {s.phoneNo}</p>
+                </div>
+            </div>
+        </div>
+    )
+}
+
 export const paymentLabel = (order) => {
     const paid = order.paymentInfo && order.paymentInfo.status === 'succeeded'
     if (paid) return { text: 'PAID', cls: 'greenColor' }
@@ -66,7 +121,7 @@ export const ReceiptButton = ({ order, className = 'btn btn-outline-luna' }) => 
             a.click()
             a.remove()
             URL.revokeObjectURL(url)
-        } catch (err) {
+        } catch {
             toast.error('Could not download the receipt. Please try again.', { position: 'bottom-right' })
         }
         setBusy(false)

@@ -35,7 +35,7 @@ const Wishlist = () => {
                 {!loading && !error && products.length === 0 && (
                     <div className="empty-state" id="wishlist_empty">
                         <p>Nothing saved yet. Tap the heart on any piece to keep it here.</p>
-                        <Link to="/" className="btn btn-luna">Browse Furniture</Link>
+                        <Link to="/#catalog" className="btn btn-luna">Browse Furniture</Link>
                     </div>
                 )}
                 {!loading && products.length > 0 && (

@@ -139,7 +139,7 @@ const ProductDetails = () => {
                                 </div>
                             )}
                             {isAuthenticated && !isAdmin && canReview && (
-                                <form onSubmit={submitReview} className="filter-panel" id="review_form">
+                                <form onSubmit={submitReview} className="panel-card" id="review_form">
                                     <h5>{myReview ? 'Update your review' : 'Write a review'}</h5>
                                     <StarInput value={rating} onChange={(value) => { setRating(value); if (reviewAttempted) setReviewErrors(current => ({ ...current, rating: '' })) }} />
                                     {reviewErrors.rating && <div className="text-danger small mt-1" role="alert">{reviewErrors.rating}</div>}

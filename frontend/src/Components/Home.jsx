@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useParams, useSearchParams } from 'react-router-dom'
+import { useLocation, useParams, useSearchParams } from 'react-router-dom'
 import Product from './Product/Product'
 import Slider from '@mui/material/Slider';
 import MetaData from './Layout/MetaData'
@@ -23,6 +23,7 @@ const Home = () => {
     // the category lives in the URL so the header links, category tiles and filter panel stay in step
     const [searchParams, setSearchParams] = useSearchParams();
     const category = searchParams.get('category') || '';
+    const location = useLocation();
     const dispatch = useDispatch();
     const { loading, products, error, filteredProductsCount, resPerPage } = useSelector(state => state.products);
     const total = filteredProductsCount || 0;
@@ -62,8 +63,12 @@ const Home = () => {
 
     useEffect(() => { load() }, [load]);
 
-    // a search or category replaces the promotions, so start at the top of the results
-    useEffect(() => { window.scrollTo(0, 0) }, [keyword, category]);
+    // a search or category replaces the promotions, so start at the top of the results.
+    // "/#catalog" (the drawers' Browse Furniture buttons) jumps straight to the product list instead.
+    useEffect(() => {
+        if (location.hash === '#catalog') document.getElementById('catalog')?.scrollIntoView()
+        else window.scrollTo(0, 0)
+    }, [keyword, category, location.hash, location.key]);
 
     const filtersActive = !!category || JSON.stringify(filters) !== JSON.stringify(defaultFilters);
     // the second check stops the requests if the catalog shrinks while scrolling: pages run out before `total`

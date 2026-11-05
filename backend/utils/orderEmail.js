@@ -12,8 +12,15 @@ require('pdfkit/standard-fonts/Helvetica');
 require('pdfkit/standard-fonts/HelveticaBold');
 const sendEmail = require('./sendEmail');
 
+// Luna Interiors palette (same as theme.css)
 const BROWN = '#8B5A2B';
 const DARK = '#2E1F14';
+const CREAM = '#FAF6EF';
+const LINE = '#E8DFD2';
+const MUTED = '#7A6A5A';
+const GREEN = '#4F6B3A';
+const RED = '#A1461F';
+const STEPS = ['Processing', 'Shipped', 'Delivered'];
 
 // light gold logo: it sits on the dark header band, like the site header. Skipped if the file is missing.
 const LOGO = path.join(__dirname, '..', 'assets', 'luna-logo.png');
@@ -33,8 +40,20 @@ const paymentText = (order) => {
     const paid = order.paymentInfo && order.paymentInfo.status === 'succeeded';
     return paid ? 'PAID' : (order.paymentMethod === 'Cash on Delivery' ? 'TO PAY ON DELIVERY' : 'NOT PAID');
 };
+const isPaid = (order) => !!(order.paymentInfo && order.paymentInfo.status === 'succeeded');
+
+// when each step of Processing -> Shipped -> Delivered happened (same rules as the order timeline on the site)
+const stepDate = (order, status) => {
+    const hit = (order.statusHistory || []).find(h => h.status === status);
+    if (hit) return hit.at;
+    if (status === 'Processing') return order.createdAt;
+    if (status === 'Delivered') return order.deliveredAt;
+    return null;
+};
 
 /* ------------------------------ PDF receipt ------------------------------ */
+// Same layout as the order pages on the website: header, status pill, then cream cards for the
+// order status, the items with totals, and payment + shipping.
 const buildReceiptPdf = (order, customer = {}) => new Promise((resolve, reject) => {
     const doc = new PDFDocument({ size: 'A4', margin: 50, info: { Title: `Receipt ${transactionNo(order)}`, Author: 'Luna Interiors' } });
     const chunks = [];
@@ -43,6 +62,10 @@ const buildReceiptPdf = (order, customer = {}) => new Promise((resolve, reject) 
     doc.on('error', reject);
 
     const left = 50, right = 545, width = right - left;
+    const PAD = 16, GAP = 12;
+    const BOTTOM = 750;                                       // keep cards clear of the footer
+    const card = (x, y, w, h) => doc.roundedRect(x, y, w, h, 8).lineWidth(0.8).fillAndStroke(CREAM, LINE);
+    const cardTitle = (text, x, y) => doc.fillColor(DARK).font('Helvetica-Bold').fontSize(11).text(text, x, y, { lineBreak: false });
 
     // header band
     doc.rect(0, 0, 595.28, 95).fill(DARK);
@@ -53,67 +76,126 @@ const buildReceiptPdf = (order, customer = {}) => new Promise((resolve, reject) 
     doc.font('Helvetica-Bold').fontSize(11).text(transactionNo(order), left, 32, { width, align: 'right' });
     doc.font('Helvetica').fontSize(10).text(when(order.createdAt), left, 50, { width, align: 'right' });
 
-    // customer + order info
-    doc.fillColor(DARK);
-    let y = 118;
-    const s = order.shippingInfo || {};
-    doc.font('Helvetica-Bold').fontSize(11).text('Billed to', left, y);
-    doc.font('Helvetica').fontSize(10)
-        .text(customer.name || '', left, y + 16)
-        .text(customer.email || '', left, y + 30)
-        .text(`${s.address || ''}, ${s.city || ''} ${s.postalCode || ''}`, left, y + 44, { width: 250 })
-        .text(`${s.country || ''}  |  Phone: ${s.phoneNo || ''}`, left, y + 70, { width: 250 });
+    // order number + status pill
+    let y = 115;
+    doc.fillColor(DARK).font('Helvetica-Bold').fontSize(17).text(`Order # ${transactionNo(order)}`, left, y, { lineBreak: false });
+    doc.fillColor(MUTED).font('Helvetica').fontSize(10).text(`Placed on ${when(order.createdAt)}`, left, y + 23, { lineBreak: false });
+    const status = order.orderStatus || 'Processing';
+    doc.font('Helvetica-Bold').fontSize(9);
+    const pillW = doc.widthOfString(status) + 22;
+    const delivered = status === 'Delivered';
+    doc.roundedRect(right - pillW, y + 2, pillW, 20, 10).fill(delivered ? '#E3E8DC' : '#EFE4D6');
+    doc.fillColor(delivered ? GREEN : BROWN).text(status, right - pillW, y + 8, { width: pillW, align: 'center', lineBreak: false });
+    y += 52;
 
-    doc.font('Helvetica-Bold').fontSize(11).text('Order details', 330, y);
-    doc.font('Helvetica').fontSize(10)
-        .text(`Status: ${order.orderStatus}`, 330, y + 16)
-        .text(`Payment: ${order.paymentMethod || 'Card'}`, 330, y + 30)
-        .text(`Payment status: ${paymentText(order)}`, 330, y + 44);
-    if (order.deliveredAt) doc.text(`Delivered: ${when(order.deliveredAt)}`, 330, y + 58);
-
-    // items table
-    y = 225;
-    const col = { name: left + 8, price: 300, qty: 390, sub: 545 };
-    doc.rect(left, y, width, 24).fill(BROWN);
-    doc.fillColor('#fff').font('Helvetica-Bold').fontSize(10)
-        .text('Product', col.name, y + 7)
-        .text('Price', col.price, y + 7, { width: 80, align: 'right' })
-        .text('Qty', col.qty, y + 7, { width: 40, align: 'right' })
-        .text('Subtotal', col.sub - 110, y + 7, { width: 102, align: 'right' });
-    y += 30;
-
-    doc.fillColor(DARK).font('Helvetica').fontSize(10);
-    (order.orderItems || []).forEach((item, i) => {
-        const h = Math.max(doc.heightOfString(item.name, { width: 230 }), 14) + 10;
-        if (y + h > 720) { doc.addPage(); y = 50; }
-        if (i % 2 === 0) doc.rect(left, y - 4, width, h).fill('#f6efe6');
-        doc.fillColor(DARK).font('Helvetica').fontSize(10)
-            .text(item.name, col.name, y, { width: 230 })
-            .text(php(item.price), col.price - 20, y, { width: 100, align: 'right' })
-            .text(String(item.quantity), col.qty, y, { width: 40, align: 'right' })
-            .text(php(item.price * item.quantity), col.sub - 110, y, { width: 102, align: 'right' });
-        y += h;
+    // order status card: Processing -> Shipped -> Delivered
+    const current = Math.max(STEPS.indexOf(status), 0);
+    card(left, y, width, 84);
+    cardTitle('Order status', left + PAD, y + 14);
+    const boxW = (width - PAD * 2 - 16) / 3;
+    STEPS.forEach((step, i) => {
+        const bx = left + PAD + i * (boxW + 8), by = y + 36;
+        const reached = i <= current;
+        doc.roundedRect(bx, by, boxW, 34, 6).lineWidth(i === current ? 1.4 : 0.8).fillAndStroke('#FFFFFF', reached ? BROWN : LINE);
+        const cx = bx + 17, cy = by + 17;
+        doc.circle(cx, cy, 9).fill(reached ? BROWN : '#EFE4D6');
+        if (reached) {
+            doc.moveTo(cx - 4, cy).lineTo(cx - 1, cy + 3).lineTo(cx + 4, cy - 3).lineWidth(1.6).strokeColor('#FFFFFF').stroke();
+        } else {
+            doc.fillColor(BROWN).font('Helvetica-Bold').fontSize(9).text(String(i + 1), cx - 9, cy - 4, { width: 18, align: 'center', lineBreak: false });
+        }
+        doc.fillColor(reached ? DARK : MUTED).font('Helvetica-Bold').fontSize(10).text(step, bx + 32, by + 6, { width: boxW - 38, lineBreak: false });
+        doc.fillColor(MUTED).font('Helvetica').fontSize(8).text(reached ? when(stepDate(order, step)) : 'Waiting', bx + 32, by + 20, { width: boxW - 38, lineBreak: false, ellipsis: true });
     });
+    y += 84 + GAP;
 
-    // totals
-    y += 12;
-    if (y > 650) { doc.addPage(); y = 50; }
-    const line = (label, value, bold) => {
-        doc.font(bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(bold ? 12 : 10).fillColor(DARK)
-            .text(label, 330, y, { width: 100 })
-            .text(value, 430, y, { width: 115, align: 'right' });
-        y += bold ? 22 : 17;
+    // items card (continues on the next page when an order is long)
+    const ix = left + PAD, iw = width - PAD * 2;
+    const nameW = iw - 260;
+    const cols = { price: ix + iw - 250, qty: ix + iw - 150, sub: ix + iw - 100 };
+    const items = order.orderItems || [];
+    doc.font('Helvetica').fontSize(10);
+    const rows = items.map(item => ({ item, h: Math.max(doc.heightOfString(item.name, { width: nameW }), 12) + 12 }));
+    const HEAD = 30 + 22, TOTALS = 100;
+    const drawHead = (top, title) => {
+        cardTitle(title, ix, top + 14);
+        doc.fillColor(MUTED).font('Helvetica-Bold').fontSize(8);
+        doc.text('PRODUCT', ix, top + 38, { characterSpacing: 0.6, lineBreak: false });
+        doc.text('PRICE', cols.price, top + 38, { width: 90, align: 'right', characterSpacing: 0.6, lineBreak: false });
+        doc.text('QTY', cols.qty, top + 38, { width: 40, align: 'right', characterSpacing: 0.6, lineBreak: false });
+        doc.text('SUBTOTAL', cols.sub, top + 38, { width: 100, align: 'right', characterSpacing: 0.6, lineBreak: false });
+        doc.moveTo(ix, top + 50).lineTo(ix + iw, top + 50).lineWidth(0.8).strokeColor(LINE).stroke();
     };
-    line('Items subtotal', php(order.itemsPrice));
-    line('Shipping', Number(order.shippingPrice) === 0 ? 'FREE' : php(order.shippingPrice));
-    line('Tax (5%)', php(order.taxPrice));
-    doc.moveTo(330, y).lineTo(right, y).lineWidth(1.5).strokeColor(BROWN).stroke();
-    y += 8;
-    line('GRAND TOTAL', php(order.totalPrice), true);
+    const drawTotals = (top) => {
+        let ty = top + 8;
+        const line = (label, value, bold) => {
+            doc.fillColor(DARK).font(bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(bold ? 12 : 10)
+                .text(label, ix, ty, { lineBreak: false })
+                .text(value, ix + iw - 200, ty, { width: 200, align: 'right', lineBreak: false });
+            ty += bold ? 22 : 18;
+        };
+        line('Items subtotal', php(order.itemsPrice));
+        line('Shipping', Number(order.shippingPrice) === 0 ? 'FREE' : php(order.shippingPrice));
+        line('Tax (5%)', php(order.taxPrice));
+        doc.moveTo(ix, ty).lineTo(ix + iw, ty).lineWidth(1.4).strokeColor(BROWN).stroke();
+        ty += 9;
+        line('Grand total', php(order.totalPrice), true);
+    };
+    let next = 0, part = 0;
+    for (;;) {
+        const room = BOTTOM - y;
+        let used = HEAD, end = next;
+        while (end < rows.length && used + rows[end].h <= room - PAD) { used += rows[end].h; end++; }
+        const withTotals = end === rows.length && used + TOTALS <= room - PAD;
+        if (end === next && !withTotals) { doc.addPage(); y = 50; continue; }
+        const h = used + (withTotals ? TOTALS : 0) + PAD - 6;
+        card(left, y, width, h);
+        drawHead(y, part === 0 ? 'Items' : 'Items (continued)');
+        let ry = y + HEAD + 4;
+        for (let k = next; k < end; k++) {
+            const { item, h: rh } = rows[k];
+            doc.fillColor(DARK).font('Helvetica').fontSize(10)
+                .text(item.name, ix, ry, { width: nameW })
+                .text(php(item.price), cols.price, ry, { width: 90, align: 'right', lineBreak: false })
+                .text(String(item.quantity), cols.qty, ry, { width: 40, align: 'right', lineBreak: false })
+                .text(php(item.price * item.quantity), cols.sub, ry, { width: 100, align: 'right', lineBreak: false });
+            ry += rh;
+            if (k < end - 1) doc.moveTo(ix, ry - 6).lineTo(ix + iw, ry - 6).lineWidth(0.5).strokeColor(LINE).stroke();
+        }
+        if (withTotals) drawTotals(ry);
+        y += h + GAP;
+        next = end; part += 1;
+        if (withTotals) break;
+        doc.addPage(); y = 50;
+    }
+
+    // payment + ship to, side by side
+    const half = (width - GAP) / 2;
+    const s = order.shippingInfo || {};
+    const address = `${s.address || ''}, ${s.city || ''}, ${s.postalCode || ''}, ${s.country || ''}`;
+    doc.font('Helvetica').fontSize(10);
+    const shipH = 36 + (customer.name ? 16 : 0) + doc.heightOfString(address, { width: half - PAD * 2 }) + 16 + (customer.email ? 14 : 0) + PAD;
+    const boxH = Math.max(shipH, 92);
+    if (y + boxH > BOTTOM) { doc.addPage(); y = 50; }
+    card(left, y, half, boxH);
+    cardTitle('Payment', left + PAD, y + 14);
+    doc.fillColor(DARK).font('Helvetica-Bold').fontSize(10).text('Method: ', left + PAD, y + 36, { continued: true })
+        .font('Helvetica').text(order.paymentMethod || 'Card');
+    doc.fillColor(isPaid(order) ? GREEN : RED).font('Helvetica-Bold').fontSize(10).text(paymentText(order), left + PAD, y + 54, { lineBreak: false });
+    if (order.deliveredAt) doc.fillColor(MUTED).font('Helvetica').fontSize(9).text(`Delivered ${when(order.deliveredAt)}`, left + PAD, y + 72, { lineBreak: false });
+
+    const sx = left + half + GAP;
+    card(sx, y, half, boxH);
+    cardTitle('Ship to', sx + PAD, y + 14);
+    let sy = y + 36;
+    if (customer.name) { doc.fillColor(DARK).font('Helvetica-Bold').fontSize(10).text(customer.name, sx + PAD, sy, { lineBreak: false }); sy += 16; }
+    doc.fillColor(DARK).font('Helvetica').fontSize(10).text(address, sx + PAD, sy, { width: half - PAD * 2 });
+    doc.text(`Phone: ${s.phoneNo || ''}`, sx + PAD, doc.y + 2, { width: half - PAD * 2 });
+    if (customer.email) doc.fillColor(MUTED).fontSize(9).text(customer.email, sx + PAD, doc.y + 2, { width: half - PAD * 2 });
 
     // footer
-    doc.font('Helvetica').fontSize(9).fillColor('#8a7a69')
-        .text('Thank you for shopping with Luna Interiors. Keep this receipt for your records.', left, 770, { width, align: 'center' });
+    doc.font('Helvetica').fontSize(9).fillColor(MUTED)
+        .text('Thank you for shopping with Luna Interiors. Keep this receipt for your records.', left, 770, { width, align: 'center', lineBreak: false });
 
     doc.end();
 });
@@ -126,18 +208,35 @@ const HEADLINES = {
     Delivered: { subject: 'Order delivered', title: 'Your order has been delivered.', note: 'Thank you for shopping with us. You can now write a review for the products you bought.' },
 };
 
+// e-mail clients ignore <style> blocks, so every style is inline
+const CARD = `background:${CREAM};border:1px solid ${LINE};border-radius:10px;padding:16px 18px;margin:0 0 12px`;
+const CARD_TITLE = `margin:0 0 10px;font-size:15px;font-weight:bold;color:${DARK}`;
+const TH = `padding:6px 4px;border-bottom:1px solid ${LINE};color:${MUTED};font-size:11px;letter-spacing:.06em;text-transform:uppercase`;
+const TD = `padding:8px 4px;border-bottom:1px solid ${LINE}`;
+
 // logo: true when the e-mail carries the logo as an inline (cid) attachment - see sendOrderEmail
 const buildOrderEmail = (order, customer = {}, kind = 'placed', logo = hasLogo()) => {
     const h = HEADLINES[kind] || HEADLINES.placed;
     const tn = transactionNo(order);
+    const status = order.orderStatus || 'Processing';
+    const current = Math.max(STEPS.indexOf(status), 0);
+    const steps = STEPS.map((step, i) => {
+        const reached = i <= current;
+        return `<td style="width:33%;padding:0 4px">
+            <div style="background:#fff;border:1px solid ${reached ? BROWN : LINE};border-radius:8px;padding:8px 10px">
+              <div style="font-weight:bold;color:${reached ? DARK : MUTED}">${reached ? '&#10003; ' : `${i + 1}. `}${step}</div>
+              <div style="font-size:12px;color:${MUTED}">${reached ? esc(when(stepDate(order, step))) : 'Waiting'}</div>
+            </div></td>`;
+    }).join('');
     const rows = (order.orderItems || []).map(i => `
         <tr>
-          <td style="padding:8px;border-bottom:1px solid #eee">${esc(i.name)}</td>
-          <td style="padding:8px;border-bottom:1px solid #eee;text-align:right">${peso(i.price)}</td>
-          <td style="padding:8px;border-bottom:1px solid #eee;text-align:center">${esc(i.quantity)}</td>
-          <td style="padding:8px;border-bottom:1px solid #eee;text-align:right">${peso(i.price * i.quantity)}</td>
+          <td style="${TD}">${esc(i.name)}</td>
+          <td style="${TD};text-align:right">${peso(i.price)}</td>
+          <td style="${TD};text-align:right">${esc(i.quantity)}</td>
+          <td style="${TD};text-align:right">${peso(i.price * i.quantity)}</td>
         </tr>`).join('');
     const s = order.shippingInfo || {};
+    const delivered = status === 'Delivered';
     const html = `
     <div style="font-family:Arial,Helvetica,sans-serif;max-width:640px;margin:auto;color:${DARK}">
       <div style="background:${DARK};color:#fff;padding:18px 22px;border-radius:10px 10px 0 0">
@@ -149,30 +248,54 @@ const buildOrderEmail = (order, customer = {}, kind = 'placed', logo = hasLogo()
           </td>
         </tr></table>
       </div>
-      <div style="border:1px solid #e6dccf;border-top:0;padding:22px;border-radius:0 0 10px 10px">
-        <p>Hi ${esc(customer.name || 'there')},</p>
+      <div style="border:1px solid ${LINE};border-top:0;padding:22px;border-radius:0 0 10px 10px;background:#fff">
+        <p style="margin:0 0 4px">Hi ${esc(customer.name || 'there')},</p>
         <h2 style="margin:6px 0">${esc(h.title)}</h2>
-        <p>${esc(h.note)}</p>
-        <p><b>Status:</b> ${esc(order.orderStatus)} &nbsp;|&nbsp; <b>Payment:</b> ${esc(order.paymentMethod || 'Card')} (${esc(paymentText(order))})</p>
+        <p style="margin:0 0 14px">${esc(h.note)}</p>
+        <p style="margin:0 0 16px"><b>Order # ${esc(tn)}</b> &nbsp;
+          <span style="display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:bold;background:${delivered ? '#E3E8DC' : '#EFE4D6'};color:${delivered ? GREEN : BROWN}">${esc(status)}</span></p>
 
-        <table style="width:100%;border-collapse:collapse;margin-top:12px">
-          <thead><tr style="background:#f6efe6">
-            <th style="padding:8px;text-align:left">Product</th><th style="padding:8px;text-align:right">Price</th>
-            <th style="padding:8px;text-align:center">Qty</th><th style="padding:8px;text-align:right">Subtotal</th>
-          </tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
+        <div style="${CARD}">
+          <p style="${CARD_TITLE}">Order status</p>
+          <table role="presentation" style="width:100%;border-collapse:collapse"><tr>${steps}</tr></table>
+        </div>
 
-        <table style="width:100%;margin-top:12px;border-collapse:collapse">
-          <tr><td style="padding:4px 8px">Items subtotal</td><td style="padding:4px 8px;text-align:right">${peso(order.itemsPrice)}</td></tr>
-          <tr><td style="padding:4px 8px">Shipping</td><td style="padding:4px 8px;text-align:right">${Number(order.shippingPrice) === 0 ? 'FREE' : peso(order.shippingPrice)}</td></tr>
-          <tr><td style="padding:4px 8px">Tax (5%)</td><td style="padding:4px 8px;text-align:right">${peso(order.taxPrice)}</td></tr>
-          <tr><td style="padding:8px;border-top:2px solid ${BROWN};font-size:16px"><b>Grand total</b></td>
-              <td style="padding:8px;border-top:2px solid ${BROWN};font-size:16px;text-align:right"><b>${peso(order.totalPrice)}</b></td></tr>
-        </table>
+        <div style="${CARD}">
+          <p style="${CARD_TITLE}">Items</p>
+          <table style="width:100%;border-collapse:collapse">
+            <thead><tr>
+              <th style="${TH};text-align:left">Product</th><th style="${TH};text-align:right">Price</th>
+              <th style="${TH};text-align:right">Qty</th><th style="${TH};text-align:right">Subtotal</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+          <table style="width:100%;margin-top:10px;border-collapse:collapse">
+            <tr><td style="padding:4px">Items subtotal</td><td style="padding:4px;text-align:right">${peso(order.itemsPrice)}</td></tr>
+            <tr><td style="padding:4px">Shipping</td><td style="padding:4px;text-align:right">${Number(order.shippingPrice) === 0 ? 'FREE' : peso(order.shippingPrice)}</td></tr>
+            <tr><td style="padding:4px">Tax (5%)</td><td style="padding:4px;text-align:right">${peso(order.taxPrice)}</td></tr>
+            <tr><td style="padding:8px 4px;border-top:2px solid ${BROWN};font-size:16px"><b>Grand total</b></td>
+                <td style="padding:8px 4px;border-top:2px solid ${BROWN};font-size:16px;text-align:right"><b>${peso(order.totalPrice)}</b></td></tr>
+          </table>
+        </div>
 
-        <p style="margin-top:16px"><b>Ship to:</b> ${esc(s.address)}, ${esc(s.city)}, ${esc(s.postalCode)}, ${esc(s.country)} (${esc(s.phoneNo)})</p>
-        <p style="color:#8a7a69;font-size:13px">Your PDF receipt is attached to this email.</p>
+        <table role="presentation" style="width:100%;border-collapse:separate;border-spacing:0"><tr>
+          <td style="width:50%;vertical-align:top;padding-right:6px">
+            <div style="${CARD}">
+              <p style="${CARD_TITLE}">Payment</p>
+              <p style="margin:0 0 4px"><b>Method:</b> ${esc(order.paymentMethod || 'Card')}</p>
+              <p style="margin:0;font-weight:bold;color:${isPaid(order) ? GREEN : RED}">${esc(paymentText(order))}</p>
+            </div>
+          </td>
+          <td style="width:50%;vertical-align:top;padding-left:6px">
+            <div style="${CARD}">
+              <p style="${CARD_TITLE}">Ship to</p>
+              ${customer.name ? `<p style="margin:0 0 4px"><b>${esc(customer.name)}</b></p>` : ''}
+              <p style="margin:0">${esc(s.address)}, ${esc(s.city)}, ${esc(s.postalCode)}, ${esc(s.country)}<br>Phone: ${esc(s.phoneNo)}</p>
+            </div>
+          </td>
+        </tr></table>
+
+        <p style="color:${MUTED};font-size:13px;margin:6px 0 0">Your PDF receipt is attached to this email.</p>
       </div>
     </div>`;
     return { subject: `Luna Interiors - ${h.subject} (${tn})`, html };

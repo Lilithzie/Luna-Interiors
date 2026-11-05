@@ -87,7 +87,7 @@ const Cart = () => {
                         <i className="fa fa-shopping-bag" aria-hidden="true"></i>
                         <h2>Your cart is empty</h2>
                         <p>Discover something beautiful for your home.</p>
-                        <button type="button" className="btn btn-luna" onClick={closeDrawer}>Browse Furniture</button>
+                        <Link to="/#catalog" className="btn btn-luna">Browse Furniture</Link>
                     </div>
                 ) : (
                     <>
