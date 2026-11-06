@@ -285,9 +285,11 @@ exports.updateUser = async (req, res, next) => {
 }
 
 exports.logout = async (req, res, next) => {
-    res.cookie('token', null, {
-        expires: new Date(Date.now()),
-        httpOnly: true
+    // attributes must match the ones used in sendToken, or the browser keeps the original cookie
+    res.clearCookie('token', {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none',
     })
 
     return res.status(200).json({
