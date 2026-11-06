@@ -9,7 +9,7 @@ export const Hero = () => (
         <img src={`${LIFESTYLE}/hero-garden.webp`} alt="Wooden outdoor seating set in a leafy garden" />
         <div className="store-hero-copy">
             <p className="eyebrow">Luna Interiors</p>
-            <h1>Warm wood. Quiet comfort. Made for how you live.</h1>
+            <h1>Style that fits your life. Made for how you live.</h1>
             <a href="#catalog" className="btn btn-luna-light" id="shop_now">Shop Now</a>
         </div>
     </section>
@@ -86,7 +86,7 @@ export const Inspiration = () => (
 export const BrandStory = () => (
     <section className="brand-story" id="brand_story">
         <div className="store-container">
-            <h2>Furniture that feels like home</h2>
+            <h2>Furnitures that feels like home</h2>
             <p>
                 Luna Interiors brings warm materials and simple shapes into every room, from the
                 dining table to the patio. Order online, pay by card or cash on delivery, and follow

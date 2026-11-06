@@ -34,7 +34,6 @@ const store = configureStore({
     },
 })
 
-// persist cart + wishlist
 let savedCart = store.getState().cart
 let savedWishlist = store.getState().wishlist.ids
 store.subscribe(() => {
