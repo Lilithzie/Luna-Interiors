@@ -9,7 +9,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { clearOrderDetailsError, getOrderDetails } from '../../slices/orderSlice'
 import { OrderItemsTable, OrderTimeline, OrderTotals, PaymentAndShipping, ReceiptButton, StatusPill, fmtDate } from './OrderParts'
 
-// Same layout as the order success page: status, items + totals, payment and shipping
+// same layout as the success page
 const OrderDetails = () => {
     const dispatch = useDispatch();
     const { loading, error, order = {} } = useSelector(state => state.orderDetails);

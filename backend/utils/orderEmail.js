@@ -1,18 +1,13 @@
-// Order e-mail + PDF receipt for Luna Interiors.
-//  - buildReceiptPdf(order, customer) -> Buffer   (PDF receipt)
-//  - buildOrderEmail(order, customer, kind) -> { subject, html }
-//  - sendOrderEmail(order, customer, kind) -> { sent, to, error? }   (never throws)
+// order email + PDF receipt
 const fs = require('fs');
 const path = require('path');
 const PDFDocument = require('pdfkit');
-// pdfkit loads its built-in fonts with a dynamic require that Vercel's bundler cannot see, so the
-// font files were left out of the deployment and every PDF failed there. Requiring the two fonts
-// the receipt uses makes the bundler include them.
+// bundle pdfkit fonts for Vercel
 require('pdfkit/standard-fonts/Helvetica');
 require('pdfkit/standard-fonts/HelveticaBold');
 const sendEmail = require('./sendEmail');
 
-// Luna Interiors palette (same as theme.css)
+// palette from theme.css
 const BROWN = '#8B5A2B';
 const DARK = '#2E1F14';
 const CREAM = '#FAF6EF';
@@ -22,14 +17,14 @@ const GREEN = '#4F6B3A';
 const RED = '#A1461F';
 const STEPS = ['Processing', 'Shipped', 'Delivered'];
 
-// light gold logo: it sits on the dark header band, like the site header. Skipped if the file is missing.
+// header logo (optional)
 const LOGO = path.join(__dirname, '..', 'assets', 'luna-logo.png');
 const LOGO_CID = 'luna-logo';
 const hasLogo = () => fs.existsSync(LOGO);
 
 const transactionNo = (order) => order.transactionNo || `LUNA-${String(order._id).slice(-8).toUpperCase()}`;
 
-// PDF's built-in fonts have no peso sign, so the PDF writes "PHP 1,234.00"; the e-mail uses the real peso sign.
+// PDF fonts have no peso sign
 const num = (n) => Number(n || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 const php = (n) => `PHP ${num(n)}`;
 const peso = (n) => `₱${num(n)}`;
@@ -42,7 +37,7 @@ const paymentText = (order) => {
 };
 const isPaid = (order) => !!(order.paymentInfo && order.paymentInfo.status === 'succeeded');
 
-// when each step of Processing -> Shipped -> Delivered happened (same rules as the order timeline on the site)
+// timeline step dates
 const stepDate = (order, status) => {
     const hit = (order.statusHistory || []).find(h => h.status === status);
     if (hit) return hit.at;
@@ -51,9 +46,8 @@ const stepDate = (order, status) => {
     return null;
 };
 
-/* ------------------------------ PDF receipt ------------------------------ */
-// Same layout as the order pages on the website: header, status pill, then cream cards for the
-// order status, the items with totals, and payment + shipping.
+// PDF receipt
+// same layout as the order pages
 const buildReceiptPdf = (order, customer = {}) => new Promise((resolve, reject) => {
     const doc = new PDFDocument({ size: 'A4', margin: 50, info: { Title: `Receipt ${transactionNo(order)}`, Author: 'Luna Interiors' } });
     const chunks = [];
@@ -63,7 +57,7 @@ const buildReceiptPdf = (order, customer = {}) => new Promise((resolve, reject) 
 
     const left = 50, right = 545, width = right - left;
     const PAD = 16, GAP = 12;
-    const BOTTOM = 750;                                       // keep cards clear of the footer
+    const BOTTOM = 750;                                       // keep clear of the footer
     const card = (x, y, w, h) => doc.roundedRect(x, y, w, h, 8).lineWidth(0.8).fillAndStroke(CREAM, LINE);
     const cardTitle = (text, x, y) => doc.fillColor(DARK).font('Helvetica-Bold').fontSize(11).text(text, x, y, { lineBreak: false });
 
@@ -88,7 +82,7 @@ const buildReceiptPdf = (order, customer = {}) => new Promise((resolve, reject) 
     doc.fillColor(delivered ? GREEN : BROWN).text(status, right - pillW, y + 8, { width: pillW, align: 'center', lineBreak: false });
     y += 52;
 
-    // order status card: Processing -> Shipped -> Delivered
+    // order status card
     const current = Math.max(STEPS.indexOf(status), 0);
     card(left, y, width, 84);
     cardTitle('Order status', left + PAD, y + 14);
@@ -109,7 +103,7 @@ const buildReceiptPdf = (order, customer = {}) => new Promise((resolve, reject) 
     });
     y += 84 + GAP;
 
-    // items card (continues on the next page when an order is long)
+    // items card
     const ix = left + PAD, iw = width - PAD * 2;
     const nameW = iw - 260;
     const cols = { price: ix + iw - 250, qty: ix + iw - 150, sub: ix + iw - 100 };
@@ -200,7 +194,7 @@ const buildReceiptPdf = (order, customer = {}) => new Promise((resolve, reject) 
     doc.end();
 });
 
-/* ------------------------------- e-mail body ------------------------------- */
+// email body
 const HEADLINES = {
     placed: { subject: 'Order received', title: 'Thank you! We received your order.', note: 'We will email you again whenever the status of your order changes.' },
     Processing: { subject: 'Order is being processed', title: 'Your order is being processed.', note: 'We are preparing your items.' },
@@ -208,13 +202,13 @@ const HEADLINES = {
     Delivered: { subject: 'Order delivered', title: 'Your order has been delivered.', note: 'Thank you for shopping with us. You can now write a review for the products you bought.' },
 };
 
-// e-mail clients ignore <style> blocks, so every style is inline
+// inline styles only
 const CARD = `background:${CREAM};border:1px solid ${LINE};border-radius:10px;padding:16px 18px;margin:0 0 12px`;
 const CARD_TITLE = `margin:0 0 10px;font-size:15px;font-weight:bold;color:${DARK}`;
 const TH = `padding:6px 4px;border-bottom:1px solid ${LINE};color:${MUTED};font-size:11px;letter-spacing:.06em;text-transform:uppercase`;
 const TD = `padding:8px 4px;border-bottom:1px solid ${LINE}`;
 
-// logo: true when the e-mail carries the logo as an inline (cid) attachment - see sendOrderEmail
+// logo as inline attachment
 const buildOrderEmail = (order, customer = {}, kind = 'placed', logo = hasLogo()) => {
     const h = HEADLINES[kind] || HEADLINES.placed;
     const tn = transactionNo(order);
@@ -301,8 +295,8 @@ const buildOrderEmail = (order, customer = {}, kind = 'placed', logo = hasLogo()
     return { subject: `Luna Interiors - ${h.subject} (${tn})`, html };
 };
 
-/* ------------------------------- send it ------------------------------- */
-// Never throws: a mail problem must not break checkout or the admin's status update.
+// send
+// never throws
 const sendOrderEmail = async (order, customer, kind = 'placed') => {
     const to = customer && customer.email;
     if (!to) return { sent: false, error: 'Customer has no email address' };

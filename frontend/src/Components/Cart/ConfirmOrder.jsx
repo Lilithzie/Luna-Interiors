@@ -2,17 +2,15 @@ import { useNavigate } from 'react-router-dom'
 import MetaData from '../Layout/MetaData'
 import CheckoutSteps from './CheckoutSteps'
 import { OrderItemsTable, OrderTotals } from '../Order/OrderParts'
-// import { getUser } from '../Utils/helpers'
 import { useSelector } from 'react-redux'
 const ConfirmOrder = () => {
-    // const [user, setUser] = useState(getUser() ? getUser() : {})
     let navigate = useNavigate();
     const { cartItems, selectedCartItems, shippingInfo } = useSelector(state => state.cart)
     const checkoutItems = selectedCartItems === null
         ? cartItems
         : cartItems.filter(item => selectedCartItems.includes(item.product))
     const { user } = useSelector(state => state.auth)
-    // Calculate Order Prices
+    // order prices
     const itemsPrice = checkoutItems.reduce((acc, item) => acc + item.price * item.quantity, 0)
     const shippingPrice = itemsPrice > 5000 ? 0 : 250
     const taxPrice = Number((0.05 * itemsPrice).toFixed(2))

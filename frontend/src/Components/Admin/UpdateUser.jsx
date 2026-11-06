@@ -18,7 +18,7 @@ const UpdateUser = () => {
     let navigate = useNavigate();
 
     const { id } = useParams();
-    const loaded = user._id === id   // name and email are shown only: admins change the role alone
+    const loaded = user._id === id   // role only
     const isEditingOwnAccount = loaded && currentUser?._id === id
 
     useEffect(() => {

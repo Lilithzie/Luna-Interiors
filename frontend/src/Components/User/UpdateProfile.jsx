@@ -8,25 +8,17 @@ import { updateProfile, resetUserUpdate, clearUserError } from '../../slices/use
 
 import { useDispatch, useSelector } from 'react-redux'
 
-// import { getToken } from '../Utils/helpers';
-
-
 const UpdateProfile = () => {
     const dispatch = useDispatch();
     const { user } = useSelector(state => state.auth);
     const { error, isUpdated, loading } = useSelector(state => state.user)
 
-
     const { register, handleSubmit, reset, formState: { errors } } = useForm({ mode: 'onTouched', defaultValues: { name: '', email: '' } })
     const [avatar, setAvatar] = useState('')
     const [avatarPreview, setAvatarPreview] = useState('/images/default_avatar.svg')
-    // const [error, setError] = useState('')
-    // const [user, setUser] = useState({})
-    // const [loading, setLoading] = useState(false)
-    // const [isUpdated, setIsUpdated] = useState(false)
     let navigate = useNavigate();
     const location = useLocation()
-    // side drawer like Profile: going back returns to the profile drawer it was opened from
+    // side drawer
     const closeDrawer = useCallback(() => {
         if (location.state?.backgroundLocation) navigate(-1)
         else navigate('/me', { replace: true })
@@ -39,61 +31,6 @@ const UpdateProfile = () => {
         document.addEventListener('keydown', handleEscape)
         return () => document.removeEventListener('keydown', handleEscape)
     }, [closeDrawer])
-
-    // const getProfile = async () => {
-    //     const config = {
-    //         headers: {
-    //             'Content-Type': 'application/json',
-    //             'Authorization': `Bearer ${getToken()}`
-    //         }
-    //     }
-    //     try {
-    //         const { data } = await axios.get(`${import.meta.env.VITE_API}/me`, config)
-    //         console.log(data)
-    //         setUser(data.user)
-    //         setName(data.user.name);
-    //         setEmail(data.user.email);
-    //         setAvatarPreview(data.user.avatar.url)
-    //         setLoading(false)
-    //     } catch (error) {
-    //         console.log(error)
-    //         toast.error('user not found', {
-    //             position: 'bottom-right'
-    //         });
-    //     }
-    // }
-
-    // const updateProfile = async (userData) => {
-    //     const config = {
-    //         headers: {
-    //             'Content-Type': 'multipart/form-data',
-    //             'Authorization': `Bearer ${getToken()}`
-    //         }
-    //     }
-    //     try {
-    //         const { data } = await axios.put(`${import.meta.env.VITE_API}/me/update`, userData, config)
-    //         setIsUpdated(data.success)
-    //         setLoading(false)
-    //         toast.success('user updated', {
-    //             position: 'bottom-right'
-    //         });
-    //         getProfile();
-    //         navigate('/me', { replace: true })
-
-
-    //     } catch (error) {
-    //         console.log(error)
-    //         toast.error('user not found', {
-    //             position: 'bottom-right'
-    //         });
-    //     }
-    // }
-
-    // console.log(error)
-    // useEffect(() => {
-    //     getProfile()
-
-    // }, [])
 
     useEffect(() => {
         if (user) {
@@ -139,8 +76,6 @@ const UpdateProfile = () => {
         reader.readAsDataURL(file)
 
     }
-    // console.log(user)
-
 
     return (
         <>

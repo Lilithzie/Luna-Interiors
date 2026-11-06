@@ -1,13 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 
-/* ------------------------------------------------------------------ */
-/* Infinite scroll helpers (Quiz 3)                                    */
-/*  - <LoadMoreSentinel/>  : invisible marker at the bottom of a list;  */
-/*                           when it scrolls into view -> load more     */
-/*  - useInfiniteRows()    : reveals a DataGrid's rows 10 at a time     */
-/* ------------------------------------------------------------------ */
+// Infinite scroll helpers (Quiz 3)
 
-// Put this right after a list. It calls onLoadMore() each time it comes into view.
 export const LoadMoreSentinel = ({ hasMore, loading = false, onLoadMore, shown, total, label = 'items' }) => {
     const ref = useRef(null)
     const loadRef = useRef(onLoadMore)
@@ -16,8 +10,6 @@ export const LoadMoreSentinel = ({ hasMore, loading = false, onLoadMore, shown, 
     useEffect(() => {
         const el = ref.current
         if (!el || !hasMore || loading) return undefined
-        // A new observer is created every time more rows arrive, so if the marker is
-        // still on screen (tall monitor / few rows) it immediately asks for the next batch.
         const observer = new IntersectionObserver(([entry]) => {
             if (entry.isIntersecting) loadRef.current()
         }, { rootMargin: '500px' })
@@ -37,9 +29,6 @@ export const LoadMoreSentinel = ({ hasMore, loading = false, onLoadMore, shown, 
     )
 }
 
-// For MUI DataGrids that already hold every row in memory: show `step` rows, then reveal
-// more as the user scrolls. While the user is searching / filtering / sorting, ALL rows are
-// used so the result covers the whole table, not just the part that was scrolled into view.
 export const useInfiniteRows = (rows, step = 10) => {
     const [count, setCount] = useState(step)
     const [filterModel, setFilterModel] = useState({ items: [], quickFilterValues: [] })
@@ -51,8 +40,7 @@ export const useInfiniteRows = (rows, step = 10) => {
         sortModel.length > 0
 
     const total = rows.length
-    // The free DataGrid can only show 100 rows per page, so a table bigger than that falls back
-    // to the normal footer pagination instead of infinite scroll.
+
     const tooBig = total > 100
     const showAll = narrowing || tooBig
     const visibleRows = showAll ? rows : rows.slice(0, count)
@@ -65,7 +53,6 @@ export const useInfiniteRows = (rows, step = 10) => {
         hasMore,
         loadMore,
         shown: visibleRows.length,
-        // spread these onto <DataGrid {...gridProps} />
         gridProps: {
             rows: visibleRows,
             filterModel,

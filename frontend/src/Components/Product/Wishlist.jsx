@@ -15,7 +15,7 @@ const Wishlist = () => {
 
     useEffect(() => {
         dispatch(getWishlistProducts(ids))
-        // only on opening the page: removing a heart updates the list on its own
+        // load on open only
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dispatch])
 

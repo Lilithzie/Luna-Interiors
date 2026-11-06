@@ -1,6 +1,6 @@
 import React from 'react'
 
-// read-only star bar (uses the .rating-outer/.rating-inner css from the reference system)
+// read-only stars
 export const Stars = ({ value = 0 }) => (
     <div className="rating-outer d-inline-block" title={`${Number(value).toFixed(1)} / 5`}>
         <div className="rating-inner" style={{ width: `${(Number(value) / 5) * 100}%` }}></div>

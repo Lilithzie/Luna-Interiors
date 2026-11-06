@@ -2,7 +2,7 @@ const path = require('path');
 const dotenv = require('dotenv');
 const cloudinary = require('cloudinary').v2;
 
-// Vercel supplies process.env directly. Load the file only outside production.
+// load .env outside production
 if (process.env.NODE_ENV !== 'production') {
     dotenv.config({ path: path.resolve(__dirname, '.env') });
 }

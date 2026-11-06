@@ -3,7 +3,7 @@ import axios from 'axios'
 import { API, NO_IMAGE } from '../Components/Utils/helpers'
 import { apiThunk } from './apiThunk'
 
-// store.js writes these two keys back to localStorage whenever the cart changes
+// saved by store.js
 const saved = (key, fallback) => {
     const value = localStorage.getItem(key)
     return value ? JSON.parse(value) : fallback

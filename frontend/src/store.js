@@ -34,7 +34,7 @@ const store = configureStore({
     },
 })
 
-// keep the cart and wishlist across page refreshes
+// persist cart + wishlist
 let savedCart = store.getState().cart
 let savedWishlist = store.getState().wishlist.ids
 store.subscribe(() => {

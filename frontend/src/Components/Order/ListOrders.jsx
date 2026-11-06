@@ -4,7 +4,6 @@ import MetaData from '../Layout/MetaData'
 import Loader from '../Layout/Loader'
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-// import { getToken } from '../Utils/helpers'
 import { useDispatch, useSelector } from 'react-redux'
 import { myOrders, clearMyOrdersError } from '../../slices/orderSlice'
 
@@ -13,41 +12,12 @@ import {
     Button
 } from '@mui/material'
 
-
 import { DataGrid, } from '@mui/x-data-grid'
 import { useInfiniteRows, LoadMoreSentinel } from '../Utils/InfiniteScroll'
 
 const ListOrders = () => {
     const dispatch = useDispatch();
     const { loading, error, orders } = useSelector(state => state.myOrders);
-    // const [loading, setLoading] = useState(true)
-    // const [error, setError] = useState('')
-    // const [myOrdersList, setMyOrdersList] = useState([])
-
-    // const myOrders = async () => {
-    //     try {
-    //         const config = {
-    //             headers: {
-    //                 'Authorization': `Bearer ${getToken()}`
-    //             }
-    //         }
-    //         const { data } = await axios.get(`${import.meta.env.VITE_API}/orders/me`, config)
-    //         console.log(data)
-    //         setMyOrdersList(data.orders)
-    //         setLoading(false)
-
-    //     } catch (error) {
-    //         setError(error.response.data.message)
-    //     }
-    // }
-    // useEffect(() => {
-    //     myOrders();
-    //     if (error) {
-    //         toast.error(error, {
-    //             position: toast.POSITION.BOTTOM_RIGHT
-    //         });
-    //     }
-    // }, [error])
 
     const columns = [
         {
@@ -111,7 +81,7 @@ const ListOrders = () => {
         payment: order.paymentMethod || 'Card',
         status: order.orderStatus || ''
     }));
-    // Quiz 3: infinite scroll - rows are revealed 10 at a time as you scroll down
+    // Quiz 3: infinite scroll
     const inf = useInfiniteRows(allRows, 10)
     useEffect(() => {
         dispatch(myOrders());
@@ -126,15 +96,10 @@ const ListOrders = () => {
         }
     }, [error, dispatch])
 
-
-
     return (
         <>
             <MetaData title={'My Orders'} />
             <h1 className="my-5">My Orders</h1>
-
-
-
 
             {loading ? <Loader /> : (
                 <div style={{ width: '100%' }}>

@@ -26,14 +26,14 @@ app.use(async (req, res, next) => {
     }
 });
 
-// local image fallback (used when Cloudinary keys are not configured)
+// local image fallback
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api/v1', products);
 app.use('/api/v1', auth);
 app.use('/api/v1', order);
 
-// central error handler (validation, multer, bad ObjectId, ...)
+// central error handler
 app.use((err, req, res, next) => {
     let status = err.statusCode || 500;
     let message = err.message || 'Server error';

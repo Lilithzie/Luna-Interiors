@@ -6,8 +6,6 @@ import Loader from '../Layout/Loader'
 import MetaData from '../Layout/MetaData';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-// import axios from 'axios';
-// import { getUser, authenticate } from '../Utils/helpers';
 import { useDispatch, useSelector } from 'react-redux'
 import { login, loginWithGoogle, clearAuthError } from '../../slices/authSlice'
 import { signInWithGoogle } from '../../config/firebase'
@@ -15,9 +13,8 @@ import AuthBrand from '../Layout/AuthBrand'
 
 const Login = () => {
     const { isAuthenticated, error, loading, user } = useSelector(state => state.auth)
-    // React Hook Form: validation rules live next to each field (see register(...) below)
+    // react-hook-form validation
     const { register, handleSubmit, formState: { errors } } = useForm({ mode: 'onTouched', defaultValues: { email: '', password: '' } })
-    // const [loading, setLoading] = useState(false)
     let navigate = useNavigate()
     let location = useLocation()
     const dispatch = useDispatch()
@@ -35,41 +32,11 @@ const Login = () => {
         }
     }
 
-    // const login = async (email, password) => {
-    //     try {
-    //         const config = {
-    //             headers: {
-    //                 'Content-Type': 'application/json'
-    //             }
-    //         }
-    //         const { data } = await axios.post(`http://localhost:4001/api/v1/login`, { email, password }, config)
-    //         console.log(data)
-    //         authenticate(data, () => navigate("/"))
-
-    //     } catch (error) {
-
-    //         toast.error("invalid user or password", {
-    //             position: 'bottom-right'
-    //         })
-    //     }
-    // }
-
     const redirect = location.search ? new URLSearchParams(location.search).get('redirect') : ''
-    // useEffect(() => {
-    //     if (getUser()) {
-    //         navigate('/')
-    //     }
-    // }, [])
-
-    // useEffect(() => {
-    //     if (getUser() && redirect === 'shipping') {
-    //         navigate(`/${redirect}`)
-    //     }
-    // }, [])
 
     useEffect(() => {
         if (isAuthenticated && user && user.role === 'admin') {
-            navigate('/dashboard')        // admins go straight to their own area
+            navigate('/dashboard')        // admins go to their own area
         }
         else if (isAuthenticated && redirect === 'shipping') {
             navigate(`/${redirect}`)

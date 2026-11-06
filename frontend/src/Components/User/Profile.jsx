@@ -19,35 +19,6 @@ const Profile = () => {
         return () => document.removeEventListener('keydown', handleEscape)
     }, [closeDrawer])
 
-    // const [loading, setLoading] = useState(true)
-    // const [user, setUser] = useState({})
-
-
-    // const getProfile = async () => {
-    //     const config = {
-    //         headers: {
-    //             'Authorization': `Bearer ${getToken()}`
-    //         }
-    //     }
-    //     try {
-    //         const { data } = await axios.get(`http://localhost:4001/api/v1/me`, config)
-    //         console.log(data.user)
-    //         setUser(data.user)
-    //         setLoading(false)
-    //     } catch (error) {
-    //         console.log(error)
-    //         toast.error("invalid user or password", {
-    //             position: 'bottom-center'
-    //         })
-    //     }
-
-    // }
-
-    // useEffect(() => {
-
-    //     getProfile()
-
-    // }, [])
     return (
         <>
             {loading ? <Loader /> : (

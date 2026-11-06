@@ -1,7 +1,6 @@
 const nodemailer = require('nodemailer');
 
-// options: { email, subject, message }                      -> simple text email (password reset)
-//          { email, subject, html, attachments: [{...}] }   -> rich email, optionally with attachments (order receipt)
+// text or html email, optional attachments
 const sendEmail = async options => {
     const transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
@@ -10,7 +9,7 @@ const sendEmail = async options => {
             user: process.env.SMTP_EMAIL,
             pass: process.env.SMTP_PASSWORD
         },
-        // do not let a slow mail server hang the request for long
+        // mail timeout
         connectionTimeout: 10000,
         greetingTimeout: 10000,
         socketTimeout: 20000

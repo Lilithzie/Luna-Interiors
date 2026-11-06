@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import Logo from './Logo'
 
-// Dark band at the top of the login / register forms: the logo text needs a dark background
+// dark band for the logo
 const AuthBrand = () => (
     <div className="auth-brand">
         <Link to="/"><Logo /></Link>

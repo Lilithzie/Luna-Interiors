@@ -18,7 +18,7 @@ const Toolbar = () => (
     </GridToolbarContainer>
 )
 
-// MP3 - admin can delete any review
+// MP3 - admin deletes reviews
 const ProductReviews = () => {
     const dispatch = useDispatch()
     const { reviews, loading, error } = useSelector(state => state.reviews)
@@ -59,7 +59,7 @@ const ProductReviews = () => {
         },
     ], [])   // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Quiz 3: infinite scroll - rows are revealed 10 at a time as you scroll down
+    // Quiz 3: infinite scroll
     const inf = useInfiniteRows(reviews.map(r => ({ ...r, id: r._id })), 10)
 
     return (

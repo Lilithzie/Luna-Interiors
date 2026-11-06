@@ -29,7 +29,7 @@ exports.authorizeRoles = (...roles) => {
     }
 }
 
-// Admin accounts manage the shop - they are not allowed to place orders
+// admins cannot place orders
 exports.forbidAdmin = (req, res, next) => {
     if (req.user && req.user.role === 'admin') {
         return res.status(403).json({ success: false, message: 'Admin accounts cannot place orders. Please use a customer account.' })

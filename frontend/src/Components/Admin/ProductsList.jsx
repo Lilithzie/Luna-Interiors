@@ -33,7 +33,7 @@ const ProductsList = () => {
         }
     }, [dispatch, error])
 
-    // MUI v9 can report "select all" as {type:'exclude'} - normalise to a plain id list of the rows in the table
+    // normalise MUI select-all
     const onSelectionChange = (model) => {
         if (model.type === 'include') return setSelection(model)
         const visible = gridFilteredSortedRowIdsSelector(apiRef)
@@ -55,7 +55,7 @@ const ProductsList = () => {
         } catch (message) { toast.error(message || 'Delete failed', { position: 'bottom-right' }) }
     }
 
-    // MP1 - bulk delete with checkboxes
+    // MP1 - bulk delete
     const deleteSelected = async () => {
         const ids = [...selection.ids].map(String)
         if (!ids.length) return
@@ -90,7 +90,7 @@ const ProductsList = () => {
     ], [])   // eslint-disable-line react-hooks/exhaustive-deps
 
     const allRows = products.map(p => ({ ...p, id: p._id }))
-    // Quiz 3: infinite scroll - rows are revealed 10 at a time as you scroll down
+    // Quiz 3: infinite scroll
     const inf = useInfiniteRows(allRows, 10)
 
     return (

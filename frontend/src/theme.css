@@ -1,6 +1,4 @@
-/* ---------- Luna Interiors storefront design system ----------
-   Loaded after App.css. Builds on the existing --luna palette from App.css and
-   adds a few neighbouring wood tones. */
+/* Luna Interiors design system */
 :root {
   --luna-oak: #A67C52;
   --luna-maple: #C49A6C;
@@ -19,7 +17,7 @@ h1 { font-size: 2rem; }
 a { color: var(--luna); }
 a:hover { color: var(--luna-dark); }
 
-/* The logos keep their aspect ratio: height is set, width follows */
+/* keep logo aspect ratio */
 .luna-logo { display: block; height: 96px; width: auto; }
 
 .store-container { width: 100%; max-width: 1400px; margin: 0 auto; padding: 0 clamp(16px, 3vw, 40px); }
@@ -27,13 +25,13 @@ a:hover { color: var(--luna-dark); }
 .store-section { padding-top: 3rem; padding-bottom: 1rem; }
 .store-section > h2, #catalog > h2 { font-size: 1.75rem; font-weight: 600; margin-bottom: 1.25rem; }
 
-/* ---------- Page frame ---------- */
+/* Page frame */
 .route-content { padding: 0 clamp(16px, 3vw, 40px) 3rem; }
 .route-content:has(> .storefront), .route-content:has(> #wishlist_page) { padding: 0; }
 .route-content:has(.sidebar-wrapper) { padding: 0; }
 .route-content:has(.sidebar-wrapper) > .row { margin: 0; }
 
-/* ---------- Header ---------- */
+/* Header */
 .announcement-bar { position: relative; display: flex; align-items: center; justify-content: center; min-height: 32px; background: var(--luna-dark); color: var(--luna-cream); text-align: center; font-size: .8rem; letter-spacing: .02em; padding: .4rem 3rem; animation: announcement-in .25s ease-out; }
 .announcement-dismiss { position: absolute; right: clamp(12px, 3vw, 40px); top: 50%; transform: translateY(-50%); border: 0; background: transparent; color: var(--luna-sand); padding: .25rem .4rem; cursor: pointer; }
 .announcement-dismiss:hover, .announcement-dismiss:focus { color: #fff; outline: 1px solid var(--luna-gold); outline-offset: 2px; }
@@ -63,7 +61,7 @@ nav.category-nav a { color: var(--luna-sand); font-size: .875rem; padding-bottom
 nav.category-nav a:hover { color: #fff; text-decoration: none; }
 nav.category-nav a.active { color: #fff; border-bottom-color: var(--luna-gold); }
 
-/* ---------- Home: hero + promotions (kept compact so products are close) ---------- */
+/* Home: hero + promotions */
 .store-hero { position: relative; height: clamp(320px, 48vh, 500px); overflow: hidden; background: var(--luna-ink); }
 .store-hero img { width: 100%; height: 100%; object-fit: cover; object-position: center 62%; display: block; }
 .store-hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(46, 31, 20, .82) 0%, rgba(46, 31, 20, .45) 42%, rgba(46, 31, 20, 0) 72%); }
@@ -89,7 +87,7 @@ nav.category-nav a.active { color: #fff; border-bottom-color: var(--luna-gold); 
 .promo-copy { position: absolute; left: 24px; bottom: 20px; right: 24px; text-shadow: 0 1px 8px rgba(46, 31, 20, .75); }
 .promo-copy strong { display: block; font-family: var(--serif); font-size: 1.75rem; font-weight: 600; line-height: 1.15; }
 
-/* ---------- Catalog ---------- */
+/* Catalog */
 .catalog-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--luna-line); }
 .catalog-toolbar-actions { display: flex; align-items: center; gap: 8px; }
 #sort { width: auto; }
@@ -115,7 +113,7 @@ nav.category-nav a.active { color: #fff; border-bottom-color: var(--luna-gold); 
 .filter-panel .form-control:focus { border-color: var(--luna-oak); box-shadow: 0 0 0 2px rgba(166, 124, 82, .18); }
 .filter-panel .btn-link:focus { box-shadow: 0 0 0 2px rgba(166, 124, 82, .22); }
 
-/* ---------- Login drawer ---------- */
+/* Login drawer */
 .login-drawer-layer { position: fixed; inset: 0; z-index: 1100; pointer-events: none; }
 .login-drawer-backdrop { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: rgba(25, 16, 10, .48); opacity: 1; pointer-events: auto; cursor: default; animation: drawer-fade-in .25s ease-out; }
 .login-drawer { position: absolute; top: 0; right: 0; display: flex; flex-direction: column; width: min(100%, 460px); height: 100%; overflow-y: auto; padding: clamp(2rem, 6vh, 3.5rem) clamp(1.35rem, 5vw, 3.25rem) 2rem; background: var(--luna-cream); box-shadow: -12px 0 32px rgba(25, 16, 10, .2); pointer-events: auto; animation: drawer-slide-in .3s cubic-bezier(.22, 1, .36, 1); }
@@ -134,7 +132,7 @@ nav.category-nav a.active { color: #fff; border-bottom-color: var(--luna-gold); 
 .login-drawer #login_button, .login-drawer #register_button { display: block; width: 100%; min-height: 3.15rem; border: 1px solid var(--luna); border-radius: 3px; background: var(--luna); color: #fff; font-weight: 600; letter-spacing: .05em; }
 .login-drawer #login_button:hover, .login-drawer #login_button:focus, .login-drawer #register_button:hover, .login-drawer #register_button:focus { border-color: var(--luna-dark); background: var(--luna-dark); color: #fff; box-shadow: 0 0 0 2px rgba(139, 90, 43, .2); }
 .login-drawer .auth-register a { color: var(--luna-dark); }
-/* Edit Profile drawer: same fields as the login drawer */
+/* Edit Profile drawer */
 .update-profile-drawer .form-group { margin-bottom: 1.15rem; }
 .update-profile-drawer .form-control { min-height: 2.8rem; border-color: var(--luna-line); background: #fff; }
 .update-profile-drawer .form-control:focus { border-color: var(--luna-oak); box-shadow: 0 0 0 2px rgba(166, 124, 82, .18); }
@@ -173,7 +171,7 @@ nav.category-nav a.active { color: #fff; border-bottom-color: var(--luna-gold); 
 .catalog-error { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
 .empty-state { padding: 3rem 1rem; text-align: center; color: var(--luna-muted); }
 
-/* ---------- Home: inspiration + brand ---------- */
+/* Home: inspiration + brand */
 .inspiration-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .inspiration-grid figure { margin: 0; }
 .inspiration-grid img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 4px; display: block; }
@@ -182,7 +180,7 @@ nav.category-nav a.active { color: #fff; border-bottom-color: var(--luna-gold); 
 .brand-story h2 { font-family: var(--serif); font-size: 2.1rem; font-weight: 600; }
 .brand-story p { max-width: 640px; margin: .75rem auto 0; color: var(--luna-muted); line-height: 1.7; }
 
-/* ---------- Footer ---------- */
+/* Footer */
 footer.site-footer { background: var(--luna-ink); color: var(--luna-sand); margin-top: 0; padding: 3rem 0 1.25rem; font-size: .875rem; }
 .footer-columns { display: grid; grid-template-columns: 1.3fr 1fr 1fr 1.3fr; gap: 32px; }
 .footer-brand .luna-logo { height: 130px; }
@@ -193,7 +191,7 @@ footer.site-footer { background: var(--luna-ink); color: var(--luna-sand); margi
 .site-footer p { margin-bottom: .3rem; }
 .footer-legal { text-align: center; color: var(--luna-oak); border-top: 1px solid rgba(255, 255, 255, .1); margin: 2rem 0 0; padding-top: 1rem; }
 
-/* ---------- Shared controls: Bootstrap blue becomes wood ---------- */
+/* Shared controls */
 .btn { border-radius: 3px; font-weight: 500; }
 .btn-primary, .badge-primary { background: var(--luna); border-color: var(--luna); color: #fff; }
 .btn-primary:hover, .btn-primary:focus, .btn-primary:not(:disabled):not(.disabled):active { background: var(--luna-dark); border-color: var(--luna-dark); color: #fff; }
@@ -208,7 +206,7 @@ footer.site-footer { background: var(--luna-ink); color: var(--luna-sand); margi
 .ratings, .rating-outer, .rating-inner::before { color: #C8922E; }
 .rating-outer::before { color: #C8922E; }
 
-/* ---------- Auth pages: the logo sits on a dark band ---------- */
+/* Auth pages */
 .wrapper { margin-top: 2.5rem; font-weight: 400; }
 .wrapper form { background: #fff; border-radius: 6px; overflow: hidden; }
 .auth-brand { display: flex; justify-content: center; background: var(--luna-ink); margin: -2.5rem -3rem 1.75rem; padding: 1rem; }
@@ -216,12 +214,12 @@ footer.site-footer { background: var(--luna-ink); color: var(--luna-sand); margi
 .auth-brand .luna-logo { height: 150px; }
 .wrapper h1 { font-size: 1.6rem; }
 
-/* ---------- Product details, cart, checkout, orders ---------- */
+/* Product details, cart, checkout, orders */
 .product-detail-price { display: flex; align-items: center; gap: 12px; }
 .product-detail-price .product-price { margin: 0; font-size: 1.5rem; }
 .product-detail-price .wishlist-btn { background: var(--luna-cream); }
 #product_id { font-size: .8rem; }
-/* ---------- Order pages: confirm, success, details, admin process ---------- */
+/* Order pages */
 .panel-card { padding: 1.15rem 1.25rem; border: 1px solid var(--luna-line); border-radius: 10px; background: var(--luna-cream); box-shadow: 0 8px 26px rgba(46, 31, 20, .08); }
 .panel-card h5 { margin-bottom: .85rem; font-size: 1.05rem; font-weight: 600; color: var(--luna-ink); }
 #order_summary { padding: 1.15rem 1.25rem; border-radius: 10px; }
@@ -245,7 +243,7 @@ footer.site-footer { background: var(--luna-ink); color: var(--luna-sand); margi
 .cart-item a { color: var(--luna-ink); }
 #delete_cart_item { color: #A1461F; }
 
-/* ---------- Admin ---------- */
+/* Admin */
 .card-font-size { font-weight: 500; }
 .dashboard-chart-card { border-radius: 4px; }
 .route-content:has(.sidebar-wrapper) h1 { font-size: 1.75rem; }
@@ -327,7 +325,7 @@ footer.site-footer { background: var(--luna-ink); color: var(--luna-sand); margi
 .date-range-field { display: flex; align-items: center; gap: .45rem; margin: 0; white-space: nowrap; color: var(--luna-muted); font-size: .8rem; }
 .date-range-field .form-control { width: 166px; }
 
-/* ---------- Tablet + phone ---------- */
+/* Tablet + phone */
 @media (max-width: 991.98px) {
   .inspiration-grid { grid-template-columns: repeat(2, 1fr); }
   .footer-columns { grid-template-columns: repeat(2, 1fr); }
@@ -365,7 +363,7 @@ footer.site-footer { background: var(--luna-ink); color: var(--luna-sand); margi
   .auth-brand { margin: -1.5rem -1.5rem 1.25rem; }
 }
 
-/* ---------- Refinements ---------- */
+/* Refinements */
 .store-hero img { object-position: center 55%; }
 .promo-tile::after { content: ''; position: absolute; inset: 0; background: linear-gradient(0deg, rgba(46, 31, 20, .85) 0%, rgba(46, 31, 20, .35) 55%, rgba(46, 31, 20, 0) 100%); }
 .promo-tile img { opacity: 1; }

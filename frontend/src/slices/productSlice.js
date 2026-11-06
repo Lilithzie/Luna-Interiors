@@ -3,7 +3,7 @@ import axios from 'axios'
 import { API } from '../Components/Utils/helpers'
 import { apiThunk } from './apiThunk'
 
-// MP2 - filters: { keyword, page, price:[min,max], category, ratings, reviews, sort, append }
+// MP2 filters
 export const getProducts = apiThunk('products/list', async ({ page = 1, keyword = '', price, category = '', ratings = 0, reviews = 0, sort = 'newest' } = {}) => {
     const params = new URLSearchParams()
     params.set('page', page)
@@ -39,12 +39,11 @@ const productsSlice = createSlice({
                 if (!action.meta.arg?.append) state.products = []
             })
             .addCase(getProducts.fulfilled, (state, action) => {
-                // infinite scroll: only the newest request may update the list. If the shopper changes a
-                // filter / search while an older page is still loading, that older response is ignored.
+                // ignore stale responses
                 if (action.meta.requestId !== state.latestRequest) return
                 const { products, productsCount, resPerPage, filteredProductsCount, categories } = action.payload
                 state.loading = false
-                // add the next page, skipping anything already shown (the list can shift while scrolling)
+                // append next page, skip duplicates
                 state.products = action.meta.arg?.append
                     ? [...state.products, ...products.filter(p => !state.products.some(old => old._id === p._id))]
                     : products

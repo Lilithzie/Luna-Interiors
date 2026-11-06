@@ -42,83 +42,9 @@ function App() {
   const dispatch = useDispatch()
   const [ready, setReady] = useState(false)
   useEffect(() => {
-    // restore the login session (cookie) after a page refresh
+    // restore session from cookie
     dispatch(loadUser()).finally(() => setReady(true))
   }, [dispatch])
-
-  // const [state, setState] = useState({
-  //   cartItems: localStorage.getItem('cartItems')
-  //     ? JSON.parse(localStorage.getItem('cartItems'))
-  //     : [],
-
-  //   shippingInfo: localStorage.getItem('shippingInfo')
-  //     ? JSON.parse(localStorage.getItem('shippingInfo'))
-  //     : {},
-  // })
-
-  // const addItemToCart = async (id, quantity) => {
-  //   console.log(id, quantity)
-  //   try {
-  //     const { data } = await axios.get(`${import.meta.env.VITE_API}/product/${id}`)
-  //     console.log(data)
-
-  //     const item = {
-  //       product: data.product._id,
-  //       name: data.product.name,
-  //       price: data.product.price,
-  //       image: data.product.images[0].url ? data.product.images[0].url : '',
-  //       stock: data.product.stock,
-  //       quantity: quantity
-  //     }
-  //     console.log(item)
-
-  //     const isItemExist = state.cartItems.find(i => i.product === item.product)
-
-
-  //     if (isItemExist) {
-  //       setState({
-  //         ...state,
-  //         cartItems: state.cartItems.map(i => i.product === isItemExist.product ? item : i)
-  //       })
-  //     }
-  //     else {
-  //       setState({
-  //         ...state,
-  //         cartItems: [...state.cartItems, item]
-  //       })
-  //     }
-
-  //     toast.success('Item Added to Cart', {
-  //       position: 'bottom-right'
-  //     })
-
-
-
-  //   } catch (error) {
-  //     toast.error(error, {
-  //       position: 'top-left'
-  //     });
-
-  //   }
-
-  // }
-
-  // const removeItemFromCart = async (id) => {
-  //   setState({
-  //     ...state,
-  //     cartItems: state.cartItems.filter(i => i.product !== id)
-  //   })
-  //   localStorage.setItem('cartItems', JSON.stringify(state.cartItems))
-  // }
-
-  // const saveShippingInfo = async (data) => {
-  //   setState({
-  //     ...state,
-  //     shippingInfo: data
-  //   })
-  //   localStorage.setItem('shippingInfo', JSON.stringify(data))
-  // }
-
 
   if (!ready) return <div className="loader"> </div>
 
@@ -139,11 +65,9 @@ function AppRoutes() {
   return (
     <>
         <div className="site-main">
-        {/* <Header cartItems={state.cartItems} /> */}
         <Header />
         <main className="route-content"><Routes location={backgroundLocation || location}>
           <Route path="/" element={<Home />} exact="true" />
-          {/* <Route path="/product/:id" element={<ProductDetails cartItems={state.cartItems} addItemToCart={addItemToCart} />} exact="true" /> */}
           <Route path="/product/:id" element={<ProductDetails />} exact="true" />
 
           <Route path="/search/:keyword" element={<Home />} exact="true" />
@@ -156,38 +80,23 @@ function AppRoutes() {
           <Route path="/me/update" element={<ProtectedRoute><><Home /><UpdateProfile /></></ProtectedRoute>} exact="true"
           />
           <Route path="/password/update" element={<ProtectedRoute><UpdatePassword /></ProtectedRoute>} />
-          {/* <Route path="/cart" element={<Cart cartItems={state.cartItems} addItemToCart={addItemToCart} removeItemFromCart={removeItemFromCart} />} exact="true" />
-          <Route path="/shipping" element={<Shipping shipping={state.shippingInfo} saveShippingInfo={saveShippingInfo} />} />
-          <Route path="/confirm" element={<ConfirmOrder cartItems={state.cartItems} shippingInfo={state.shippingInfo} />} />
-          <Route path="/payment" element={<Payment cartItems={state.cartItems} shippingInfo={state.shippingInfo} />} /> */}
 
           <Route path="/cart" element={<ProtectedRoute customerOnly={true}><Cart /></ProtectedRoute>} />
           <Route path="/shipping" element={<ProtectedRoute customerOnly={true}><Shipping /></ProtectedRoute>} />
           <Route path="/confirm" element={<ProtectedRoute customerOnly={true}><ConfirmOrder /></ProtectedRoute>} />
           <Route path="/payment" element={<ProtectedRoute customerOnly={true}><Payment /></ProtectedRoute>} />
 
-
           <Route path="/success" element={<ProtectedRoute customerOnly={true}><OrderSuccess /></ProtectedRoute>} />
           <Route path="/orders/me" element={<ProtectedRoute customerOnly={true}><ListOrders /></ProtectedRoute>} />
           <Route path="/order/:id" element={<ProtectedRoute><OrderDetails /></ProtectedRoute>} />
 
-          {/* <Route path="/dashboard" element={<Dashboard />} /> */}
-          {/* <Route path="/admin/products" element={<ProductsList />} /> */}
           <Route path="/admin/product" element={<ProtectedRoute isAdmin={true}><NewProduct /></ProtectedRoute>} />
           <Route
             path="/admin/product/:id"
             element={<ProtectedRoute isAdmin={true}><UpdateProduct /></ProtectedRoute>} />
-          {/* <Route
-            path="/admin/orders"
-            element={<OrdersList />}
-
-          /> */}
           <Route
             path="/admin/order/:id"
             element={<ProtectedRoute isAdmin={true}><ProcessOrder /></ProtectedRoute>} />
-          {/* <Route
-            path="/admin/users"
-            element={<UsersList />} /> */}
           <Route path="/admin/user/:id" element={<ProtectedRoute isAdmin={true}><UpdateUser /></ProtectedRoute>} />
 
           <Route

@@ -15,7 +15,7 @@ export const Hero = () => (
     </section>
 )
 
-// Only categories that have products, each with a real product photo from the database
+// categories with products
 export const CategoryGrid = () => {
     const { categories } = useSelector(state => state.catalog)
     if (!categories.length) return null
@@ -41,7 +41,7 @@ const PROMOS = [
     { category: 'Storage', title: 'A Place for Everything', text: 'Storage that keeps a room calm.', image: 'shelves' },
 ]
 
-// A promo is shown only while its category has products to link to
+// promo only if its category has products
 export const PromoBanners = () => {
     const { categories } = useSelector(state => state.catalog)
     const promos = PROMOS.filter(promo => categories.some(c => c.category === promo.category))

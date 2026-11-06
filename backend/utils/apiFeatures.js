@@ -14,11 +14,7 @@ class APIFeatures {
         return this;
     }
 
-    // MP2 filters:
-    //   price[gte] / price[lte]          -> price filter
-    //   category                         -> category filter (comma separated allowed)
-    //   ratings[gte]                     -> minimum average rating
-    //   numOfReviews[gte]                -> minimum number of reviews (review filter)
+    // MP2 filters: price, category, ratings, reviews
     filter() {
         const q = this.queryStr;
         const num = (v) => (v === undefined || v === '' || isNaN(Number(v)) ? null : Number(v));
@@ -51,7 +47,7 @@ class APIFeatures {
     }
 
     sort() {
-        // _id breaks ties: without it, products with equal values can repeat or go missing between pages
+        // _id breaks sort ties
         const sorts = {
             newest: { createdAt: -1, _id: -1 },
             'price-asc': { price: 1, _id: -1 },

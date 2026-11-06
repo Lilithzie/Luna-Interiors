@@ -6,7 +6,7 @@ const { maskBadWords } = require('../utils/profanity');
 
 const RES_PER_PAGE = 8;
 
-// Recompute the cached rating summary from the embedded reviews.
+// recompute rating summary
 const recalcRatings = (product) => {
     product.numOfReviews = product.reviews.length;
     product.ratings = product.reviews.length
@@ -19,16 +19,14 @@ const pickFields = (body) => {
     ['name', 'price', 'description', 'category', 'seller', 'stock'].forEach(k => {
         if (body[k] !== undefined) fields[k] = body[k];
     });
-    // optional "was" price: leaving the form field blank removes the discount
+    // blank compare price removes discount
     if (body.compareAtPrice !== undefined) fields.compareAtPrice = body.compareAtPrice === '' ? null : body.compareAtPrice;
     return fields;
 }
 
-/* ------------------------------------------------------------------ */
-/* MP1 - Product CRUD                                                  */
-/* ------------------------------------------------------------------ */
+// MP1 - product CRUD
 
-// POST /admin/product/new   (multipart/form-data, field "images" x many)
+// POST /admin/product/new
 exports.newProduct = async (req, res) => {
     const images = await uploadImages(req.files, req);
     if (!images.length) {
@@ -43,13 +41,13 @@ exports.getSingleProduct = async (req, res) => {
     if (!product) {
         return res.status(404).json({ success: false, message: 'Product not found' })
     }
-    // mask bad words in review comments (also covers reviews saved before the filter existed)
+    // mask bad words in reviews
     const data = product.toObject ? product.toObject() : product;
     data.reviews = (data.reviews || []).map(r => ({ ...r, comment: maskBadWords(r.comment).text }));
     return res.status(200).json({ success: true, product: data })
 }
 
-// PUT /admin/product/:id   (multipart: new "images" files + "keepImages" JSON array of public_ids)
+// PUT /admin/product/:id
 exports.updateProduct = async (req, res) => {
     const product = await Product.findById(req.params.id);
     if (!product) {
@@ -85,7 +83,7 @@ exports.deleteProduct = async (req, res) => {
     return res.status(200).json({ success: true, message: 'Product deleted' })
 }
 
-// DELETE /admin/products   body: { ids: [..] }   (bulk delete from datatable checkboxes)
+// DELETE /admin/products (bulk)
 exports.bulkDeleteProducts = async (req, res) => {
     const ids = Array.isArray(req.body.ids) ? req.body.ids : [];
     if (!ids.length) {
@@ -102,15 +100,13 @@ exports.getAdminProducts = async (req, res) => {
     return res.status(200).json({ success: true, products })
 }
 
-/* ------------------------------------------------------------------ */
-/* MP2 - Shop listing with filters                                     */
-/* ------------------------------------------------------------------ */
+// MP2 - shop listing
 
 exports.getProducts = async (req, res) => {
     const productsCount = await Product.countDocuments();
 
     const features = new APIFeatures(Product.find(), req.query).search().filter();
-    // count AFTER filters so pagination matches what the shopper sees
+    // count after filters, before paging
     const filteredProductsCount = await Product.countDocuments(features.conditions);
 
     features.sort().pagination(RES_PER_PAGE);
@@ -126,7 +122,7 @@ exports.getProducts = async (req, res) => {
     })
 }
 
-// GET /products/categories  -> categories that have products, each with a count and a top-rated photo
+// GET /products/categories
 exports.getCategorySummary = async (req, res) => {
     const categories = await Product.aggregate([
         { $sort: { ratings: -1, numOfReviews: -1, _id: -1 } },
@@ -137,15 +133,13 @@ exports.getCategorySummary = async (req, res) => {
     return res.status(200).json({ success: true, categories })
 }
 
-/* ------------------------------------------------------------------ */
-/* MP3 - Reviews & ratings                                             */
-/* ------------------------------------------------------------------ */
+// MP3 - reviews
 
-// A user has "availed" a product once an order containing it has been delivered.
+// availed = delivered order
 const hasAvailed = (userId, productId) =>
     Order.exists({ user: userId, orderStatus: 'Delivered', 'orderItems.product': productId });
 
-// GET /review/eligibility?productId=...
+// GET /review/eligibility
 exports.reviewEligibility = async (req, res) => {
     const product = await Product.findById(req.query.productId);
     if (!product) return res.status(404).json({ success: false, message: 'Product not found' })
@@ -155,7 +149,7 @@ exports.reviewEligibility = async (req, res) => {
     return res.status(200).json({ success: true, canReview: availed, review: myReview })
 }
 
-// PUT /review   -> create the user's review, or update it if it already exists
+// PUT /review (create or update)
 exports.createProductReview = async (req, res) => {
     const { rating, comment, productId } = req.body;
     const value = Number(rating);
@@ -175,7 +169,7 @@ exports.createProductReview = async (req, res) => {
         return res.status(403).json({ success: false, message: 'You can review this product once your order has been delivered' })
     }
 
-    // bad-words: the comment is saved as written; it is masked whenever it is sent to the website
+    // save comment unmasked
     const originalComment = String(comment).trim();
     const { masked } = maskBadWords(originalComment);
 
@@ -199,8 +193,7 @@ exports.createProductReview = async (req, res) => {
     return res.status(200).json({ success: true, updated: !!existing, masked })
 }
 
-// GET /reviews?id=<productId>
-// Comments are masked again on the way out so reviews saved before the filter existed are clean too.
+// GET /reviews?id=
 exports.getProductReviews = async (req, res) => {
     const product = await Product.findById(req.query.id);
     if (!product) return res.status(404).json({ success: false, message: 'Product not found' })
@@ -211,7 +204,7 @@ exports.getProductReviews = async (req, res) => {
     res.status(200).json({ success: true, reviews })
 }
 
-// GET /admin/reviews  -> every review of every product (admin datatable)
+// GET /admin/reviews
 exports.getAllReviews = async (req, res) => {
     const products = await Product.find({ 'reviews.0': { $exists: true } }).select('name reviews');
     const reviews = [];
@@ -230,7 +223,7 @@ exports.getAllReviews = async (req, res) => {
     res.status(200).json({ success: true, reviews })
 }
 
-// DELETE /reviews?productId=..&id=<reviewId>   (admin only)
+// DELETE /reviews (admin)
 exports.deleteReview = async (req, res) => {
     const product = await Product.findById(req.query.productId);
     if (!product) return res.status(404).json({ success: false, message: 'Product not found' })
@@ -246,9 +239,7 @@ exports.deleteReview = async (req, res) => {
     return res.status(200).json({ success: true })
 }
 
-/* ------------------------------------------------------------------ */
-/* Dashboard (unchanged behaviour from the reference system)           */
-/* ------------------------------------------------------------------ */
+// Dashboard
 
 exports.productSales = async (req, res) => {
     const totalSales = await Order.aggregate([

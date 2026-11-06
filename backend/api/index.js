@@ -1,2 +1,2 @@
-// Vercel invokes this function directly; server.js remains the local HTTP entry point.
+// Vercel serverless entry
 module.exports = require('../app');

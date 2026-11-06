@@ -3,8 +3,7 @@ import axios from 'axios'
 import { API } from '../Components/Utils/helpers'
 import { apiThunk } from './apiThunk'
 
-// Only ids are saved (store.js keeps them in localStorage, like the cart); the wishlist page
-// loads live product data, so prices and stock are never stale.
+// ids only; live data on the page
 const savedIds = () => {
     const value = localStorage.getItem('wishlist')
     return value ? JSON.parse(value) : []

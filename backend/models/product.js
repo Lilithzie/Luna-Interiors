@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const { maskBadWords } = require('../utils/profanity')
 
-// Luna Interiors furniture categories (shared with the frontend filter + forms)
+// furniture categories
 const CATEGORIES = [
     'Living Room',
     'Bedroom',
@@ -26,8 +26,7 @@ const productSchema = new mongoose.Schema({
         min: [0, 'Price cannot be negative'],
         default: 0.0
     },
-    // optional regular price, shown struck through when it is higher than `price`.
-    // Display only: orders are always charged `price`.
+    // optional compare-at price (display only)
     compareAtPrice: {
         type: Number,
         min: [0, 'Compare-at price cannot be negative'],
@@ -115,7 +114,7 @@ const productSchema = new mongoose.Schema({
     }
 })
 
-// Review comments are stored as written; every product sent to the website has its bad words masked
+// mask bad words on output
 productSchema.set('toJSON', {
     transform: (doc, ret) => {
         if (Array.isArray(ret.reviews)) {

@@ -44,12 +44,12 @@ const ProcessOrder = () => {
         const data = result.payload
         setSelectedStatus(null)
         successMsg(`Order status updated to ${data.order.orderStatus}`);
-        // the server e-mails the customer (products, subtotal, grand total + PDF receipt)
+        // server emails the customer
         if (data.emailSent) toast.info(`Email with the PDF receipt sent to ${data.emailTo}`, { position: 'bottom-center' })
         else toast.warn('Status saved, but the email could not be sent. Check the SMTP settings in the backend .env.', { position: 'bottom-center' })
     }
 
-    // the status can only move forward, so earlier steps are not offered
+    // forward statuses only
     const currentIdx = STATUSES.indexOf(orderStatus)
     const delivered = orderStatus === 'Delivered'
     return (

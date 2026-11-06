@@ -18,12 +18,10 @@ export default function ProductSalesChart() {
         "#B5651D",
         "#9C7A5B",
     ]
-    // console.log(data)
 
     useEffect(() => {
         dispatch(getProductSales())
     }, [dispatch])
-
 
     return (
         <div className="card dashboard-chart-card shadow-sm border-0 p-3">
@@ -44,7 +42,6 @@ export default function ProductSalesChart() {
             </ResponsiveContainer>
             </div>
         </div>
-
 
     );
 }

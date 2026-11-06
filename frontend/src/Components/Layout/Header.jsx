@@ -41,7 +41,7 @@ export const Header = () => {
         try {
             sessionStorage.setItem('luna-announcement-dismissed', 'true')
         } catch {
-            // Session storage may be unavailable in privacy-restricted browsers.
+            // sessionStorage may be blocked
         }
     }
 

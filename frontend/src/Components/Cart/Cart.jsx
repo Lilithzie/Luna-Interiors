@@ -5,7 +5,6 @@ import { useDispatch, useSelector } from 'react-redux'
 import { addItemToCart, removeItemFromCart, setSelectedCartItems } from '../../slices/cartSlice'
 import { toast } from 'react-toastify'
 
-
 const Cart = () => {
     const dispatch = useDispatch();
     const { cartItems, selectedCartItems } = useSelector(state => state.cart)
@@ -22,7 +21,6 @@ const Cart = () => {
         document.addEventListener('keydown', handleEscape)
         return () => document.removeEventListener('keydown', handleEscape)
     }, [closeDrawer])
-
 
     const increaseQty = (id, quantity, stock) => {
         const newQty = quantity + 1;
@@ -64,10 +62,6 @@ const Cart = () => {
         }
         navigate(isAuthenticated ? '/shipping' : '/login?redirect=shipping')
     }
-    // localStorage.setItem('cartItems', JSON.stringify(cartItems))
-    // useEffect(() => {
-    //     localStorage.setItem('cartItems', JSON.stringify(cartItems));
-    // }, [cartItems]);
     return (
         <div className="cart-drawer-layer" role="dialog" aria-modal="true" aria-labelledby="cart_drawer_title">
             <MetaData title={'Your Cart'} />

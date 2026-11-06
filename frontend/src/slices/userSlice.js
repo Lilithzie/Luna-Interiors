@@ -3,7 +3,7 @@ import axios from 'axios'
 import { API } from '../Components/Utils/helpers'
 import { apiThunk } from './apiThunk'
 
-// The logged-in user's own account. The user object itself lives in the auth slice.
+// own account
 export const updateProfile = apiThunk('user/updateProfile', async (userData) => {
     const { data } = await axios.put(`${API}/me/update`, userData)
     return data.user

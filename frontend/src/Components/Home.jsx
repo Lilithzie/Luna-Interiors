@@ -20,7 +20,7 @@ const Home = () => {
     const [priceDraft, setPriceDraft] = useState(defaultFilters.price);   // slider value while dragging
     const [filtersOpen, setFiltersOpen] = useState(false);                // phones: panel is collapsed
     const { keyword } = useParams();
-    // the category lives in the URL so the header links, category tiles and filter panel stay in step
+    // category lives in the URL
     const [searchParams, setSearchParams] = useSearchParams();
     const category = searchParams.get('category') || '';
     const location = useLocation();
@@ -28,10 +28,8 @@ const Home = () => {
     const { loading, products, error, filteredProductsCount, resPerPage } = useSelector(state => state.products);
     const total = filteredProductsCount || 0;
 
-    // ---- Quiz 3: infinite scroll ----
-    // The page number belongs to ONE search/filter combination (queryKey). When the keyword or any
-    // filter changes the key changes, so we are automatically back on page 1 - no stale page 2/3 request
-    // can ever be appended to a different result set.
+    // Quiz 3: infinite scroll
+    // page resets when search/filters change
     const queryKey = JSON.stringify([keyword || '', category, filters]);
     const [pageState, setPageState] = useState({ key: queryKey, page: 1 });
     const currentPage = pageState.key === queryKey ? pageState.page : 1;
@@ -63,15 +61,15 @@ const Home = () => {
 
     useEffect(() => { load() }, [load]);
 
-    // a search or category replaces the promotions, so start at the top of the results.
-    // "/#catalog" (the drawers' Browse Furniture buttons) jumps straight to the product list instead.
+    // new search: scroll to top
+    // /#catalog: scroll to products
     useEffect(() => {
         if (location.hash === '#catalog') document.getElementById('catalog')?.scrollIntoView()
         else window.scrollTo(0, 0)
     }, [keyword, category, location.hash, location.key]);
 
     const filtersActive = !!category || JSON.stringify(filters) !== JSON.stringify(defaultFilters);
-    // the second check stops the requests if the catalog shrinks while scrolling: pages run out before `total`
+    // stop if the catalog shrinks
     const hasMore = !error && products.length < total && (currentPage - 1) * (resPerPage || 1) < total;
     const showPromotions = !keyword && !category;
 
@@ -107,7 +105,7 @@ const Home = () => {
                 </div>
 
                 <div className="row">
-                    {/* ---------------- MP2 FILTERS ---------------- */}
+                    {/* MP2 filters */}
                     <div className="col-12 col-md-4 col-lg-3">
                         <div className={`filter-panel ${filtersOpen ? 'open' : ''}`} id="filters">
                         <div className="filter-panel-header">
@@ -191,9 +189,9 @@ const Home = () => {
                         </div>
                     </div>
 
-                    {/* ---------------- PRODUCT GRID ---------------- */}
+                    {/* Product grid */}
                     <div className="col-12 col-md-8 col-lg-9">
-                        {/* full-page loader only for the first load / a new search; while loading MORE the list stays put */}
+                        {/* full loader on first load only */}
                         {loading && products.length === 0 ? <Loader /> : (
                             <section id="products">
                                 <div className="row">

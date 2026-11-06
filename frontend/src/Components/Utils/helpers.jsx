@@ -24,7 +24,7 @@ export const NO_IMAGE = '/images/no-image.svg';
 
 export const peso = (n) => `₱${Number(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 
-// percent off when the product has a higher compare-at price, otherwise 0
+// discount percent
 export const discountPercent = (product) =>
     product && product.compareAtPrice > product.price
         ? Math.round((1 - product.price / product.compareAtPrice) * 100)
@@ -35,5 +35,5 @@ export const firstImage = (product) =>
 
 export const API = import.meta.env.VITE_API;
 
-// the message to show the user for a failed API call
+// API error message
 export const errorMessage = (error) => error.response?.data?.message || error.response?.data?.error || error.message;

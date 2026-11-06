@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from 'react-redux'
 import { toggleWishlist } from '../../slices/wishlistSlice'
 
-// Admin accounts do not shop, so they get no heart
+// no heart for admins
 const WishlistButton = ({ productId, className = '' }) => {
     const dispatch = useDispatch()
     const saved = useSelector(state => state.wishlist.ids.includes(productId))

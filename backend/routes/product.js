@@ -22,12 +22,12 @@ const { isAuthenticatedUser, authorizeRoles } = require('../middleware/auth')
 
 const admin = [isAuthenticatedUser, authorizeRoles('admin')];
 
-// ---- shop (public)
+// shop (public)
 router.get('/products', getProducts)
 router.get('/products/categories', getCategorySummary)
 router.get('/product/:id', getSingleProduct)
 
-// ---- MP1: admin product CRUD (+ multiple photos, bulk delete)
+// MP1: admin product CRUD
 router.get('/admin/products', ...admin, getAdminProducts)
 router.post('/admin/product/new', ...admin, upload.array('images', 10), newProduct);
 router.delete('/admin/products', ...admin, bulkDeleteProducts);
@@ -35,7 +35,7 @@ router.route('/admin/product/:id')
     .put(...admin, upload.array('images', 10), updateProduct)
     .delete(...admin, deleteProduct);
 
-// ---- MP3: reviews & ratings
+// MP3: reviews
 router.put('/review', isAuthenticatedUser, createProductReview)
 router.get('/review/eligibility', isAuthenticatedUser, reviewEligibility)
 router.get('/reviews', getProductReviews)

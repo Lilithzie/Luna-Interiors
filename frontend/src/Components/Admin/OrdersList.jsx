@@ -104,7 +104,7 @@ const OrdersList = () => {
         payment: order.paymentMethod || 'Card',
         status: order.orderStatus,
     }));
-    // Quiz 3: infinite scroll - rows are revealed 10 at a time as you scroll down
+    // Quiz 3: infinite scroll
     const inf = useInfiniteRows(allRows, 10)
 
     return (

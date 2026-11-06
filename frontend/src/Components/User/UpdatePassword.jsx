@@ -3,14 +3,9 @@ import { useNavigate } from "react-router-dom";
 import MetaData from '../Layout/MetaData';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-// import axios from 'axios';
-// import { getToken } from '../Utils/helpers'
 import { useDispatch, useSelector } from 'react-redux'
 import { updatePassword, resetUserUpdate, clearUserError } from '../../slices/userSlice'
 import { validatePassword } from '../Utils/validation'
-
-
-
 
 const UpdatePassword = () => {
     const dispatch = useDispatch()
@@ -20,47 +15,7 @@ const UpdatePassword = () => {
     const [password, setPassword] = useState('')
     const [fieldErrors, setFieldErrors] = useState({})
     const [attempted, setAttempted] = useState(false)
-    // const [error, setError] = useState('')
-    // const [isUpdated, setIsUpdated] = useState(false)
-    // const [loading, setLoading] = useState(false)
     let navigate = useNavigate();
-
-    // const updatePassword = async (formData) => {
-    //     console.log(formData)
-    //     try {
-    //         const config = {
-    //             headers: {
-    //                 'Content-Type': 'application/json',
-    //                 'Authorization': `Bearer ${getToken()}`
-
-    //             }
-    //         }
-
-    //         const { data } = await axios.put(`${import.meta.env.VITE_API}/password/update`, formData, config)
-    //         setIsUpdated(data.success)
-    //         setLoading(false)
-    //         toast.success('password updated', {
-    //             position: 'bottom-right'
-    //         });
-    //         navigate('/me')
-
-
-    //     } catch (error) {
-    //         setError(error.response.data.message)
-
-    //     }
-    // }
-
-    // useEffect(() => {
-
-    //     if (error) {
-    //         toast.error(error, {
-    //             position: 'bottom-right'
-    //         });
-    //     }
-
-
-    // }, [error,])
 
     useEffect(() => {
         if (error) {
@@ -73,8 +28,6 @@ const UpdatePassword = () => {
             dispatch(resetUserUpdate())
         }
     }, [dispatch, error, navigate, isUpdated])
-
-
 
     const submitHandler = (e) => {
         e.preventDefault();

@@ -126,7 +126,7 @@ const ProductDetails = () => {
                         <hr />
                         <p id="product_seller">Sold by: <strong>{product.seller}</strong></p>
 
-                        {/* ---------------- MP3: write / update my review ---------------- */}
+                        {/* MP3: write / update review */}
                         <div id="review_section" className="mt-4">
                             {!isAuthenticated && (
                                 <div className="alert alert-secondary">

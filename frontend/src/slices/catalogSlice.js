@@ -3,7 +3,7 @@ import axios from 'axios'
 import { API } from '../Components/Utils/helpers'
 import { apiThunk } from './apiThunk'
 
-// Storefront navigation: categories that actually have products, with a real product photo
+// categories with products
 export const getCategorySummary = apiThunk('catalog/categories', async () => {
     const { data } = await axios.get(`${API}/products/categories`)
     return data.categories

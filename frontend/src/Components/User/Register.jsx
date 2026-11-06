@@ -1,13 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import MetaData from '../Layout/MetaData'
-// import axios from 'axios'
 import { useDispatch, useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 import { register, clearAuthError } from '../../slices/authSlice'
 import { isValidEmail, validatePassword } from '../Utils/validation'
 import AuthBrand from '../Layout/AuthBrand'
-
 
 const Register = () => {
     const dispatch = useDispatch()
@@ -18,12 +16,6 @@ const Register = () => {
         password: '',
     })
 
-    // const [user, setUser] = useState({
-    //     name: '',
-    //     email: '',
-    //     password: '',
-    // })
-
     const { name, email, password } = user;
 
     const [avatar, setAvatar] = useState('')
@@ -31,13 +23,9 @@ const Register = () => {
     const [errors, setErrors] = useState({})
     const [attempted, setAttempted] = useState(false)
 
-    // const [error, setError] = useState('')
-    // const [loading, setLoading] = useState(true)
-
-
     let navigate = useNavigate()
     const location = useLocation()
-    // side drawer like Login: opened over the current page when it was opened from a link
+    // side drawer
     const closeDrawer = useCallback(() => navigate(location.state?.backgroundLocation ? -1 : '/'), [location, navigate])
 
     useEffect(() => {
@@ -113,33 +101,6 @@ const Register = () => {
             if (attempted) setErrors(current => ({ ...current, [field]: '' }))
         }
     }
-
-    // const register = async (userData) => {
-    //     console.log(userData)
-    //     try {
-    //         const config = {
-    //             headers: {
-    //                 'Content-Type': 'multipart/form-data'
-    //             }
-    //         }
-
-    //         const { data } = await axios.post(`http://localhost:4001/api/v1/register`, userData, config)
-    //         console.log(data.user)
-
-    //         setLoading(false)
-    //         setUser(data.user)
-    //         navigate('/')
-
-    //     } catch (error) {
-    //         setLoading(false)
-    //         setUser(null)
-    //         setError(error.response.data.message)
-    //         console.log(error.response.data.message)
-    //     }
-    // }
-
-
-
 
     return (
         <>

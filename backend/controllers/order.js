@@ -3,18 +3,15 @@ const { ORDER_STATUSES } = require('../models/order');
 const Product = require('../models/product');
 const { sendOrderEmail, buildReceiptPdf, transactionNo } = require('../utils/orderEmail');
 
-
-
-// Create a new order   =>  /api/v1/order/new
 const SHIPPING_FREE_OVER = 5000;
 const SHIPPING_FEE = 250;
 const TAX_RATE = 0.05;
 const PAYMENT_METHODS = ['Cash on Delivery', 'Card'];
-// MongoDB stores UTC; the sales charts report Philippine calendar days and months
+// Manila time for sales charts
 const SHOP_TIMEZONE = 'Asia/Manila';
 const SHOP_UTC_OFFSET = '+08:00';
 
-// POST /order/new   (customers only - admins manage the shop, they do not buy)
+// POST /order/new (customers only)
 exports.newOrder = async (req, res) => {
     const { orderItems, shippingInfo, paymentMethod, paymentInfo } = req.body;
 
@@ -28,7 +25,7 @@ exports.newOrder = async (req, res) => {
         return res.status(400).json({ success: false, message: 'Please provide a complete and valid shipping address, phone number, postal code, and country' })
     }
 
-    // Never trust prices from the browser: rebuild the items from the database
+    // rebuild items from database prices
     const items = [];
     for (const line of orderItems) {
         const qty = Number(line.quantity);
@@ -66,7 +63,7 @@ exports.newOrder = async (req, res) => {
         shippingPrice,
         totalPrice,
         paymentMethod,
-        // Card is simulated (no real gateway): only the last 4 digits are ever kept
+        // simulated card: last 4 digits only
         paymentInfo: isCard
             ? { id: `card_${Date.now()}_${(paymentInfo && paymentInfo.last4) || '0000'}`, status: 'succeeded' }
             : { id: `cod_${Date.now()}`, status: 'Pending (Cash on Delivery)' },
@@ -76,14 +73,13 @@ exports.newOrder = async (req, res) => {
         user: req.user._id
     })
 
-    // reserve the stock as soon as the order is placed
+    // reserve stock
     for (const i of items) {
         i._doc.stock -= i.quantity;
         await i._doc.save({ validateBeforeSave: false });
     }
 
-    // e-mail the customer a confirmation (products, subtotal, grand total + PDF receipt).
-    // If the mail server is down the order is still placed - the result is reported as emailSent.
+    // email confirmation + PDF receipt
     const mail = await sendOrderEmail(order, req.user, 'placed');
 
     res.status(201).json({ success: true, order, emailSent: mail.sent, emailTo: mail.to })
@@ -91,7 +87,6 @@ exports.newOrder = async (req, res) => {
 
 exports.myOrders = async (req, res, next) => {
     const orders = await Order.find({ user: req.user.id })
-    // console.log(req.user)
     res.status(200).json({
         success: true,
         orders
@@ -103,7 +98,7 @@ exports.getSingleOrder = async (req, res) => {
     if (!order) {
         return res.status(404).json({ success: false, message: 'No Order found with this ID' })
     }
-    // a customer can only open their own order, admins can open any
+    // owner or admin only
     const ownerId = order.user && order.user._id ? order.user._id.toString() : String(order.user);
     if (req.user.role !== 'admin' && ownerId !== req.user._id.toString()) {
         return res.status(403).json({ success: false, message: 'You are not allowed to view this order' })
@@ -113,7 +108,6 @@ exports.getSingleOrder = async (req, res) => {
 
 exports.allOrders = async (req, res, next) => {
     const orders = await Order.find()
-    // console.log(orders)
     let totalAmount = 0;
 
     orders.forEach(order => {
@@ -138,8 +132,7 @@ exports.deleteOrder = async (req, res, next) => {
         })
 
     }
-    // undelivered items go back on the shelf; delivered ones have left the inventory.
-    // Runs after the delete so a repeated request cannot restore the stock twice.
+    // restock undelivered items
     if (order.orderStatus !== 'Delivered') {
         for (const item of order.orderItems) {
             await Product.updateOne({ _id: item.product }, { $inc: { stock: item.quantity } })
@@ -152,8 +145,7 @@ exports.deleteOrder = async (req, res, next) => {
 
 const STATUSES = ORDER_STATUSES;
 
-// PUT /admin/order/:id   body: { status }
-// The status can only move forward: Processing -> Shipped -> Delivered.
+// PUT /admin/order/:id (status only moves forward)
 exports.updateOrder = async (req, res) => {
     const order = await Order.findById(req.params.id).populate('user', 'name email')
     if (!order) {
@@ -176,17 +168,17 @@ exports.updateOrder = async (req, res) => {
     }
 
     order.orderStatus = status
-    // orders created before status history existed start their timeline from their creation date
+    // older orders start at creation date
     if (!order.statusHistory || order.statusHistory.length === 0) {
         order.statusHistory = [{ status: 'Processing', at: order.createdAt || Date.now() }]
     }
-    // moving straight to Delivered still records the Shipped step in between
+    // record the skipped Shipped step
     for (let i = from + 1; i <= to; i++) {
         order.statusHistory.push({ status: STATUSES[i], at: Date.now() })
     }
     if (status === 'Delivered') {
         order.deliveredAt = Date.now()
-        // Cash on Delivery is paid when the customer receives the order
+        // COD is paid on delivery
         if (order.paymentMethod === 'Cash on Delivery') {
             order.paymentInfo = { id: order.paymentInfo && order.paymentInfo.id, status: 'succeeded' }
             order.paidAt = Date.now()
@@ -194,13 +186,13 @@ exports.updateOrder = async (req, res) => {
     }
     await order.save()
 
-    // tell the customer: e-mail with the products, subtotal, grand total and the PDF receipt attached
+    // email update + PDF receipt
     const mail = await sendOrderEmail(order, order.user, status);
 
     res.status(200).json({ success: true, order, emailSent: mail.sent, emailTo: mail.to, emailError: mail.sent ? undefined : mail.error })
 }
 
-// GET /order/:id/receipt  -> the PDF receipt (the customer who owns the order, or an admin)
+// GET /order/:id/receipt
 exports.downloadReceipt = async (req, res) => {
     const order = await Order.findById(req.params.id).populate('user', 'name email')
     if (!order) {
@@ -270,12 +262,6 @@ exports.customerSales = async (req, res, next) => {
                 as: 'userDetails'
             },
         },
-        // {
-        //     $group: {
-        //         _id: "$user",
-        //         total: { $sum: "$totalPrice" },
-        //     }
-        // },
 
         { $unwind: "$userDetails" },
         {
@@ -292,12 +278,6 @@ exports.customerSales = async (req, res, next) => {
                 newRoot: { $mergeObjects: [{ total: '$total' }, '$doc'] },
             },
         },
-        // {
-        //     $group: {
-        //         _id: "$userDetails.name",
-        //         total: { $sum: "$totalPrice" }
-        //     }
-        // },
         {
             $project: {
                 _id: 0,
@@ -314,9 +294,7 @@ exports.customerSales = async (req, res, next) => {
             message: 'error customer sales',
         })
 
-
     }
-    // return console.log(customerSales)
     res.status(200).json({
         success: true,
         customerSales
@@ -325,14 +303,10 @@ exports.customerSales = async (req, res, next) => {
 }
 
 exports.salesPerMonth = async (req, res, next) => {
-    // select monthname(paidAt) sum(price * quantity)
-    // from orders
-    // group by month(date_placed), year(date_placed)
     const salesPerMonth = await Order.aggregate([
 
         {
             $group: {
-                // _id: {month: { $month: "$paidAt" } },
                 _id: {
                     year: { $year: { date: { $ifNull: ["$paidAt", "$createdAt"] }, timezone: SHOP_TIMEZONE } },
                     month: { $month: { date: { $ifNull: ["$paidAt", "$createdAt"] }, timezone: SHOP_TIMEZONE } }
@@ -348,7 +322,7 @@ exports.salesPerMonth = async (req, res, next) => {
                         vars: {
                             monthsInString: [null, 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
                         },
-                        // "Jan 2026": the year keeps the same month of different years apart
+                        // month label with year
                         in: {
                             $concat: [{ $arrayElemAt: ['$$monthsInString', "$_id.month"] }, ' ', { $toString: "$_id.year" }]
                         }
@@ -371,7 +345,6 @@ exports.salesPerMonth = async (req, res, next) => {
             message: 'error sales per month',
         })
     }
-    // return console.log(customerSales)
     res.status(200).json({
         success: true,
         salesPerMonth
@@ -379,7 +352,7 @@ exports.salesPerMonth = async (req, res, next) => {
 
 }
 
-// GET /admin/sales-per-year -> [{ year: '2026', total }], oldest year first. Years are Manila calendar years.
+// GET /admin/sales-per-year
 exports.salesPerYear = async (req, res) => {
     const salesPerYear = await Order.aggregate([
         {
@@ -397,8 +370,7 @@ exports.salesPerYear = async (req, res) => {
     })
 }
 
-// GET /admin/sales-chart?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
-// Returns daily order sales for the dashboard date-range chart. Days are Manila calendar days.
+// GET /admin/sales-chart
 exports.salesChart = async (req, res) => {
     const start = req.query.startDate ? new Date(`${req.query.startDate}T00:00:00.000${SHOP_UTC_OFFSET}`) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const end = req.query.endDate ? new Date(`${req.query.endDate}T23:59:59.999${SHOP_UTC_OFFSET}`) : new Date();

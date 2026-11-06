@@ -4,9 +4,9 @@ import { useSelector } from 'react-redux'
 
 import Loader from '../Layout/Loader'
 
-// Uses the Redux auth state (cookie/JWT session loaded by App via /me)
-//   isAdmin      -> admin accounts only (customers are sent to the shop)
-//   customerOnly -> customer accounts only (admins are sent to their dashboard)
+// uses the Redux auth state
+// isAdmin: admins only
+// customerOnly: customers only
 const ProtectedRoute = ({ children, isAdmin = false, customerOnly = false }) => {
     const { isAuthenticated, user, loading } = useSelector(state => state.auth)
 

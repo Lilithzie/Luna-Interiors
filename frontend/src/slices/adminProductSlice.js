@@ -3,7 +3,7 @@ import axios from 'axios'
 import { API } from '../Components/Utils/helpers'
 import { apiThunk } from './apiThunk'
 
-// MP1 - product CRUD, multiple photos (multipart FormData) and bulk delete
+// MP1 - product CRUD
 export const getAdminProducts = apiThunk('adminProducts/list', async () => {
     const { data } = await axios.get(`${API}/admin/products`)
     return data.products

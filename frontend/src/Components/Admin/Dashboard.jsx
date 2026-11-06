@@ -15,7 +15,6 @@ import MonthlySalesChart from './MonthlySalesChart';
 import YearlySalesChart from './YearlySalesChart';
 import DateRangeSalesChart from './DateRangeSalesChart';
 
-
 const Dashboard = () => {
 
     const dispatch = useDispatch()
@@ -90,7 +89,6 @@ const Dashboard = () => {
                                     </div>
                                 </div>
 
-
                                 <div className="col-xl-3 col-sm-6 mb-3">
                                     <div className="card text-white luna-stat-users o-hidden h-100">
 
@@ -108,9 +106,6 @@ const Dashboard = () => {
                                 </div>
                                 <div className="col-xl-3 col-sm-6 mb-3">
                                     <div className="card text-white luna-stat-stock o-hidden h-100">
-                                        {/*<div className="card-body">
-                                            <div className="text-center card-font-size">Out of Stock<br /> <b>0</b></div>
-                                        </div>*/}
 
                                         <div className="card-body">
                                             <div className="text-center card-font-size">Out of Stock<br /> <b>{outOfStock}</b></div>

@@ -8,7 +8,7 @@ export const STATUSES = ['Processing', 'Shipped', 'Delivered']
 export const money = (n) => `₱${Number(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 export const fmtDate = (d) => (d ? new Date(d).toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' }) : '')
 
-// Processing -> Shipped -> Delivered, with the date each step happened
+// status timeline
 export const OrderTimeline = ({ order }) => {
     const current = Math.max(STATUSES.indexOf(order.orderStatus), 0)
     const when = (status) => {
@@ -45,7 +45,7 @@ export const OrderTotals = ({ order }) => (
     </table>
 )
 
-// product rows: photo + name, price, qty, line subtotal (used by confirm, success, details and admin pages)
+// item rows
 export const OrderItemsTable = ({ items = [] }) => (
     <div className="table-responsive">
         <table className="table table-sm order-items" id="order_items">
@@ -106,7 +106,7 @@ export const paymentLabel = (order) => {
         : { text: 'NOT PAID', cls: 'redColor' }
 }
 
-// "Download receipt (PDF)" - the file is built by the server (GET /order/:id/receipt)
+// download PDF receipt
 export const ReceiptButton = ({ order, className = 'btn btn-outline-luna' }) => {
     const [busy, setBusy] = React.useState(false)
     const download = async () => {

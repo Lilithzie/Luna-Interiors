@@ -6,16 +6,16 @@ import { CATEGORIES } from '../Utils/helpers'
 const MAX_FILES = 10
 const MAX_SIZE = 5 * 1024 * 1024
 
-// Shared by NewProduct and UpdateProduct. Supports MULTIPLE photo upload with previews.
+// shared create/update form, multiple photos
 const ProductForm = ({ initial, title, submitLabel, submitting, onSubmit }) => {
-    // React Hook Form handles the text fields; photos are managed separately below
+    // react-hook-form for text fields
     const { register, handleSubmit, reset, formState: { errors } } = useForm({
         mode: 'onTouched',
         defaultValues: { name: '', price: '', compareAtPrice: '', stock: '', description: '', category: CATEGORIES[0], seller: 'Luna Interiors' },
     })
     const [photoError, setPhotoError] = useState('')
-    const [existing, setExisting] = useState([])     // images already saved (can be removed)
-    const [files, setFiles] = useState([])           // new File objects
+    const [existing, setExisting] = useState([])     // saved images
+    const [files, setFiles] = useState([])           // new files
 
     useEffect(() => {
         if (!initial) return

@@ -29,7 +29,7 @@ const Payment = () => {
     let orderInfo = null
     try { orderInfo = JSON.parse(sessionStorage.getItem('orderInfo')) } catch { orderInfo = null }
 
-    // "4242 4242 4242 4242" style grouping, digits only
+    // group card digits
     const onCardNumber = (v) => setCardNumber(v.replace(/\D/g, '').slice(0, 16).replace(/(.{4})/g, '$1 ').trim())
     const onExpiry = (v) => {
         const d = v.replace(/\D/g, '').slice(0, 4)
@@ -59,12 +59,12 @@ const Payment = () => {
         }
         if (method === CARD && !validateCard()) return
 
-        // The server recalculates prices from the database; the browser only sends what was chosen.
+        // server recalculates prices
         const order = {
             orderItems: checkoutItems.map(i => ({ product: i.product, quantity: i.quantity })),
             shippingInfo,
             paymentMethod: method,
-            // card payment is simulated: never send the full number or the CVC
+            // simulated card: no full number or CVC
             paymentInfo: method === CARD ? { last4: cardNumber.replace(/\s/g, '').slice(-4) } : {}
         }
         try {

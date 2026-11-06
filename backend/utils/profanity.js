@@ -1,5 +1,5 @@
-// Masks bad words in user-written text using the `bad-words` package.
-// English words come with the package; common Filipino ones are added below.
+// mask bad words (bad-words package)
+// plus Filipino words
 const Filter = require('bad-words');
 
 const filter = new Filter({ placeHolder: '*' });
@@ -9,7 +9,7 @@ filter.addWords(
     'hayop ka', 'siraulo', 'shunga', 'pakshet', 'kupal'
 );
 
-// Returns { text, masked } where `text` has each bad word replaced by asterisks.
+// returns { text, masked }
 const maskBadWords = (value) => {
     const original = String(value ?? '');
     if (!original.trim()) return { text: original, masked: false };
@@ -17,7 +17,7 @@ const maskBadWords = (value) => {
         const text = filter.clean(original);
         return { text, masked: text !== original };
     } catch (err) {
-        // bad-words can throw on odd strings (e.g. only punctuation) - keep the text as is
+        // keep text if bad-words throws
         return { text: original, masked: false };
     }
 };

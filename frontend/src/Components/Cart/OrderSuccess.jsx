@@ -3,13 +3,13 @@ import { useSelector } from 'react-redux'
 import MetaData from '../Layout/MetaData'
 import { OrderItemsTable, OrderTimeline, OrderTotals, PaymentAndShipping, ReceiptButton, fmtDate } from '../Order/OrderParts'
 
-// Shown right after checkout: the completed transaction (like a receipt).
+// post-checkout receipt
 const OrderSuccess = () => {
     sessionStorage.removeItem('orderInfo')
     const { order: created } = useSelector(state => state.newOrder)
     const order = created && created.order
 
-    // opened without placing an order (e.g. page refreshed) -> simple message
+    // no order: simple message
     if (!order) {
         return (
             <>

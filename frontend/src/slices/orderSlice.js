@@ -23,7 +23,7 @@ export const allOrders = apiThunk('adminOrders/list', async () => {
     return data
 })
 
-// Term Test: the backend emails the customer the receipt and reports whether it was sent
+// email sent status
 export const updateOrder = apiThunk('orderDetails/update', async ({ id, status }) => {
     const { data } = await axios.put(`${API}/admin/order/${id}`, { status })
     return data

@@ -7,41 +7,13 @@ import { forgotPassword, clearPasswordState } from '../../slices/passwordSlice';
 import { isValidEmail } from '../Utils/validation'
 import AuthBrand from '../Layout/AuthBrand'
 
-
-
 const ForgotPassword = () => {
     const dispatch = useDispatch();
     const { loading, message, error } = useSelector(state => state.forgotPassword)
 
-
     const [email, setEmail] = useState('')
     const [emailError, setEmailError] = useState('')
     const [attempted, setAttempted] = useState(false)
-    // const [loading, setLoading] = useState('')
-
-
-    // const forgotPassword = async (formData) => {
-    //     const config = {
-    //         headers: {
-    //             'Content-Type': 'application/json'
-    //         }
-    //     }
-    //     try {
-    //         const { data } = await axios.post(`http://localhost:4001/api/v1/password/forgot`, formData, config)
-    //         console.log(data.message)
-
-    //         setLoading(false)
-    //         toast.success(data.message, {
-    //             position: 'bottom-center'
-    //         });
-    //         navigate('/login')
-    //     } catch (error) {
-    //         toast.error(error.response.data.message, {
-    //             position: 'top-right'
-    //         });
-    //     }
-    // }
-
 
     useEffect(() => {
         if (message) toast.success(message, { position: 'bottom-right' })

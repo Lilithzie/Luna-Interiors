@@ -56,14 +56,7 @@ exports.registerUser = async (req, res, next) => {
             url: result.secure_url
         },
     })
-    //test token
-    // const token = user.getJwtToken();
 
-    // return res.status(201).json({
-    //     success: true,
-    //     user,
-    //     token
-    // })
     sendToken(user, 200, res)
 }
 
@@ -71,33 +64,23 @@ exports.loginUser = async (req, res, next) => {
     const email = String(req.body.email || '').trim().toLowerCase();
     const password = String(req.body.password || '');
 
-    // Checks if email and password is entered by user
+    // require email and password
     if (!email || !password) {
         return res.status(400).json({ error: 'Please enter email & password' })
     }
-
-
-    // Finding user in database
 
     let user = await User.findOne({ email }).select('+password')
     if (!user) {
         return res.status(401).json({ message: 'Invalid Email or Password' })
     }
 
-
-    // Checks if password is correct or not
+    // check password
     const isPasswordMatched = await user.comparePassword(password);
-
 
     if (!isPasswordMatched) {
         return res.status(401).json({ message: 'Invalid Email or Password' })
     }
 
-    // res.status(201).json({
-    //     success: true,
-    //     token,
-    //     user
-    // });
     user = await User.findOne({ email })
     sendToken(user, 200, res)
 }
@@ -108,10 +91,9 @@ exports.forgotPassword = async (req, res, next) => {
         return res.status(404).json({ error: 'User not found with this email' })
 
     }
-    // Get reset token
+    // reset token
     const resetToken = user.getResetPasswordToken();
     await user.save({ validateBeforeSave: false });
-    // Create reset password url
     const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/password/reset/${resetToken}`;
     const message = `Your password reset token is as follow:\n\n${resetUrl}\n\nIf you have not requested this email, then ignore it.`
     try {
@@ -136,7 +118,7 @@ exports.forgotPassword = async (req, res, next) => {
 }
 
 exports.resetPassword = async (req, res, next) => {
-    // Hash URL token
+    // hash URL token
     const resetPasswordToken = crypto.createHash('sha256').update(req.params.token).digest('hex')
     const user = await User.findOne({
         resetPasswordToken,
@@ -153,12 +135,11 @@ exports.resetPassword = async (req, res, next) => {
 
     }
 
-    // Setup new password
     user.password = req.body.password;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
     await user.save();
-    // the JWT only ever travels in the httpOnly cookie (see sendToken), so it is not returned here
+    // JWT stays in the httpOnly cookie
     return res.status(201).json({
         success: true,
         user
@@ -182,13 +163,10 @@ exports.updateProfile = async (req, res, next) => {
         email: req.body.email
     }
 
-    // Update avatar
     if (req.body.avatar !== '') {
         let user = await User.findById(req.user.id)
-        // console.log(user)
         const image_id = user.avatar.public_id;
         const res = await requireCloudinary().uploader.destroy(image_id);
-        // console.log("Res", res)
         const result = await requireCloudinary().uploader.upload(req.body.avatar, {
             folder: 'avatars',
             width: 150,
@@ -219,20 +197,14 @@ exports.updatePassword = async (req, res, next) => {
         return res.status(400).json({ message: 'Current password is required and the new password must be at least 8 characters long' })
     }
     const user = await User.findById(req.user.id).select('+password');
-    // Check previous user password
+    // check old password
     const isMatched = await user.comparePassword(req.body.oldPassword)
     if (!isMatched) {
         return res.status(400).json({ message: 'Old password is incorrect' })
     }
     user.password = req.body.password;
     await user.save();
-    // const token = user.getJwtToken();
 
-    // return res.status(201).json({
-    //     success: true,
-    //     user,
-    //     token
-    // });
     sendToken(user, 200, res)
 
 }
@@ -250,7 +222,6 @@ exports.deleteUser = async (req, res, next) => {
 
     if (!user) {
         return res.status(401).json({ message: `User does not found with id: ${req.params.id}` })
-        // return next(new ErrorHandler(`User does not found with id: ${req.params.id}`))
     }
 
     if (req.user._id.equals(user._id)) {
@@ -261,7 +232,7 @@ exports.deleteUser = async (req, res, next) => {
         return res.status(400).json({ message: "You are the last admin. You can't delete this account." })
     }
 
-    // Remove avatar from cloudinary
+    // remove old avatar
     const image_id = user.avatar.public_id;
     await requireCloudinary().uploader.destroy(image_id);
     await User.findByIdAndDelete(req.params.id);
@@ -275,7 +246,6 @@ exports.getUserDetails = async (req, res, next) => {
 
     if (!user) {
         return res.status(400).json({ message: `User does not found with id: ${req.params.id}` })
-        // return next(new ErrorHandler(`User does not found with id: ${req.params.id}`))
     }
 
     res.status(200).json({
@@ -285,7 +255,7 @@ exports.getUserDetails = async (req, res, next) => {
 }
 
 exports.updateUser = async (req, res, next) => {
-    // admins manage the role only: name and email belong to the account owner
+    // admins change the role only
     const { role } = req.body
     if (!['user', 'admin'].includes(role)) {
         return res.status(400).json({ message: 'Please select a valid role' })
@@ -307,7 +277,6 @@ exports.updateUser = async (req, res, next) => {
     await User.findByIdAndUpdate(req.params.id, { role }, {
         new: true,
         runValidators: true,
-        // useFindAndModify: false
     })
 
     return res.status(200).json({
