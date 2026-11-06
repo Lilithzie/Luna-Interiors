@@ -1,5 +1,3 @@
-// mask bad words (bad-words package)
-// plus Filipino words
 const Filter = require('bad-words');
 
 const filter = new Filter({ placeHolder: '*' });
