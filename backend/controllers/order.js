@@ -388,5 +388,16 @@ exports.salesChart = async (req, res) => {
     ]);
 
     const shopDate = (date) => date.toLocaleDateString('en-CA', { timeZone: SHOP_TIMEZONE });   // YYYY-MM-DD
-    return res.status(200).json({ success: true, startDate: shopDate(start), endDate: shopDate(end), sales });
+    const startDate = shopDate(start);
+    const endDate = shopDate(end);
+
+    // Fill every day in the range so days without orders show as 0
+    const byDate = new Map(sales.map(day => [day.date, day]));
+    const filled = [];
+    for (let day = new Date(`${startDate}T00:00:00Z`); day <= new Date(`${endDate}T00:00:00Z`); day.setUTCDate(day.getUTCDate() + 1)) {
+        const date = day.toISOString().slice(0, 10);
+        filled.push(byDate.get(date) || { date, total: 0, orders: 0 });
+    }
+
+    return res.status(200).json({ success: true, startDate, endDate, sales: filled });
 };

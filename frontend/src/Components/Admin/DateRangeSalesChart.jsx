@@ -52,7 +52,7 @@ export default function DateRangeSalesChart() {
                     </ResponsiveContainer>
                 </div>
                 {loading && <p className="text-center text-muted mb-0">Updating chart…</p>}
-                {!loading && sales.length === 0 && <p className="text-center text-muted mb-0">No sales found for this range.</p>}
+                {!loading && total === 0 && <p className="text-center text-muted mb-0">No sales found for this range.</p>}
             </>}
         </section>
     )
